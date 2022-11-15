@@ -1,15 +1,20 @@
 # WooCommerce REST API - TypeScript Library
 
+This library provides a set of TypeScript classes that can be used to interact with the WooCommerce REST API.
+However, it is not a complete implementation of the API, but rather a subset of the API that is useful for
+There are so many correnctions it has to be done. 
+I am not a native English speaker, so please feel free to correct me.
+
 New TypeScript library for WooCommerce REST API, supports CommonJS (CJS) and ECMAScript (ESM).
 
-This fixes the issue with the official WooCommerce REST API JavaScript library, which is not compatible with the security features for so many packages.
+## Fixing the issue
+This fixes the issue with the official [WooCommerce REST API JavaScript library](https://github.com/woocommerce/woocommerce-rest-api-js-lib), which is not compatible with the security features for so many packages.
 Including the Axios package, which is used by the official WooCommerce REST API JavaScript library, has a Cricital vulnerability among other issues.
 
 Requests are made with [Axios library](https://github.com/axios/axios) with [support to promises](https://github.com/axios/axios#promises).
 
-[![build status](https://secure.travis-ci.org/woocommerce/woocommerce-rest-api-js-lib.svg)](http://travis-ci.org/woocommerce/woocommerce-rest-api-js-lib)
-[![dependency status](https://david-dm.org/woocommerce/woocommerce-rest-api-js-lib.svg)](https://david-dm.org/woocommerce/woocommerce-rest-api-js-lib)
-[![npm version](https://img.shields.io/npm/v/@woocommerce/woocommerce-rest-api.svg)](https://www.npmjs.com/package/@woocommerce/woocommerce-rest-api)
+![Build Main Status](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=main)
+[![npm version](https://img.shields.io/npm/v/@woocommerce/woocommerce-rest-api.svg)](https://www.npmjs.com/package/woocommerce-rest-ts-api)
 
 ## Installation
 
