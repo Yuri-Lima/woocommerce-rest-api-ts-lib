@@ -13,7 +13,7 @@ Including the Axios package, which is used by the official WooCommerce REST API 
 
 Requests are made with [Axios library](https://github.com/axios/axios) with [support to promises](https://github.com/axios/axios#promises).
 
-![Build Main Status](https://github.com/github/docs/actions/workflows/tests.yml/badge.svg?branch=main)
+![Build Main Status](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/blob/main/.github/workflows/tests.yml/badge.svg?branch=main)
 [![npm version](https://img.shields.io/npm/v/@woocommerce/woocommerce-rest-api.svg)](https://www.npmjs.com/package/woocommerce-rest-ts-api)
 
 ## Installation
