@@ -2,6 +2,9 @@
 
 New TypeScript library for WooCommerce REST API, supports CommonJS (CJS) and ECMAScript (ESM).
 
+This fixes the issue with the official WooCommerce REST API JavaScript library, which is not compatible with the security features for so many packages.
+Including the Axios package, which is used by the official WooCommerce REST API JavaScript library, has a Cricital vulnerability among other issues.
+
 Requests are made with [Axios library](https://github.com/axios/axios) with [support to promises](https://github.com/axios/axios#promises).
 
 [![build status](https://secure.travis-ci.org/woocommerce/woocommerce-rest-api-js-lib.svg)](http://travis-ci.org/woocommerce/woocommerce-rest-api-js-lib)
