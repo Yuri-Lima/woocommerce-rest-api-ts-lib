@@ -2,10 +2,15 @@
   "env": {
     "es6": true
   },
+  "plugins": [
+    "@typescript-eslint"
+  ],
   "extends": [
     "standard",
     "prettier",
-    "plugin:jest/recommended"
+    "plugin:jest/recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
   ],
   "globals": {
     "Atomics": "readonly",
@@ -19,6 +24,9 @@
     "indent": [
       2,
       2
-    ]
+    ],
+    "@typescript-eslint/no-explicit-any": ["off"], // allow any
+    "no-console": 1 // warn
   }
 }
+// npm i -D eslint eslint-config-prettier eslint-config-standard eslint-plugin-import eslint-plugin-jest eslint-plugin-node eslint-plugin-promise eslint-plugin-standard eslint-plugin-prettier

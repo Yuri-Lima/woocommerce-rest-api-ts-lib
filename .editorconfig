@@ -13,6 +13,3 @@ trim_trailing_whitespace = false
 
 [*.{json,yml}]
 insert_final_newline = false
-
-[.babelrc]
-insert_final_newline = false
