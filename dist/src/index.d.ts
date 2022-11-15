@@ -49,3 +49,4 @@ export declare class OptionsException {
   message: string;
   constructor(message: string);
 }
+//# sourceMappingURL=index.d.ts.map

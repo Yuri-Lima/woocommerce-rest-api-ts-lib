@@ -29,3 +29,4 @@ export interface IWooCommerceRestApiOptions extends AxiosRequestConfig {
 export interface IWooCommerceRestApiQuery {
   [key: string]: string;
 }
+//# sourceMappingURL=types.d.ts.map
