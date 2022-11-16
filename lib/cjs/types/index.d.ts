@@ -6,7 +6,7 @@ import {
   IWooRestApiOptions,
   IWooRestApiQuery,
   IWooCredentials,
-} from "./types";
+} from "./types.js";
 export default class WooCommerceRestApi {
   protected classVersion: string;
   protected url: string;

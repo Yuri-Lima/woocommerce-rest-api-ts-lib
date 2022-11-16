@@ -232,9 +232,15 @@ api.delete("products/1", {
 
 [See changelog for details](https://github.com/woocommerce/woocommerce-rest-api-js-lib/blob/master/CHANGELOG.md)
 
+## GitHub Actions
+- There is a YAML script which checks out your latest code, installs its dependencies, and runs the npm test command to execute your tests and many other commands to make sure our App is running ok. It does this for every version of Node.js listed in the node-version field so you can ensure the code works as expected in each runtime.
+- Few free to improve the script and add more commands to it.
+- Implementing security checks with snyk.io is also a good idea.
+
 ## Thanks / Credits / Bibliography
 - [snyk - Best Pratice Guide](https://snyk.io/blog/best-practices-create-modern-npm-package/)
 - [woocommerce](https://woocommerce.github.io/woocommerce-rest-api-docs/)
 - [dennismphil - Updates dependencies](https://dev.to/dennismphil/automate-your-node-dependency-updates-4aga)
 - [emojis](https://www.webfx.com/tools/emoji-cheat-sheet/)
 - [eslint-for-typescript](https://khalilstemmler.com/blogs/typescript/eslint-for-typescript/)
+- [Yoni Goldberg’s](https://github.com/goldbergyoni/javascript-testing-best-practices)

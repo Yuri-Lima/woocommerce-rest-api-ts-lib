@@ -11,7 +11,7 @@ import {
   IWooRestApiOptions,
   IWooRestApiQuery,
   IWooCredentials,
-} from "./types";
+} from "./types.js"; // Typescript types for the library
 
 /**
  * WooCommerce REST API wrapper

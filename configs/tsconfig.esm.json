@@ -1,0 +1,11 @@
+{
+    "extends": "./tsconfig.base.json", // <- this is the important part to extend the base config
+    "compilerOptions": {
+      "lib": ["ES2016", "DOM"], // <-- property indicates to TypeScript what types it should reference to assist you while writing code for your project.
+      "target": "ES2016", // <-- property indicates to TypeScript what version of JavaScript you want to target.
+      "module": "NodeNext", // <-- property indicates to TypeScript what module system you want yo be used when compiling your code.
+      "moduleResolution": "NodeNext", // <-- property indicates to TypeScript how to resolve modules like import statements.
+      "outDir": "../lib/esm", // <-- property indicates to TypeScript where to put the compiled JavaScript files. 
+      "declarationDir": "../lib/esm/types" // <-- property indicates to TypeScript where to put the compiled TypeScript declaration files.
+    }
+  }
