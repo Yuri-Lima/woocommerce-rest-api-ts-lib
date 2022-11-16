@@ -231,3 +231,10 @@ api.delete("products/1", {
 ## Changelog
 
 [See changelog for details](https://github.com/woocommerce/woocommerce-rest-api-js-lib/blob/master/CHANGELOG.md)
+
+## Thanks / Credits / Bibliography
+- [snyk - Best Pratice Guide](https://snyk.io/blog/best-practices-create-modern-npm-package/)
+- [woocommerce](https://woocommerce.github.io/woocommerce-rest-api-docs/)
+- [dennismphil - Updates dependencies](https://dev.to/dennismphil/automate-your-node-dependency-updates-4aga)
+- [emojis](https://www.webfx.com/tools/emoji-cheat-sheet/)
+- [eslint-for-typescript](https://khalilstemmler.com/blogs/typescript/eslint-for-typescript/)
