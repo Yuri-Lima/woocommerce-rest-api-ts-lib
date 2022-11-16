@@ -2,7 +2,7 @@
   "name": "woocommerce-rest-ts-api",
   "version": "0.1.0",
   "description": "WooCommerce REST API - Type Script Library",
-  "author": "Automattic",
+  "author": "Yuri Lima",
   "license": "MIT",
   "keywords": [
     "wordpress",
@@ -11,13 +11,13 @@
     "promise",
     "node"
   ],
-  "homepage": "https://github.com/woocommerce/woocommerce-rest-api-js-lib",
+  "homepage": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/woocommerce/woocommerce-rest-api-js-lib.git"
+    "url": "git+https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib.git"
   },
   "bugs": {
-    "url": "https://github.com/woocommerce/woocommerce-rest-api-js-lib/issues"
+    "url": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/issues"
   },
   "main": "index.js",
   "files": [
