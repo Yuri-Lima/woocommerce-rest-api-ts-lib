@@ -77,26 +77,22 @@ export default class WooCommerceRestApi {
   }
 
   /**
-   * Parse params object.
-   *
+   * Parse params to object.
+   * 
    * @param {Object} params
    * @param {Object} query
    */
   _parseParamsObject(params: any, query: any) {
     for (const key in params) {
-      const value = params[key];
-
-      if (typeof value === "object") {
-        for (const prop in value) {
-          const itemKey = key.toString() + "[" + prop.toString() + "]";
-          query[itemKey] = value[prop];
+      if(typeof params[key] === 'object') { // If the value is an object, loop through it and add it to the query object
+        for (const subKey in params[key]) {
+          query[key + '[' + subKey + ']'] = params[key][subKey];
         }
-      } else {
-        query[key] = value;
+      } else{
+        query[key] = params[key]; // If the value is not an object, add it to the query object
       }
     }
-
-    return query;
+    return query; // Return the query object
   }
 
   /**
