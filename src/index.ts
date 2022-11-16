@@ -147,19 +147,24 @@ export default class WooCommerceRestApi {
    * @return {String}
    */
   _getUrl(endpoint: string, params: Record<string, unknown>): string {
-    const api = this.wpAPIPrefix + "/";
+    const api = this.wpAPIPrefix + "/"; // Add prefix to endpoint
 
     let url = this.url.slice(-1) === "/" ? this.url : this.url + "/";
 
     url = url + api + this.version + "/" + endpoint;
 
-    // Include port.
+    /**
+     * If port is defined, add it to the url
+     */
     if (this.port !== "") {
       const hostname = new Url(url).hostname;
 
       url = url.replace(hostname, hostname + ":" + this.port);
     }
 
+    /**
+     * If isHttps is false, normalize the query string
+     */
     if (!this.isHttps) {
       return this._normalizeQueryString(url, params);
     }
@@ -168,8 +173,10 @@ export default class WooCommerceRestApi {
   }
 
   /**
-   * Get OAuth
-   *
+   * Create Hmac was deprecated fot this version at 16.11.2022
+   * Get OAuth 1.0a since it is mandatory for WooCommerce REST API
+   * You must use OAuth 1.0a "one-legged" authentication to ensure REST API credentials cannot be intercepted by an attacker.
+   * Reference: https://woocommerce.github.io/woocommerce-rest-api-docs/#authentication-over-http
    * @return {Object}
    */
   _getOAuth(): OAuth {
