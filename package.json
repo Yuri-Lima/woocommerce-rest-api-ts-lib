@@ -58,7 +58,7 @@
     "build": "del ./dist && npx tsc",
     "dep:update": "ncu && ncu --doctor -u && ncu -u",
     "test": "del ./dist && npx tsc && jest",
-    "format": "prettier --write \"**/*.ts\" \"test.js\"",
+    "format": "prettier --write \"**/*.ts\" \"**/test.js\"",
     "lint": "eslint . --ext .ts",
     "lint-and-fix": "eslint . --ext .ts --fix",
     "prepare": "npm run build",

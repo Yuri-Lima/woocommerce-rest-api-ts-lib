@@ -10,7 +10,7 @@ import {
   WooRestApiMethod,
   IWooRestApiOptions,
   IWooRestApiQuery,
-  IWooCredentials
+  IWooCredentials,
 } from "./types";
 
 /**
@@ -23,9 +23,9 @@ export default class WooCommerceRestApi {
   protected url: string;
   protected credentials: IWooCredentials = {
     consumerKey: "",
-    consumerSecret: ""
+    consumerSecret: "",
   };
-  
+
   protected wpAPIPrefix: string;
   protected version: WooRestApiVersion;
   protected encoding: WooRestApiEncoding;
@@ -83,18 +83,22 @@ export default class WooCommerceRestApi {
 
   /**
    * Parse params to object.
-   * 
+   *
    * @param {Object} params
    * @param {Object} query
    * @return {Object} IWooRestApiQuery
    */
-  _parseParamsObject(params: Record<string, any>, query: Record<string, any>):IWooRestApiQuery {
+  _parseParamsObject(
+    params: Record<string, any>,
+    query: Record<string, any>
+  ): IWooRestApiQuery {
     for (const key in params) {
-      if(typeof params[key] === 'object') { // If the value is an object, loop through it and add it to the query object
+      if (typeof params[key] === "object") {
+        // If the value is an object, loop through it and add it to the query object
         for (const subKey in params[key]) {
-          query[key + '[' + subKey + ']'] = params[key][subKey];
+          query[key + "[" + subKey + "]"] = params[key][subKey];
         }
-      } else{
+      } else {
         query[key] = params[key]; // If the value is not an object, add it to the query object
       }
     }
@@ -110,10 +114,10 @@ export default class WooCommerceRestApi {
    *
    * @return {String}
    */
-  _normalizeQueryString(url: string, params: { [key: string]: any }):string {
+  _normalizeQueryString(url: string, params: { [key: string]: any }): string {
     /**
      * Exit if url and params are not defined
-    */
+     */
     if (url.indexOf("?") === -1 && Object.keys(params).length === 0) {
       return url;
     }
@@ -138,7 +142,10 @@ export default class WooCommerceRestApi {
       if (queryString.length) {
         queryString += "&";
       }
-      queryString += encodeURIComponent(values[i]) + "=" + encodeURIComponent(<string | number | boolean>query[values[i]]);
+      queryString +=
+        encodeURIComponent(values[i]) +
+        "=" +
+        encodeURIComponent(<string | number | boolean>query[values[i]]);
     }
     queryString = queryString.replace(/%5B/g, "[").replace(/%5D/g, "]");
     return url.split("?")[0] + "?" + queryString;
@@ -189,12 +196,12 @@ export default class WooCommerceRestApi {
     const data = {
       consumer: {
         key: this.credentials.consumerKey,
-        secret: this.credentials.consumerSecret
+        secret: this.credentials.consumerSecret,
       },
       signature_method: "HMAC-SHA256",
       hash_function: (base: any, key: any) => {
         return crypto.createHmac("sha256", key).update(base).digest("base64");
-      }
+      },
     };
 
     return new OAuth(data);
@@ -211,11 +218,16 @@ export default class WooCommerceRestApi {
    *
    * @return {Object}
    */
-  _request(method: WooRestApiMethod, endpoint: string, data: Record<string, unknown>, params: Record<string, unknown> = {}): Promise<any> {
+  _request(
+    method: WooRestApiMethod,
+    endpoint: string,
+    data: Record<string, unknown>,
+    params: Record<string, unknown> = {}
+  ): Promise<any> {
     const url = this._getUrl(endpoint, params);
 
     const header: RawAxiosRequestHeaders = {
-      Accept: "application/json"
+      Accept: "application/json",
     };
     // only set "User-Agent" in node environment
     // the checking method is identical to upstream axios
@@ -234,7 +246,7 @@ export default class WooCommerceRestApi {
       responseType: "json",
       headers: { ...header },
       params: {},
-      data: data ? JSON.stringify(data) : null
+      data: data ? JSON.stringify(data) : null,
     };
 
     /**
@@ -244,12 +256,12 @@ export default class WooCommerceRestApi {
       if (this.queryStringAuth) {
         options.params = {
           consumer_key: this.credentials.consumerKey,
-          consumer_secret: this.credentials.consumerSecret
+          consumer_secret: this.credentials.consumerSecret,
         };
       } else {
         options.auth = {
           username: this.credentials.consumerKey,
-          password: this.credentials.consumerSecret
+          password: this.credentials.consumerSecret,
         };
       }
 
@@ -257,14 +269,14 @@ export default class WooCommerceRestApi {
     } else {
       options.params = this._getOAuth().authorize({
         url,
-        method
+        method,
       });
     }
 
     if (options.data) {
       options.headers = {
         ...header,
-        "Content-Type": `application/json; charset=${this.encoding}`
+        "Content-Type": `application/json; charset=${this.encoding}`,
       };
     }
 
