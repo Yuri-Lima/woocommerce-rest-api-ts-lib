@@ -16,7 +16,9 @@ export default class WooCommerceRestApi {
     constructor(opt: IWooCommerceRestApiOptions);
     _setDefaultsOptions(opt: IWooCommerceRestApiOptions): void;
     _parseParamsObject(params: any, query: any): any;
-    _normalizeQueryString(url: string, params?: any): string;
+    _normalizeQueryString(url: string, params: {
+        [key: string]: any;
+    }): string;
     _getUrl(endpoint: string, params: Record<string, unknown>): string;
     _getOAuth(): OAuth;
     _request(method: WooCommerceRestApiMethod, endpoint: string, data: Record<string, unknown>, params?: Record<string, unknown>): Promise<any>;

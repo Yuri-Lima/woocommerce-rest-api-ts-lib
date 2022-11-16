@@ -107,12 +107,14 @@ export default class WooCommerceRestApi {
    *
    * @return {String}
    */
-  _normalizeQueryString(url: string, params?: any): string {
-    // Exit if don't find query string.
+  _normalizeQueryString(url: string, params: { [key: string]: any }) {
+    /**
+     * Exit if url and params are not defined
+    */
     if (url.indexOf("?") === -1 && Object.keys(params).length === 0) {
       return url;
     }
-    const query = new Url(url, true).query;
+    const query = new Url(url, true).query; // Parse the query string returned by the url
     const values = [];
 
     let queryString = "";
@@ -120,23 +122,22 @@ export default class WooCommerceRestApi {
     // Include params object into URL.searchParams.
     this._parseParamsObject(params, query);
 
+    /**
+     * Loop through the params object and push the key and value into the values array
+     * Example: values = ['key1=value1', 'key2=value2']
+     */
     for (const key in query) {
       values.push(key);
     }
-    values.sort();
+    values.sort(); // Sort the values array
 
     for (const i in values) {
       if (queryString.length) {
         queryString += "&";
       }
-      queryString += encodeURIComponent(values[i])
-        .replace(/%5B/g, "[")
-        .replace(/%5D/g, "]");
-      queryString += "=";
-      queryString += encodeURIComponent(<string | number | boolean>(
-        query[values[i]]
-      ));
+      queryString += encodeURIComponent(values[i]) + "=" + encodeURIComponent(<string | number | boolean>query[values[i]]);
     }
+    queryString = queryString.replace(/%5B/g, "[").replace(/%5D/g, "]");
     return url.split("?")[0] + "?" + queryString;
   }
 
