@@ -1,7 +1,6 @@
 "use strict";
 
 import axios, { RawAxiosRequestHeaders } from "axios";
-import createHmac from "create-hmac";
 import crypto from "node:crypto";
 import OAuth from "oauth-1.0a";
 import Url from "url-parse";
