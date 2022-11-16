@@ -5,11 +5,12 @@ However, it is not a complete implementation of the API, but rather a subset of 
 There are so many correnctions it has to be done. 
 I am not a native English speaker, so please feel free to correct me.
 
-New TypeScript library for WooCommerce REST API, supports CommonJS (CJS) and ECMAScript (ESM).
+New TypeScript library for WooCommerce REST API. This will supports CommonJS (CJS) and ECMAScript (ESM). [Working in progress]
 
 ## Fixing the issue
 This fixes the issue with the official [WooCommerce REST API JavaScript library](https://github.com/woocommerce/woocommerce-rest-api-js-lib), which is not compatible with the security features for so many packages.
 Including the Axios package, which is used by the official WooCommerce REST API JavaScript library, has a Cricital vulnerability among other issues.
+There is new feature to make the library compatible with the security features for so many packages to keep the library up to date.
 
 Requests are made with [Axios library](https://github.com/axios/axios) with [support to promises](https://github.com/axios/axios#promises).
 
@@ -19,7 +20,7 @@ Requests are made with [Axios library](https://github.com/axios/axios) with [sup
 ## Installation
 
 ```
-npm install --save @woocommerce/woocommerce-rest-api
+npm install --save woocommerce-rest-ts-api
 ```
 
 ## Getting started
@@ -34,26 +35,28 @@ Check out the WooCommerce API endpoints and data that can be manipulated in <htt
 ### ESM example:
 
 ```js
-import WooCommerceRestApi from "@woocommerce/woocommerce-rest-api";
+import WooCommerceRestApi from "woocommerce-rest-ts-api";
 
 const api = new WooCommerceRestApi({
   url: "http://example.com",
   consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  version: "wc/v3"
+  version: "wc/v3",
+  queryStringAuth: false // Force Basic Authentication as query string true and using under HTTPS
 });
 ```
 
 ### CJS example:
 
 ```js
-const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
+const WooCommerceRestApi = require("woocommerce-rest-ts-api").default;
 
 const api = new WooCommerceRestApi({
   url: "http://example.com",
   consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  version: "wc/v3"
+  version: "wc/v3",
+  queryStringAuth: false // Force Basic Authentication as query string true and using under HTTPS
 });
 ```
 
@@ -129,14 +132,15 @@ const api = new WooCommerceRestApi({
 ## Example of use
 
 ```js
-// import WooCommerceRestApi from "@woocommerce/woocommerce-rest-api";
-const WooCommerceRestApi = require("@woocommerce/woocommerce-rest-api").default;
+// import WooCommerceRestApi from "woocommerce-rest-ts-api";
+const WooCommerceRestApi = require("woocommerce-rest-ts-api").default;
 
 const api = new WooCommerceRestApi({
   url: "http://example.com",
   consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
   consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  version: "wc/v3"
+  version: "wc/v3",
+  queryStringAuth: false // Force Basic Authentication as query string true and using under HTTPS
 });
 
 // List products

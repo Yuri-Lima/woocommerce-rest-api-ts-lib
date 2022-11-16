@@ -12,7 +12,8 @@ describe("#options", () => {
             consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
             consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
             wpAPIPrefix: "wp-rest",
-            version: "wc/v3"
+            version: "wc/v3",
+            queryStringAuth: false
         });
         const endpoint = "products";
         const expected = "https://test.dev/wp-rest/wc/v3/" + endpoint;
@@ -25,7 +26,8 @@ describe("#methods", () => {
         url: "https://test.dev",
         consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-        version: "wc/v3"
+        version: "wc/v3",
+        queryStringAuth: false
     });
     test("_getUrl should return full endpoint URL", () => {
         const endpoint = "products";
@@ -48,7 +50,8 @@ describe("#requests", () => {
         url: "https://test.dev",
         consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
         consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-        version: "wc/v3"
+        version: "wc/v3",
+        queryStringAuth: false
     });
     test("should return content for basic auth", () => {
         expect.assertions(1);
@@ -111,7 +114,8 @@ describe("#requests", () => {
             url: "http://test.dev",
             consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
             consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-            version: "wc/v3"
+            version: "wc/v3",
+            queryStringAuth: false
         });
         (0, nock_1.default)("http://test.dev/wp-json/wc/v3")
             .filteringPath(/\?.*/, "?params")

@@ -10,7 +10,8 @@ describe("#options", () => {
       consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
       consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
       wpAPIPrefix: "wp-rest",
-      version: "wc/v3"
+      version: "wc/v3",
+      queryStringAuth: false // Force Basic Authentication as query string true and using under HTTPS
     });
 
     const endpoint = "products";
@@ -26,7 +27,8 @@ describe("#methods", () => {
     url: "https://test.dev",
     consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-    version: "wc/v3"
+    version: "wc/v3",
+    queryStringAuth: false // Force Basic Authentication as query string true and using under HTTPS
   });
 
   test("_getUrl should return full endpoint URL", () => {
@@ -57,7 +59,8 @@ describe("#requests", () => {
     url: "https://test.dev",
     consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
     consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-    version: "wc/v3"
+    version: "wc/v3",
+    queryStringAuth: false // Force Basic Authentication as query string true and using under HTTPS
   });
 
   test("should return content for basic auth", () => {
@@ -132,7 +135,8 @@ describe("#requests", () => {
       url: "http://test.dev",
       consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
       consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-      version: "wc/v3"
+      version: "wc/v3",
+      queryStringAuth: false // Force Basic Authentication as query string true and using under HTTPS
     });
 
     nock("http://test.dev/wp-json/wc/v3")

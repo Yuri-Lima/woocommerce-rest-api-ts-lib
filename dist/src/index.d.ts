@@ -1,10 +1,9 @@
 import OAuth from "oauth-1.0a";
-import { WooRestApiVersion, WooRestApiEncoding, WooRestApiMethod, IWooRestApiOptions, IWooRestApiQuery } from "./types";
+import { WooRestApiVersion, WooRestApiEncoding, WooRestApiMethod, IWooRestApiOptions, IWooRestApiQuery, IWooCredentials } from "./types";
 export default class WooCommerceRestApi {
     protected classVersion: string;
     protected url: string;
-    protected consumerKey: string;
-    protected consumerSecret: string;
+    protected credentials: IWooCredentials;
     protected wpAPIPrefix: string;
     protected version: WooRestApiVersion;
     protected encoding: WooRestApiEncoding;

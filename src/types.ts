@@ -22,10 +22,9 @@ export type IWooCredentials = {
   consumerSecret: string;
 };
 
-export interface IWooRestApiOptions extends AxiosRequestConfig {
+export interface IWooRestApiOptions extends IWooCredentials {
   /* Your Store URL, example: http://woo.dev/ */
   url: string;
-  credentials: IWooCredentials;
   /* Custom WP REST API URL prefix, used to support custom prefixes created with the `rest_url_prefix filter` */
   wpAPIPrefix?: string;
   /* API version, default is `v3` */

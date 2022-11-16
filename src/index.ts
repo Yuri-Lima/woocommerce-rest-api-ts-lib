@@ -1,6 +1,6 @@
 "use strict";
 
-import axios, { RawAxiosRequestHeaders } from "axios";
+import axios, { RawAxiosRequestHeaders, AxiosRequestConfig } from "axios";
 import crypto from "node:crypto";
 import OAuth from "oauth-1.0a";
 import Url from "url-parse";
@@ -9,7 +9,8 @@ import {
   WooRestApiEncoding,
   WooRestApiMethod,
   IWooRestApiOptions,
-  IWooRestApiQuery
+  IWooRestApiQuery,
+  IWooCredentials
 } from "./types";
 
 /**
@@ -20,8 +21,11 @@ import {
 export default class WooCommerceRestApi {
   protected classVersion: string;
   protected url: string;
-  protected consumerKey: string;
-  protected consumerSecret: string;
+  protected credentials: IWooCredentials = {
+    consumerKey: "",
+    consumerSecret: ""
+  };
+  
   protected wpAPIPrefix: string;
   protected version: WooRestApiVersion;
   protected encoding: WooRestApiEncoding;
@@ -68,8 +72,8 @@ export default class WooCommerceRestApi {
     this.wpAPIPrefix = opt.wpAPIPrefix || "wp-json";
     this.version = opt.version || "wc/v3";
     this.isHttps = /^https/i.test(this.url);
-    this.consumerKey = opt.consumerKey;
-    this.consumerSecret = opt.consumerSecret;
+    this.credentials.consumerKey = opt.consumerKey;
+    this.credentials.consumerSecret = opt.consumerSecret;
     this.encoding = opt.encoding || "utf-8";
     this.queryStringAuth = opt.queryStringAuth || false;
     this.port = <number>opt.port || "";
@@ -184,8 +188,8 @@ export default class WooCommerceRestApi {
   _getOAuth(): OAuth {
     const data = {
       consumer: {
-        key: this.consumerKey,
-        secret: this.consumerSecret
+        key: this.credentials.consumerKey,
+        secret: this.credentials.consumerSecret
       },
       signature_method: "HMAC-SHA256",
       hash_function: (base: any, key: any) => {
@@ -222,17 +226,7 @@ export default class WooCommerceRestApi {
       header["User-Agent"] =
         "WooCommerce REST API - TS Client/" + this.classVersion;
     }
-    type option_type = Omit<
-      IWooRestApiOptions,
-      | "consumerKey"
-      | "consumerSecret"
-      | "wpAPIPrefix"
-      | "version"
-      | "encoding"
-      | "queryStringAuth"
-      | "port"
-    >;
-    let options: option_type = {
+    let options: AxiosRequestConfig = {
       url,
       method,
       responseEncoding: this.encoding,
@@ -243,16 +237,19 @@ export default class WooCommerceRestApi {
       data: data ? JSON.stringify(data) : null
     };
 
+    /**
+     * If isHttps is false, add the query string to the params object
+     */
     if (this.isHttps) {
       if (this.queryStringAuth) {
         options.params = {
-          consumer_key: this.consumerKey,
-          consumer_secret: this.consumerSecret
+          consumer_key: this.credentials.consumerKey,
+          consumer_secret: this.credentials.consumerSecret
         };
       } else {
         options.auth = {
-          username: this.consumerKey,
-          password: this.consumerSecret
+          username: this.credentials.consumerKey,
+          password: this.credentials.consumerSecret
         };
       }
 
