@@ -197,7 +197,8 @@ export default class WooCommerceRestApi {
   }
 
   /**
-   * Do requests
+   * Axios request
+   * Mount the options to send to axios and send the request.
    *
    * @param  {String} method
    * @param  {String} endpoint
@@ -219,7 +220,7 @@ export default class WooCommerceRestApi {
       Object.prototype.toString.call(process) === "[object process]"
     ) {
       header["User-Agent"] =
-        "WooCommerce REST API - JS Client/" + this.classVersion;
+        "WooCommerce REST API - TS Client/" + this.classVersion;
     }
     type option_type = Omit<
       IWooRestApiOptions,
