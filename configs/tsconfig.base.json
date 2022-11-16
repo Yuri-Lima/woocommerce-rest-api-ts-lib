@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+      "incremental": true,
+      "strict": true,
+      "strictPropertyInitialization": false,
+      "esModuleInterop": true,
+      "forceConsistentCasingInFileNames": true,
+      "skipLibCheck": true,
+      "checkJs": true,
+      "allowJs": true,
+      "declaration": true,
+      "declarationMap": true,
+      "allowSyntheticDefaultImports": true,
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      "resolveJsonModule": true,
+      "removeComments": true,
+      "noUnusedLocals": false,
+      "noUnusedParameters": false
+    },
+    "files": ["../src/index.ts"]
+  }
