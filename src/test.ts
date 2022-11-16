@@ -3,12 +3,15 @@
 import WooCommerceRestApi from "./index";
 import nock from "nock";
 
+const secretKey = "ck_";
+const consumerKey = "cs_";
+
 describe("#options", () => {
   test("wpAPIPrefix should set WP REST API custom path", () => {
     const api = new WooCommerceRestApi({
       url: "https://test.dev",
-      consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-      consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      consumerKey: secretKey,
+      consumerSecret: consumerKey,
       wpAPIPrefix: "wp-rest",
       version: "wc/v3",
       queryStringAuth: false, // Force Basic Authentication as query string true and using under HTTPS
@@ -25,8 +28,8 @@ describe("#options", () => {
 describe("#methods", () => {
   const api = new WooCommerceRestApi({
     url: "https://test.dev",
-    consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-    consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    consumerKey: "secretKey",
+    consumerSecret: consumerKey,
     version: "wc/v3",
     queryStringAuth: false, // Force Basic Authentication as query string true and using under HTTPS
   });
@@ -57,8 +60,8 @@ describe("#requests", () => {
 
   const api = new WooCommerceRestApi({
     url: "https://test.dev",
-    consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-    consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    consumerKey: "secretKey",
+    consumerSecret: consumerKey,
     version: "wc/v3",
     queryStringAuth: false, // Force Basic Authentication as query string true and using under HTTPS
   });
@@ -125,8 +128,8 @@ describe("#requests", () => {
     expect.assertions(1);
     const oAuth = new WooCommerceRestApi({
       url: "http://test.dev",
-      consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-      consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      consumerKey: "secretKey",
+      consumerSecret: consumerKey,
       version: "wc/v3",
       queryStringAuth: false, // Force Basic Authentication as query string true and using under HTTPS
     });
