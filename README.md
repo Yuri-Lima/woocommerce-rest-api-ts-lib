@@ -1,15 +1,24 @@
 # WooCommerce REST API - TypeScript Library
+create-hmac - Crypto
 
+## :rocket: TypeScript library for WooCommerce REST API v3 and v2 [ Still in development ]
 This library provides a set of TypeScript classes that can be used to interact with the WooCommerce REST API.
 However, it is not a complete implementation of the API, but rather a subset of the API that is useful for
-There are so many correnctions it has to be done. 
-I am not a native English speaker, so please feel free to correct me.
+
+## Tanks to
+- [Elijahmanor Automate Dependeces Article](https://elijahmanor.com/byte/update-node-deps)
+
+## :warning: Important
+- There are so many thing to be improved, but this is not a high priority for me right now. If you want to contribute, please feel free to do so.
+- I live in Ireland, but I am not a native English speaker, so please feel free to correct me.
+- I have not tested this library with WooCommerce v2, but it should work.
+- I have ***not updated all the documentation***, but I will do it soon.
 
 New TypeScript library for WooCommerce REST API, supports CommonJS (CJS) and ECMAScript (ESM).
 
 ## Fixing the issue
-This fixes the issue with the official [WooCommerce REST API JavaScript library](https://github.com/woocommerce/woocommerce-rest-api-js-lib), which is not compatible with the security features for so many packages.
-Including the Axios package, which is used by the official WooCommerce REST API JavaScript library, has a Cricital vulnerability among other issues.
+This fixes the issue with the official [WooCommerce REST API JavaScript library](https://github.com/woocommerce/woocommerce-rest-api-js-lib), which is not folling the security features for so many packages.
+Including the Axios package, which is used by the official WooCommerce REST API JavaScript library, has a Cricital vulnerability among other issues, of course, a simple update would fix the issue, but the official library is not being updated anymore since 2018.
 
 Requests are made with [Axios library](https://github.com/axios/axios) with [support to promises](https://github.com/axios/axios#promises).
 
