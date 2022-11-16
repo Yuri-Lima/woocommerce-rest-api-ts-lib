@@ -5,10 +5,10 @@ import crypto from "node:crypto";
 import OAuth from "oauth-1.0a";
 import Url from "url-parse";
 import {
-  WooCommerceRestApiVersion,
-  WooCommerceRestApiEncoding,
-  WooCommerceRestApiMethod,
-  IWooCommerceRestApiOptions
+  WooRestApiVersion,
+  WooRestApiEncoding,
+  WooRestApiMethod,
+  IWooRestApiOptions
 } from "./types";
 
 /**
@@ -22,8 +22,8 @@ export default class WooCommerceRestApi {
   protected consumerKey: string;
   protected consumerSecret: string;
   protected wpAPIPrefix: string;
-  protected version: WooCommerceRestApiVersion;
-  protected encoding: WooCommerceRestApiEncoding;
+  protected version: WooRestApiVersion;
+  protected encoding: WooRestApiEncoding;
   protected queryStringAuth: boolean;
   protected port: number | string;
   protected timeout: number;
@@ -34,7 +34,7 @@ export default class WooCommerceRestApi {
    *
    * @param {Object} opt
    */
-  constructor(opt: IWooCommerceRestApiOptions) {
+  constructor(opt: IWooRestApiOptions) {
     if (!(this instanceof WooCommerceRestApi)) {
       return new WooCommerceRestApi(opt);
     }
@@ -62,7 +62,7 @@ export default class WooCommerceRestApi {
    *
    * @param {Object} opt
    */
-  _setDefaultsOptions(opt: IWooCommerceRestApiOptions): void {
+  _setDefaultsOptions(opt: IWooRestApiOptions): void {
     this.url = opt.url;
     this.wpAPIPrefix = opt.wpAPIPrefix || "wp-json";
     this.version = opt.version || "wc/v3";
@@ -204,12 +204,7 @@ export default class WooCommerceRestApi {
    *
    * @return {Object}
    */
-  _request(
-    method: WooCommerceRestApiMethod,
-    endpoint: string,
-    data: Record<string, unknown>,
-    params: Record<string, unknown> = {}
-  ): Promise<any> {
+  _request(method: WooRestApiMethod, endpoint: string, data: Record<string, unknown>, params: Record<string, unknown> = {}): Promise<any> {
     const url = this._getUrl(endpoint, params);
 
     const header: RawAxiosRequestHeaders = {
@@ -225,7 +220,7 @@ export default class WooCommerceRestApi {
         "WooCommerce REST API - JS Client/" + this.classVersion;
     }
     type option_type = Omit<
-      IWooCommerceRestApiOptions,
+      IWooRestApiOptions,
       | "consumerKey"
       | "consumerSecret"
       | "wpAPIPrefix"
@@ -288,7 +283,7 @@ export default class WooCommerceRestApi {
    * @return {Object}
    */
   get(endpoint: string, params: Record<string, unknown> = {}): Promise<any> {
-    return this._request("get", endpoint, {}, params);
+    return this._request("GET", endpoint, {}, params);
   }
 
   /**
@@ -305,7 +300,7 @@ export default class WooCommerceRestApi {
     data: Record<string, unknown>,
     params: Record<string, unknown> = {}
   ): Promise<any> {
-    return this._request("post", endpoint, data, params);
+    return this._request("POST", endpoint, data, params);
   }
 
   /**
@@ -322,7 +317,7 @@ export default class WooCommerceRestApi {
     data: Record<string, unknown>,
     params: Record<string, unknown> = {}
   ): Promise<any> {
-    return this._request("put", endpoint, data, params);
+    return this._request("PUT", endpoint, data, params);
   }
 
   /**
@@ -335,7 +330,7 @@ export default class WooCommerceRestApi {
    * @return {Object}
    */
   delete(endpoint: string, params: Record<string, unknown> = {}): Promise<any> {
-    return this._request("delete", endpoint, {}, params);
+    return this._request("DELETE", endpoint, {}, params);
   }
 
   /**
@@ -350,7 +345,7 @@ export default class WooCommerceRestApi {
     endpoint: string,
     params: Record<string, unknown> = {}
   ): Promise<any> {
-    return this._request("options", endpoint, {}, params);
+    return this._request("OPTIONS", endpoint, {}, params);
   }
 }
 
