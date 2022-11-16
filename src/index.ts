@@ -100,7 +100,8 @@ export default class WooCommerceRestApi {
   }
 
   /**
-   * Normalize query string for oAuth
+   * Normalize query string for oAuth 1.0a
+   * Depends on the _parseParamsObject method
    *
    * @param  {String} url
    * @param  {Object} params
