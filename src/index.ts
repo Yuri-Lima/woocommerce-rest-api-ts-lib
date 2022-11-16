@@ -2,6 +2,7 @@
 
 import axios, { RawAxiosRequestHeaders } from "axios";
 import createHmac from "create-hmac";
+import crypto from "node:crypto";
 import OAuth from "oauth-1.0a";
 import Url from "url-parse";
 import {
@@ -182,9 +183,7 @@ export default class WooCommerceRestApi {
       },
       signature_method: "HMAC-SHA256",
       hash_function: (base: any, key: any) => {
-        return createHmac("sha256", key)
-          .update(base)
-          .digest("base64");
+        return crypto.createHmac("sha256", key).update(base).digest("base64");
       }
     };
 
