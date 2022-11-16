@@ -1,27 +1,27 @@
 import OAuth from "oauth-1.0a";
-import { WooCommerceRestApiVersion, WooCommerceRestApiEncoding, WooCommerceRestApiMethod, IWooCommerceRestApiOptions } from "./types";
+import { WooRestApiVersion, WooRestApiEncoding, WooRestApiMethod, IWooRestApiOptions } from "./types";
 export default class WooCommerceRestApi {
     protected classVersion: string;
     protected url: string;
     protected consumerKey: string;
     protected consumerSecret: string;
     protected wpAPIPrefix: string;
-    protected version: WooCommerceRestApiVersion;
-    protected encoding: WooCommerceRestApiEncoding;
+    protected version: WooRestApiVersion;
+    protected encoding: WooRestApiEncoding;
     protected queryStringAuth: boolean;
     protected port: number | string;
     protected timeout: number;
     protected axiosConfig: any;
     protected isHttps: boolean;
-    constructor(opt: IWooCommerceRestApiOptions);
-    _setDefaultsOptions(opt: IWooCommerceRestApiOptions): void;
+    constructor(opt: IWooRestApiOptions);
+    _setDefaultsOptions(opt: IWooRestApiOptions): void;
     _parseParamsObject(params: any, query: any): any;
     _normalizeQueryString(url: string, params: {
         [key: string]: any;
     }): string;
     _getUrl(endpoint: string, params: Record<string, unknown>): string;
     _getOAuth(): OAuth;
-    _request(method: WooCommerceRestApiMethod, endpoint: string, data: Record<string, unknown>, params?: Record<string, unknown>): Promise<any>;
+    _request(method: WooRestApiMethod, endpoint: string, data: Record<string, unknown>, params?: Record<string, unknown>): Promise<any>;
     get(endpoint: string, params?: Record<string, unknown>): Promise<any>;
     post(endpoint: string, data: Record<string, unknown>, params?: Record<string, unknown>): Promise<any>;
     put(endpoint: string, data: Record<string, unknown>, params?: Record<string, unknown>): Promise<any>;

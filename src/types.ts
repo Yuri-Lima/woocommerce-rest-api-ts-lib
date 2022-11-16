@@ -1,21 +1,21 @@
 import { AxiosRequestConfig } from "axios";
 
-export declare type WooCommerceRestApiVersion =
+export declare type WooRestApiVersion =
   | "wc/v3"
   | "wc/v2"
   | "wc/v1"
   | "wc-api/v3"
   | "wc-api/v2"
   | "wc-api/v1";
-export declare type WooCommerceRestApiEncoding = "utf-8" | "ascii";
-export declare type WooCommerceRestApiMethod =
-  | "get"
-  | "post"
-  | "put"
-  | "delete"
-  | "options";
+export declare type WooRestApiEncoding = "utf-8" | "ascii";
+export declare type WooRestApiMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "DELETE"
+  | "OPTIONS";
 
-export interface IWooCommerceRestApiOptions extends AxiosRequestConfig {
+export interface IWooRestApiOptions extends AxiosRequestConfig {
   /* Your Store URL, example: http://woo.dev/ */
   url: string;
   /* Your API consumer key */
@@ -25,9 +25,9 @@ export interface IWooCommerceRestApiOptions extends AxiosRequestConfig {
   /* Custom WP REST API URL prefix, used to support custom prefixes created with the `rest_url_prefix filter` */
   wpAPIPrefix?: string;
   /* API version, default is `v3` */
-  version?: WooCommerceRestApiVersion;
+  version?: WooRestApiVersion;
   /* Encoding, default is 'utf-8' */
-  encoding?: WooCommerceRestApiEncoding;
+  encoding?: WooRestApiEncoding;
   /* When `true` and using under HTTPS force Basic Authentication as query string, default is `false` */
   queryStringAuth?: boolean;
   /* Provide support for URLs with ports, eg: `8080` */
@@ -39,6 +39,6 @@ export interface IWooCommerceRestApiOptions extends AxiosRequestConfig {
   classVersion?: string;
 }
 
-export interface IWooCommerceRestApiQuery {
+export interface IWooRestApiQuery {
   [key: string]: string;
 }
