@@ -1,5 +1,5 @@
 import OAuth from "oauth-1.0a";
-import { WooRestApiVersion, WooRestApiEncoding, WooRestApiMethod, IWooRestApiOptions } from "./types";
+import { WooRestApiVersion, WooRestApiEncoding, WooRestApiMethod, IWooRestApiOptions, IWooRestApiQuery } from "./types";
 export default class WooCommerceRestApi {
     protected classVersion: string;
     protected url: string;
@@ -15,7 +15,7 @@ export default class WooCommerceRestApi {
     protected isHttps: boolean;
     constructor(opt: IWooRestApiOptions);
     _setDefaultsOptions(opt: IWooRestApiOptions): void;
-    _parseParamsObject(params: any, query: any): any;
+    _parseParamsObject(params: Record<string, any>, query: Record<string, any>): IWooRestApiQuery;
     _normalizeQueryString(url: string, params: {
         [key: string]: any;
     }): string;
