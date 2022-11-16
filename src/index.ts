@@ -8,7 +8,8 @@ import {
   WooRestApiVersion,
   WooRestApiEncoding,
   WooRestApiMethod,
-  IWooRestApiOptions
+  IWooRestApiOptions,
+  IWooRestApiQuery
 } from "./types";
 
 /**
@@ -81,8 +82,9 @@ export default class WooCommerceRestApi {
    * 
    * @param {Object} params
    * @param {Object} query
+   * @return {Object} IWooRestApiQuery
    */
-  _parseParamsObject(params: any, query: any) {
+  _parseParamsObject(params: Record<string, any>, query: Record<string, any>):IWooRestApiQuery {
     for (const key in params) {
       if(typeof params[key] === 'object') { // If the value is an object, loop through it and add it to the query object
         for (const subKey in params[key]) {
@@ -104,7 +106,7 @@ export default class WooCommerceRestApi {
    *
    * @return {String}
    */
-  _normalizeQueryString(url: string, params: { [key: string]: any }) {
+  _normalizeQueryString(url: string, params: { [key: string]: any }):string {
     /**
      * Exit if url and params are not defined
     */
