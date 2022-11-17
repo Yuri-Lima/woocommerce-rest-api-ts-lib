@@ -1,36 +1,31 @@
+import { AxiosRequestConfig } from "axios";
 import OAuth from "oauth-1.0a";
 import {
-  WooRestApiVersion,
-  WooRestApiEncoding,
   WooRestApiMethod,
-  IWooRestApiOptions,
   IWooRestApiQuery,
-  IWooCredentials,
+  IWooRestApiOptions,
+  WooRestApiEndpoint,
+  OrdersMainParams,
+  ProductsMainParams,
+  SystemStatusParams,
+  CouponsParams,
+  CustomersParams,
 } from "./types.js";
-export default class WooCommerceRestApi {
-  protected classVersion: string;
-  protected url: string;
-  protected credentials: IWooCredentials;
-  protected wpAPIPrefix: string;
-  protected version: WooRestApiVersion;
-  protected encoding: WooRestApiEncoding;
-  protected queryStringAuth: boolean;
-  protected port: number | string;
-  protected timeout: number;
-  protected axiosConfig: any;
-  protected isHttps: boolean;
-  constructor(opt: IWooRestApiOptions);
-  _setDefaultsOptions(opt: IWooRestApiOptions): void;
-  _parseParamsObject(
-    params: Record<string, any>,
+type WooRestApiOptions = IWooRestApiOptions<AxiosRequestConfig>;
+type WooRestApiParams = CouponsParams &
+  CustomersParams &
+  OrdersMainParams &
+  ProductsMainParams &
+  SystemStatusParams;
+export default class WooCommerceRestApi<T extends WooRestApiOptions> {
+  protected _opt: T;
+  constructor(opt: T);
+  _setDefaultsOptions(opt: T): void;
+  _parseParamsObject<T>(
+    params: Record<string, T>,
     query: Record<string, any>
   ): IWooRestApiQuery;
-  _normalizeQueryString(
-    url: string,
-    params: {
-      [key: string]: any;
-    }
-  ): string;
+  _normalizeQueryString(url: string, params: Record<string, any>): string;
   _getUrl(endpoint: string, params: Record<string, unknown>): string;
   _getOAuth(): OAuth;
   _request(
@@ -39,23 +34,33 @@ export default class WooCommerceRestApi {
     data: Record<string, unknown>,
     params?: Record<string, unknown>
   ): Promise<any>;
-  get(endpoint: string, params?: Record<string, unknown>): Promise<any>;
-  post(
-    endpoint: string,
-    data: Record<string, unknown>,
-    params?: Record<string, unknown>
+  get<T extends WooRestApiEndpoint>(
+    endpoint: T,
+    params: WooRestApiParams
   ): Promise<any>;
-  put(
-    endpoint: string,
+  post<T extends WooRestApiEndpoint>(
+    endpoint: T,
     data: Record<string, unknown>,
-    params?: Record<string, unknown>
+    params?: WooRestApiParams
   ): Promise<any>;
-  delete(endpoint: string, params?: Record<string, unknown>): Promise<any>;
-  options(endpoint: string, params?: Record<string, unknown>): Promise<any>;
+  put<T extends WooRestApiEndpoint>(
+    endpoint: T,
+    data: Record<string, unknown>,
+    params?: WooRestApiParams
+  ): Promise<any>;
+  delete<T extends WooRestApiEndpoint>(
+    endpoint: T,
+    params?: WooRestApiParams
+  ): Promise<any>;
+  options<T extends WooRestApiEndpoint>(
+    endpoint: T,
+    params?: WooRestApiParams
+  ): Promise<any>;
 }
 export declare class OptionsException {
   name: "Options Error";
   message: string;
   constructor(message: string);
 }
+export {};
 //# sourceMappingURL=index.d.ts.map

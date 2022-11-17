@@ -5,61 +5,82 @@ import crypto from "node:crypto";
 import OAuth from "oauth-1.0a";
 import Url from "url-parse";
 import {
-  WooRestApiVersion,
-  WooRestApiEncoding,
   WooRestApiMethod,
-  IWooRestApiOptions,
   IWooRestApiQuery,
-  IWooCredentials,
+  IWooRestApiOptions,
+  WooRestApiEndpoint,
+  OrdersMainParams,
+  ProductsMainParams,
+  SystemStatusParams,
+  CouponsParams,
+  CustomersParams,
 } from "./types.js"; // Typescript types for the library
+
+/**
+ * Set the axiosConfig property to the axios config object.
+ * Could reveive any axios |... config objects.
+ * @param {AxiosRequestConfig} axiosConfig
+ */
+type WooRestApiOptions = IWooRestApiOptions<AxiosRequestConfig>;
+
+/**
+ * Set all the possible query params for the WooCommerce REST API.
+ */
+type WooRestApiParams = CouponsParams &
+  CustomersParams &
+  OrdersMainParams &
+  ProductsMainParams &
+  SystemStatusParams;
 
 /**
  * WooCommerce REST API wrapper
  *
  * @param {Object} opt
  */
-export default class WooCommerceRestApi {
-  protected classVersion: string;
-  protected url: string;
-  protected credentials: IWooCredentials = {
-    consumerKey: "",
-    consumerSecret: "",
-  };
+export default class WooCommerceRestApi<T extends WooRestApiOptions> {
+  protected _opt: T;
 
-  protected wpAPIPrefix: string;
-  protected version: WooRestApiVersion;
-  protected encoding: WooRestApiEncoding;
-  protected queryStringAuth: boolean;
-  protected port: number | string;
-  protected timeout: number;
-  protected axiosConfig: any;
-  protected isHttps: boolean;
   /**
    * Class constructor.
    *
    * @param {Object} opt
    */
-  constructor(opt: IWooRestApiOptions) {
+  constructor(opt: T) {
+    this._opt = opt;
+
+    /**
+     * If the class is not instantiated, return a new instance.
+     * This is useful for the static methods.
+     */
     if (!(this instanceof WooCommerceRestApi)) {
       return new WooCommerceRestApi(opt);
     }
 
-    opt = opt || {};
-
-    if (!opt.url) {
+    /**
+     * Check if the url is defined.
+     */
+    if (!this._opt.url) {
       throw new OptionsException("url is required");
     }
 
-    if (!opt.consumerKey) {
+    /**
+     * Check if the consumerKey is defined.
+     */
+    if (!this._opt.consumerKey) {
       throw new OptionsException("consumerKey is required");
     }
 
-    if (!opt.consumerSecret) {
+    /**
+     * Check if the consumerSecret is defined.
+     */
+    if (!this._opt.consumerSecret) {
       throw new OptionsException("consumerSecret is required");
     }
 
-    this.classVersion = "1.0.1";
-    this._setDefaultsOptions(opt);
+    /**
+     * Set default options
+     */
+    this._setDefaultsOptions(this._opt);
   }
 
   /**
@@ -67,18 +88,13 @@ export default class WooCommerceRestApi {
    *
    * @param {Object} opt
    */
-  _setDefaultsOptions(opt: IWooRestApiOptions): void {
-    this.url = opt.url;
-    this.wpAPIPrefix = opt.wpAPIPrefix || "wp-json";
-    this.version = opt.version || "wc/v3";
-    this.isHttps = /^https/i.test(this.url);
-    this.credentials.consumerKey = opt.consumerKey;
-    this.credentials.consumerSecret = opt.consumerSecret;
-    this.encoding = opt.encoding || "utf-8";
-    this.queryStringAuth = opt.queryStringAuth || false;
-    this.port = <number>opt.port || "";
-    this.timeout = <number>opt.timeout;
-    this.axiosConfig = opt.axiosConfig;
+  _setDefaultsOptions(opt: T): void {
+    this._opt.wpAPIPrefix = opt.wpAPIPrefix || "wp-json";
+    this._opt.version = opt.version || "wc/v3";
+    this._opt.isHttps = /^https/i.test(this._opt.url);
+    this._opt.encoding = opt.encoding || "utf-8";
+    this._opt.queryStringAuth = opt.queryStringAuth || false;
+    this._opt.classVersion = "0.0.2";
   }
 
   /**
@@ -89,9 +105,9 @@ export default class WooCommerceRestApi {
    * @return {Object} IWooRestApiQuery
    */
   _parseParamsObject<T>(
-    params: Record<string, any>,
+    params: Record<string, T>,
     query: Record<string, any>
-  ): IWooRestApiQuery<T> {
+  ): IWooRestApiQuery {
     for (const key in params) {
       if (typeof params[key] === "object") {
         // If the value is an object, loop through it and add it to the query object
@@ -136,18 +152,31 @@ export default class WooCommerceRestApi {
     for (const key in query) {
       values.push(key);
     }
+
     values.sort(); // Sort the values array
 
     for (const i in values) {
-      if (queryString.length) {
-        queryString += "&";
-      }
+      /*
+       * If the queryString is not empty, add an ampersand to the end of the string
+       */
+      if (queryString.length) queryString += "&";
+
+      /**
+       * Add the key and value to the queryString
+       */
       queryString +=
         encodeURIComponent(values[i]) +
         "=" +
         encodeURIComponent(<string | number | boolean>query[values[i]]);
     }
+    /**
+     * Replace %5B with [ and %5D with ]
+     */
     queryString = queryString.replace(/%5B/g, "[").replace(/%5D/g, "]");
+
+    /**
+     * Return the url with the queryString
+     */
     return url.split("?")[0] + "?" + queryString;
   }
 
@@ -160,25 +189,26 @@ export default class WooCommerceRestApi {
    * @return {String}
    */
   _getUrl(endpoint: string, params: Record<string, unknown>): string {
-    const api = this.wpAPIPrefix + "/"; // Add prefix to endpoint
+    const api = this._opt.wpAPIPrefix + "/"; // Add prefix to endpoint
 
-    let url = this.url.slice(-1) === "/" ? this.url : this.url + "/";
+    let url =
+      this._opt.url.slice(-1) === "/" ? this._opt.url : this._opt.url + "/";
 
-    url = url + api + this.version + "/" + endpoint;
+    url = url + api + this._opt.version + "/" + endpoint;
 
     /**
      * If port is defined, add it to the url
      */
-    if (this.port !== "") {
+    if (this._opt.port) {
       const hostname = new Url(url).hostname;
 
-      url = url.replace(hostname, hostname + ":" + this.port);
+      url = url.replace(hostname, hostname + ":" + this._opt.port);
     }
 
     /**
      * If isHttps is false, normalize the query string
      */
-    if (!this.isHttps) {
+    if (!this._opt.isHttps) {
       return this._normalizeQueryString(url, params);
     }
 
@@ -195,8 +225,8 @@ export default class WooCommerceRestApi {
   _getOAuth(): OAuth {
     const data = {
       consumer: {
-        key: this.credentials.consumerKey,
-        secret: this.credentials.consumerSecret,
+        key: this._opt.consumerKey,
+        secret: this._opt.consumerSecret,
       },
       signature_method: "HMAC-SHA256",
       hash_function: (base: any, key: any) => {
@@ -236,13 +266,14 @@ export default class WooCommerceRestApi {
       Object.prototype.toString.call(process) === "[object process]"
     ) {
       header["User-Agent"] =
-        "WooCommerce REST API - TS Client/" + this.classVersion;
+        "WooCommerce REST API - TS Client/" + this._opt.classVersion;
     }
+
     let options: AxiosRequestConfig = {
       url,
       method,
-      responseEncoding: this.encoding,
-      timeout: this.timeout,
+      responseEncoding: this._opt.encoding,
+      timeout: this._opt.timeout,
       responseType: "json",
       headers: { ...header },
       params: {},
@@ -252,16 +283,16 @@ export default class WooCommerceRestApi {
     /**
      * If isHttps is false, add the query string to the params object
      */
-    if (this.isHttps) {
-      if (this.queryStringAuth) {
+    if (this._opt.isHttps) {
+      if (this._opt.queryStringAuth) {
         options.params = {
-          consumer_key: this.credentials.consumerKey,
-          consumer_secret: this.credentials.consumerSecret,
+          consumer_key: this._opt.consumerKey,
+          consumer_secret: this._opt.consumerSecret,
         };
       } else {
         options.auth = {
-          username: this.credentials.consumerKey,
-          password: this.credentials.consumerSecret,
+          username: this._opt.consumerKey,
+          password: this._opt.consumerSecret,
         };
       }
 
@@ -276,12 +307,12 @@ export default class WooCommerceRestApi {
     if (options.data) {
       options.headers = {
         ...header,
-        "Content-Type": `application/json; charset=${this.encoding}`,
+        "Content-Type": `application/json; charset=${this._opt.encoding}`,
       };
     }
 
     // Allow set and override Axios options.
-    options = { ...options, ...this.axiosConfig };
+    options = { ...options, ...this._opt.axiosConfig };
 
     return axios(options);
   }
@@ -294,7 +325,10 @@ export default class WooCommerceRestApi {
    *
    * @return {Object}
    */
-  get(endpoint: string, params: Record<string, unknown> = {}): Promise<any> {
+  get<T extends WooRestApiEndpoint>(
+    endpoint: T,
+    params: WooRestApiParams
+  ): Promise<any> {
     return this._request("GET", endpoint, {}, params);
   }
 
@@ -307,10 +341,10 @@ export default class WooCommerceRestApi {
    *
    * @return {Object}
    */
-  post(
-    endpoint: string,
+  post<T extends WooRestApiEndpoint>(
+    endpoint: T,
     data: Record<string, unknown>,
-    params: Record<string, unknown> = {}
+    params: WooRestApiParams = {}
   ): Promise<any> {
     return this._request("POST", endpoint, data, params);
   }
@@ -324,10 +358,10 @@ export default class WooCommerceRestApi {
    *
    * @return {Object}
    */
-  put(
-    endpoint: string,
+  put<T extends WooRestApiEndpoint>(
+    endpoint: T,
     data: Record<string, unknown>,
-    params: Record<string, unknown> = {}
+    params: WooRestApiParams = {}
   ): Promise<any> {
     return this._request("PUT", endpoint, data, params);
   }
@@ -341,7 +375,10 @@ export default class WooCommerceRestApi {
    *
    * @return {Object}
    */
-  delete(endpoint: string, params: Record<string, unknown> = {}): Promise<any> {
+  delete<T extends WooRestApiEndpoint>(
+    endpoint: T,
+    params: WooRestApiParams = {}
+  ): Promise<any> {
     return this._request("DELETE", endpoint, {}, params);
   }
 
@@ -353,9 +390,9 @@ export default class WooCommerceRestApi {
    *
    * @return {Object}
    */
-  options(
-    endpoint: string,
-    params: Record<string, unknown> = {}
+  options<T extends WooRestApiEndpoint>(
+    endpoint: T,
+    params: WooRestApiParams = {}
   ): Promise<any> {
     return this._request("OPTIONS", endpoint, {}, params);
   }

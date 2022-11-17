@@ -239,3 +239,12 @@ api.delete("products/1", {
 - [emojis](https://www.webfx.com/tools/emoji-cheat-sheet/)
 - [eslint-for-typescript](https://khalilstemmler.com/blogs/typescript/eslint-for-typescript/)
 - [Yoni Goldberg’s](https://github.com/goldbergyoni/javascript-testing-best-practices)
+- [Ben Awad](https://youtu.be/nViEqpgwxHE)
+
+> ### Contact
+
+> **Atention** If you email me, please use as a email subject, the name of the project, in this case: **(WooCommerce TS Library) - INFO**
+
+|  Name |  Email | Mobile/Whatsapp  |
+|-------|--------|---------|
+|  Yuri Lima | y.m.lima19@gmail.com  | +353 83 419.1605  |
