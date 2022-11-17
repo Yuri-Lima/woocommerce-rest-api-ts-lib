@@ -1,21 +1,21 @@
-# WooCommerce REST API - TypeScript Library
-
-This library provides a set of TypeScript classes that can be used to interact with the WooCommerce REST API.
-However, it is not a complete implementation of the API, but rather a subset of the API that is useful for
-There are so many correnctions it has to be done. 
-I am not a native English speaker, so please feel free to correct me.
-
-New TypeScript library for WooCommerce REST API. This will supports CommonJS (CJS) and ECMAScript (ESM). [Working in progress]
-
-## Fixing the issue
-This fixes the issue with the official [WooCommerce REST API JavaScript library](https://github.com/woocommerce/woocommerce-rest-api-js-lib), which is not compatible with the security features for so many packages.
-Including the Axios package, which is used by the official WooCommerce REST API JavaScript library, has a Cricital vulnerability among other issues.
-There is new feature to make the library compatible with the security features for so many packages to keep the library up to date.
-
-Requests are made with [Axios library](https://github.com/axios/axios) with [support to promises](https://github.com/axios/axios#promises).
-
 [![Tests](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/tests.yml)
 [![npm version](https://img.shields.io/npm/v/@woocommerce/woocommerce-rest-api.svg)](https://www.npmjs.com/package/woocommerce-rest-ts-api)
+[![npm downloads](https://img.shields.io/npm/dm/woocommerce-rest-ts-api.svg)](https://www.npmjs.com/package/woocommerce-rest-ts-api)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Known Vulnerabilities](https://snyk.io/test/github/Yuri-Lima/woocommerce-rest-api-ts-lib/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Yuri-Lima/woocommerce-rest-api-ts-lib?targetFile=package.json)
+
+# WooCommerce REST API - TypeScript Library
+
+This is alternative library which provides a set of TypeScript classes that can be used to interact with the WooCommerce REST API.
+`However, it is not a complete implementation of the API, but rather a subset of the API that is useful for.`
+
+New TypeScript library for WooCommerce REST API. This will supports CommonJS (CJS) and ECMAScript (ESM) -> `Working in progress, however ready to use cases`
+
+## Fixing the issues [Triggered Date: 2022-11-15]
+1. This new package was to fixe the issue with the official [WooCommerce REST API JavaScript library](https://github.com/woocommerce/woocommerce-rest-api-js-lib), which is not compatible with the security features for some packages used for.
+2. **Axios** package used by them, had a `Cricital vulnerability` which seems not beeing updated often.
+
+Requests are made with [Axios library](https://github.com/axios/axios) with [support to promises](https://github.com/axios/axios#promises).
 
 ## Installation
 
@@ -231,11 +231,6 @@ api.delete("products/1", {
 ## Changelog
 
 [See changelog for details](https://github.com/woocommerce/woocommerce-rest-api-js-lib/blob/master/CHANGELOG.md)
-
-## GitHub Actions
-- There is a YAML script which checks out your latest code, installs its dependencies, and runs the npm test command to execute your tests and many other commands to make sure our App is running ok. It does this for every version of Node.js listed in the node-version field so you can ensure the code works as expected in each runtime.
-- Few free to improve the script and add more commands to it.
-- Implementing security checks with snyk.io is also a good idea.
 
 ## Thanks / Credits / Bibliography
 - [snyk - Best Pratice Guide](https://snyk.io/blog/best-practices-create-modern-npm-package/)

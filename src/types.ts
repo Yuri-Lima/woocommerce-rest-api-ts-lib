@@ -38,10 +38,10 @@ export interface IWooRestApiOptions extends IWooCredentials {
   /* Provide support for custom timeout, eg: `5000` */
   timeout?: number;
   /* Define the custom Axios config, also override this library options */
-  axiosConfig?: AxiosRequestConfig;
+  axiosConfig?: AxiosRequestConfig | undefined | null;
   classVersion?: string;
 }
 
-export interface IWooRestApiQuery {
-  [key: string]: string;
+export interface IWooRestApiQuery <T>{
+  [key: string]: T;
 }
