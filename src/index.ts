@@ -1,5 +1,3 @@
-"use strict";
-
 import axios, { RawAxiosRequestHeaders, AxiosRequestConfig } from "axios";
 import crypto from "node:crypto";
 import OAuth from "oauth-1.0a";
@@ -14,7 +12,7 @@ import {
   SystemStatusParams,
   CouponsParams,
   CustomersParams,
-} from "./types.js"; // Typescript types for the library
+} from "./typesANDinterfaces.js"; // Typescript types for the library
 
 /**
  * Set the axiosConfig property to the axios config object.

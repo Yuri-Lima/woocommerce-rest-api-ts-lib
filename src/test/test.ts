@@ -1,6 +1,6 @@
 "use strict";
 
-import WooCommerceRestApi from "./index";
+import WooCommerceRestApi from "../index";
 import nock from "nock";
 
 const secretKey = "ck_";
@@ -73,7 +73,7 @@ describe("#requests", () => {
       ok: true,
     });
 
-    return api.post("orders", {}).then((response) => {
+    return api.post("orders", {}).then((response: any) => {
       expect(response.status).toBe(201);
     });
   });
@@ -84,7 +84,7 @@ describe("#requests", () => {
       ok: true,
     });
 
-    return api.get("orders", {}).then((response) => {
+    return api.get("orders", {}).then((response: any) => {
       expect(response.status).toBe(200);
     });
   });
@@ -95,7 +95,7 @@ describe("#requests", () => {
       ok: true,
     });
 
-    return api.put("orders", {}).then((response) => {
+    return api.put("orders", {}).then((response: any) => {
       expect(response.status).toBe(200);
     });
   });
@@ -106,7 +106,7 @@ describe("#requests", () => {
       ok: true,
     });
 
-    return api.delete("orders", {}).then((response) => {
+    return api.delete("orders", {}).then((response: any) => {
       expect(response.status).toBe(200);
     });
   });
@@ -119,7 +119,7 @@ describe("#requests", () => {
         ok: true,
       });
 
-    return api.options("orders", {}).then((response) => {
+    return api.options("orders", {}).then((response: any) => {
       expect(response.status).toBe(200);
     });
   });
@@ -141,7 +141,7 @@ describe("#requests", () => {
         ok: true,
       });
 
-    return oAuth.get("orders", {}).then((response) => {
+    return oAuth.get("orders", {}).then((response: any) => {
       expect(response.status).toBe(200);
     });
   });
