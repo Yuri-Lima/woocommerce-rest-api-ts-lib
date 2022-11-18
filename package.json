@@ -1,5 +1,5 @@
 {
-  "name": "woocommerce-rest-ts-api",
+  "name": "@yuri-lima/woocommerce-rest-ts-api",
   "version": "0.0.2",
   "description": "WooCommerce REST API - Type Script Library",
   "author": "Yuri Lima",
@@ -50,22 +50,19 @@
     "ts-node": "^10.9.1"
   },
   "scripts": {
-    "build": "del ./dist && npx tsc -p ./tsconfig.json",
+    "build": "npm run clean && npm run prepack",
     "dep:update": "ncu && ncu --doctor -u && ncu -u",
-    "test": "del ./dist && npx tsc -p ./tsconfig.json && jest",
-    "format": "prettier --write \"**/*.ts\" \"**/*.js\"",
+    "test": "npm run clean && npm run prepack && jest",
+    "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint . --ext .ts",
     "lint-and-fix": "eslint . --ext .ts --fix",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run test && npm run lint",
-    "preversion": "npm run lint",
-    "version": "npm run format && git add -A",
-    "postversion": "git push && git push --tags",
+    "prepublishOnly": "npm run test && npm run lint-and-fix",
     "clean": "rm -rf ./lib",
-    "build:esm:cjs": "npm run clean && npm run build:esm && npm run build:cjs && npm run format",
+    "build:esm:cjs": "npm run clean && npm run build:esm && npm run build:cjs",
     "build:esm": "npx tsc -p ./configs/tsconfig.esm.json && mv lib/esm/index.js lib/esm/index.mjs",
     "build:cjs": "npx tsc -p ./configs/tsconfig.cjs.json",
-    "prepack": "npm run build:esm:cjs"
+    "prepack": "npm run dep:update && npm run build:esm:cjs"
   },
   "husky": {
     "hooks": {
@@ -82,9 +79,9 @@
   "engines": {
     "node": ">=16.0.0"
   },
-  "type": "module",
-  "types": "./lib/cjs/types/index.d.ts",
-  "main": "./lib/cjs/index.js",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.mjs",
+  "types": "lib/cjs/index.d.ts",
   "files": [
     "lib/**/*"
   ],
