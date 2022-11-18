@@ -52,17 +52,17 @@
   "scripts": {
     "build": "npm run clean && npm run prepack",
     "dep:update": "ncu && ncu --doctor -u && ncu -u",
-    "test": "npm run clean && npm run prepack && jest",
+    "test": "jest",
     "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint . --ext .ts",
     "lint-and-fix": "eslint . --ext .ts --fix",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run test && npm run lint-and-fix",
+    "prepublishOnly": "npm run dep:update && npm run lint-and-fix",
     "clean": "rm -rf ./lib",
     "build:esm:cjs": "npm run clean && npm run build:esm && npm run build:cjs",
     "build:esm": "npx tsc -p ./configs/tsconfig.esm.json && mv lib/esm/index.js lib/esm/index.mjs",
     "build:cjs": "npx tsc -p ./configs/tsconfig.cjs.json",
-    "prepack": "npm run dep:update && npm run build:esm:cjs"
+    "prepack": "npm run build:esm:cjs"
   },
   "husky": {
     "hooks": {
