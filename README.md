@@ -238,8 +238,9 @@ api.delete("products/1", {
 - [dennismphil - Updates dependencies](https://dev.to/dennismphil/automate-your-node-dependency-updates-4aga)
 - [emojis](https://www.webfx.com/tools/emoji-cheat-sheet/)
 - [eslint-for-typescript](https://khalilstemmler.com/blogs/typescript/eslint-for-typescript/)
-- [Yoni Goldberg’s](https://github.com/goldbergyoni/javascript-testing-best-practices)
-- [Ben Awad](https://youtu.be/nViEqpgwxHE)
+- [Yoni Goldberg’s - Tests](https://github.com/goldbergyoni/javascript-testing-best-practices)
+- [Ben Awad - Generic Types](https://youtu.be/nViEqpgwxHE)
+- [Anthony Fu - Publish ESM and CJS in a single package](https://antfu.me/posts/publish-esm-and-cjs)
 
 > ### Contact
 

@@ -1,5 +1,5 @@
 {
-  "name": "@yuri-lima/woocommerce-rest-ts-api",
+  "name": "woocommerce-rest-ts-api",
   "version": "0.0.2",
   "description": "WooCommerce REST API - Type Script Library",
   "author": "Yuri Lima",
