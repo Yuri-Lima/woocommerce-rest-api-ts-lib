@@ -241,6 +241,7 @@ api.delete("products/1", {
 - [Yoni Goldberg’s - Tests](https://github.com/goldbergyoni/javascript-testing-best-practices)
 - [Ben Awad - Generic Types](https://youtu.be/nViEqpgwxHE)
 - [Anthony Fu - Publish ESM and CJS in a single package](https://antfu.me/posts/publish-esm-and-cjs)
+- [Semantic Releases - egghead](https://egghead.io/lessons/javascript-automating-releases-with-semantic-release)
 
 > ### Contact
 
