@@ -9,7 +9,9 @@
     "woocommerce",
     "rest",
     "promise",
-    "node"
+    "node",
+    "typescript",
+    "api"
   ],
   "homepage": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib",
   "repository": {
