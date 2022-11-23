@@ -7,7 +7,7 @@ on:
     branches: [ main ] # Run on pull requests to main branch
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest # or macOS-latest, or windows-latest
 
