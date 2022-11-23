@@ -75,6 +75,18 @@ export type Meta_Data = {
   value: string;
 };
 
+export type Links = {
+  self: Array<{
+    href: string;
+  }>;
+  collection: Array<{
+    href: string;
+  }>;
+  up: Array<{
+    href: string;
+  }>;
+};
+
 type Billing = {
   first_name: string;
   last_name: string;
@@ -589,7 +601,7 @@ interface ProductsReviews {
 interface Webhooks {
   id: number;
   name: string;
-  status: "active" | "paused" | "disabled" | string;
+  status: "all" | "active" | "paused" | "disabled" | string;
   topic: string;
   resource: string;
   event: string;
@@ -600,6 +612,19 @@ interface Webhooks {
   date_created_gmt(): Date;
   date_modified(): Date;
   date_modified_gmt(): Date;
+  links: Partial<Links>;
+  context: "view" | "edit" | string;
+  page: 1 | number;
+  per_page: 10 | 25 | 50 | 100 | number;
+  search: string;
+  after: string;
+  before: string;
+  exclude: number[];
+  include: number[];
+  offset: number;
+  order: "asc" | "desc" | string;
+  orderby: "id" | "include" | "name" | "date" | "title" | "slug" | string;
+  force: boolean;
 }
 // interface Settings {} // TODO
 // interface SettingsOptions {} // TODO
