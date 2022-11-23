@@ -26,6 +26,7 @@
     "url-parse": "^1.5.10"
   },
   "devDependencies": {
+    "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^8.0.6",
     "@types/jest": "^29.2.3",
     "@types/url-parse": "^1.4.8",
