@@ -586,7 +586,21 @@ interface ProductsReviews {
 // interface ReportsSales {} // TODO
 // interface TaxRates {} // TODO
 // interface TaxClasses {} // TODO
-// interface Webhooks {} // TODO
+interface Webhooks {
+  id: number;
+  name: string;
+  status: "active" | "paused" | "disabled" | string;
+  topic: string;
+  resource: string;
+  event: string;
+  hooks: string[];
+  delivery_url: string;
+  secret: string;
+  date_created(): Date;
+  date_created_gmt(): Date;
+  date_modified(): Date;
+  date_modified_gmt(): Date;
+}
 // interface Settings {} // TODO
 // interface SettingsOptions {} // TODO
 // interface PaymentGateways {} // TODO
@@ -642,3 +656,6 @@ export type ProductsMainParams =
 
 // SystemStatus
 export type SystemStatusParams = Partial<SystemStatus>; // Partial means all properties are optional [Temporary8]
+
+// Webhooks
+export type WebhooksParams = Partial<Webhooks>; // Partial means all properties are optional [Temporary]
