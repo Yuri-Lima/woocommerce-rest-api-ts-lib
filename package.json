@@ -1,6 +1,6 @@
 {
   "name": "woocommerce-rest-ts-api",
-  "version": "0.0.2",
+  "version": "0.0.0-development",
   "description": "WooCommerce REST API - Type Script Library",
   "author": "Yuri Lima",
   "license": "MIT",
@@ -14,7 +14,7 @@
   "homepage": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib.git"
+    "url": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib"
   },
   "bugs": {
     "url": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/issues"
@@ -26,10 +26,13 @@
     "url-parse": "^1.5.10"
   },
   "devDependencies": {
+    "@semantic-release/github": "^8.0.6",
     "@types/jest": "^29.2.3",
     "@types/url-parse": "^1.4.8",
     "@typescript-eslint/eslint-plugin": "^5.43.0",
     "@typescript-eslint/parser": "^5.43.0",
+    "commitizen": "^4.2.5",
+    "cz-conventional-changelog": "^3.3.0",
     "del-cli": "^5.0.0",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
@@ -40,7 +43,6 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.1.1",
-    "husky": "8.0.2",
     "jest": "^29.3.1",
     "lint-staged": "13.0.3",
     "nock": "13.2.9",
@@ -63,12 +65,9 @@
     "build:esm:cjs": "npm run clean && npm run build:esm && npm run build:cjs",
     "build:esm": "npx tsc -p ./configs/tsconfig.esm.json && mv lib/esm/index.js lib/esm/index.mjs",
     "build:cjs": "npx tsc -p ./configs/tsconfig.cjs.json",
-    "prepack": "npm run build:esm:cjs"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+    "prepack": "npm run build:esm:cjs",
+    "semantic-release": "semantic-release",
+    "commit": "cz"
   },
   "lint-staged": {
     "*.{ts,js}": [
@@ -96,6 +95,27 @@
         "types": "./lib/cjs/types/index.d.ts",
         "default": "./lib/cjs/index.js"
       }
+    }
+  },
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/github",
+      "@semantic-release/npm",
+      "@semantic-release/git"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "private": false,
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
     }
   }
 }
