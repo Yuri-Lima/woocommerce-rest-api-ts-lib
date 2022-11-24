@@ -1,4 +1,4 @@
-[![Tests](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/tests.yml)
+[![Tests](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/node.js.yml)
 [![npm version](https://img.shields.io/npm/v/@woocommerce/woocommerce-rest-api.svg)](https://www.npmjs.com/package/woocommerce-rest-ts-api)
 [![npm downloads](https://img.shields.io/npm/dm/woocommerce-rest-ts-api.svg)](https://www.npmjs.com/package/woocommerce-rest-ts-api)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -9,7 +9,7 @@
 This is alternative library which provides a set of TypeScript classes that can be used to interact with the WooCommerce REST API.
 `However, it is not a complete implementation of the API, but rather a subset of the API that is useful for.`
 
-New TypeScript library for WooCommerce REST API. This will supports CommonJS (CJS) and ECMAScript (ESM) -> `Working in progress, however ready to use cases`
+New TypeScript library for WooCommerce REST API. This will supports CommonJS (CJS) and ECMAScript (ESM)
 
 ## Fixing the issues [Triggered Date: 2022-11-15]
 1. This new package was to fixe the issue with the official [WooCommerce REST API JavaScript library](https://github.com/woocommerce/woocommerce-rest-api-js-lib), which is not compatible with the security features for some packages used for.
