@@ -3,4 +3,8 @@ coverage
 run.*
 index.js
 dist
+<<<<<<< HEAD
 .env
+=======
+.env
+>>>>>>> e558e12e724a690aa842c5d6044989db7d203e61
