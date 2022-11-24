@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x] #, 16.x, 18.x 
+        node-version: [14.x 16.x, 18.x] #, 16.x, 18.x 
         os: [ubuntu-latest] #, windows-latest, macOS-12
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
@@ -38,7 +38,7 @@ jobs:
     - run: npm run test
   publish:
    runs-on: ubuntu-latest
-   if: github.event.pull_request.merged && github.ref == 'refs/heads/main'
+   if: github.ref == 'refs/heads/main'
    needs: [build]
    steps:
      - uses: actions/checkout@v3
@@ -53,7 +53,7 @@ jobs:
          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   comment:
-    if: github.event.pull_request.merged || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@2b34a689ec86a68d8ab9478298f91d5401337b7d
