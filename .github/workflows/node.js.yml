@@ -3,9 +3,9 @@
 name: Node.js CI
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "updates" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "updates" ]
   schedule:
     - cron: "* */5 * * *" # every 5 hours
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
     - run: npm run test
   publish:
    runs-on: ubuntu-latest
-   if: github.ref == 'refs/heads/main'
+   if: github.ref  == 'refs/heads/updates'
    needs: [build]
    steps:
      - uses: actions/checkout@v3
