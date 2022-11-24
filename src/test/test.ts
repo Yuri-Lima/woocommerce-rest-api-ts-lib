@@ -55,7 +55,7 @@ describe("#methods", () => {
 
 describe("#requests", () => {
   beforeEach(() => {
-    nock.cleanAll();
+    nock.cleanAll(); // clean all nock mocks
   });
 
   const api = new WooCommerceRestApi({
