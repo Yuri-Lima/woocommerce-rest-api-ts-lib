@@ -1,4 +1,4 @@
-[![Tests](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/node.js.yml)
+[![Tests](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/updates.test.yml)
 [![npm version](https://img.shields.io/npm/v/@woocommerce/woocommerce-rest-api.svg)](https://www.npmjs.com/package/woocommerce-rest-ts-api)
 [![npm downloads](https://img.shields.io/npm/dm/woocommerce-rest-ts-api.svg)](https://www.npmjs.com/package/woocommerce-rest-ts-api)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
