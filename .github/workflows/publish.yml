@@ -23,13 +23,12 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci
-    - run: npm run build --if-present # 
-    - run: npm run dep:update # update dependencies
-    - run: npm run test
+    - run: npm run dep:update # update dependencies and run tests
+    - run: npm run build --if-present # build the source code
   publish:
    runs-on: ubuntu-latest
    if: github.ref  == 'refs/heads/main'
-   needs: [build]
+   needs: [test]
    steps:
      - uses: actions/checkout@v3
      - name: Use Node.js ${{ matrix.node-version }}
