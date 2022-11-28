@@ -6,8 +6,6 @@ on:
     branches: [ "updates" ]
   pull_request:
     branches: [ "updates" ]
-  schedule:
-    - cron: "* */5 * * *" # every 5 hours
   workflow_dispatch:
 jobs:
   test:
@@ -25,6 +23,5 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci
+    - run: npm run dep:update # update dependencies and run tests
     - run: npm run build --if-present
-    - run: npm run dep:update # update dependencies
-    - run: npm run test
