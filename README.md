@@ -1,8 +1,12 @@
-[![Tests](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/node.js.yml/badge.svg?branch=main)](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/updates.test.yml)
-[![npm version](https://img.shields.io/npm/v/@woocommerce/woocommerce-rest-api.svg)](https://www.npmjs.com/package/woocommerce-rest-ts-api)
-[![npm downloads](https://img.shields.io/npm/dm/woocommerce-rest-ts-api.svg)](https://www.npmjs.com/package/woocommerce-rest-ts-api)
+[![Updates Test CI](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/updates.test.yml/badge.svg?branch=main)](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/actions/workflows/updates.test.yml)
+![npm](https://img.shields.io/npm/v/woocommerce-rest-ts-api)
+![npm](https://img.shields.io/npm/dt/woocommerce-rest-ts-api)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Known Vulnerabilities](https://snyk.io/test/github/Yuri-Lima/woocommerce-rest-api-ts-lib/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Yuri-Lima/woocommerce-rest-api-ts-lib?targetFile=package.json)
+
+<div align="center" width="100%">
+    <img src="./images/woocommerce-wordpress-logo.png" width="128" alt="woocommerce_integration_api" />
+</div>
 
 # WooCommerce REST API - TypeScript Library
 
