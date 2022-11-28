@@ -4,22 +4,42 @@
   "description": "WooCommerce REST API - Type Script Library",
   "author": "Yuri Lima",
   "license": "MIT",
-  "keywords": [
-    "wordpress",
-    "woocommerce",
-    "rest",
-    "promise",
-    "node",
-    "typescript",
-    "api"
-  ],
-  "homepage": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib"
+  "engines": {
+    "node": ">=14.0.0"
   },
-  "bugs": {
-    "url": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/issues"
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/src/index.d.ts",
+  "files": [
+    "./dist/**/*"
+  ],
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/src/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "npm run prepack",
+    "dep:update": "ncu && ncu --doctor -u && ncu -u",
+    "test": "jest",
+    "format": "prettier --write \"**/*.ts\"",
+    "lint": "eslint . --ext .ts",
+    "lint-and-fix": "eslint . --ext .ts --fix",
+    "prepublishOnly": "npm run dep:update && npm run format && npm run lint-and-fix",
+    "clean": "rm -rf ./dist",
+    "build:types": "npx tsc --emitDeclarationOnly --declaration",
+    "build:cjs:esm": "npx tsup ./src/index.ts --format cjs,esm --sourcemap",
+    "prepack": "npm run clean && npm run build:cjs:esm && npm run build:types",
+    "semantic-release": "semantic-release",
+    "commit": "cz"
+  },
+  "lint-staged": {
+    "*.{ts,js,json}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "axios": "^1.2.0",
@@ -56,48 +76,18 @@
     "ts-node": "^10.9.1",
     "tsup": "^6.5.0"
   },
-  "scripts": {
-    "build": "npm run clean && npm run prepack",
-    "dep:update": "ncu && ncu --doctor -u && ncu -u",
-    "test": "jest",
-    "format": "prettier --write \"**/*.ts\"",
-    "lint": "eslint . --ext .ts",
-    "lint-and-fix": "eslint . --ext .ts --fix",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run dep:update && npm run lint-and-fix",
-    "clean": "rm -rf ./lib",
-    "build:esm:cjs": "npm run clean && npm run build:esm && npm run build:cjs",
-    "build:esm": "npx tsc -p ./configs/tsconfig.esm.json && mv lib/esm/index.js lib/esm/index.mjs",
-    "build:cjs": "npx tsc -p ./configs/tsconfig.cjs.json",
-    "prepack": "rm -rf ./dist && tsup src/index.ts --format cjs,esm --sourcemap && npx tsc --emitDeclarationOnly --declaration",
-    "semantic-release": "semantic-release",
-    "commit": "cz"
+  "homepage": "https://yurilima.uk/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib"
   },
-  "lint-staged": {
-    "*.{ts,js}": [
-      "eslint --fix",
-      "prettier --write",
-      "git add"
-    ]
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/src/index.d.ts",
-  "files": [
-    "./dist/**/*"
-  ],
-  "exports": {
-    ".": {
-      "require": "./dist/index.js",
-      "import": "./dist/index.mjs",
-      "types": "./dist/src/index.d.ts"
-    }
+  "bugs": {
+    "url": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/issues"
   },
   "release": {
     "branches": [
+      "updates",
+      "master",
       "main"
     ],
     "plugins": [
@@ -109,12 +99,22 @@
     ]
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "private": false,
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
-  }
+  },
+  "keywords": [
+    "wordpress",
+    "woocommerce",
+    "rest",
+    "promise",
+    "node",
+    "typescript",
+    "api"
+  ]
 }
