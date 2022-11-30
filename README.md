@@ -13,7 +13,7 @@
 This is alternative library which provides a set of TypeScript classes that can be used to interact with the WooCommerce REST API.
 `However, it is not a complete implementation of the API, but rather a subset of the API that is useful for.`
 
-New TypeScript library for WooCommerce REST API. This will supports CommonJS (CJS) and ECMAScript (ESM)
+New TypeScript library for WooCommerce REST API. Supports CommonJS (CJS) and ECMAScript (ESM)
 
 ## Fixing the issues [Triggered Date: 2022-11-15]
 1. This new package was to fixe the issue with the official [WooCommerce REST API JavaScript library](https://github.com/woocommerce/woocommerce-rest-api-js-lib), which is not compatible with the security features for some packages used for.
