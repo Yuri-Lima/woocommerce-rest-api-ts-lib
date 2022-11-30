@@ -18,7 +18,8 @@ export declare type WooRestApiEndpoint =
   | "customers"
   | "orders"
   | "products"
-  | "system_status";
+  | "system_status"
+  | ""
 // | "reports" // TODO: add support for reports
 // | "settings" // TODO: add support for settings
 // | "webhooks" // TODO: add support for webhooks
@@ -438,12 +439,8 @@ interface Products {
   date_created_gmt(): Date;
   date_modified(): Date;
   date_modified_gmt(): Date;
-  type: string;
-  status: string;
-  featured: boolean;
   catalog_visibility: string;
   description: string;
-  sku: string;
   price: string;
   regular_price: string;
   sale_price: string;
@@ -452,7 +449,6 @@ interface Products {
   date_on_sale_to(): Date;
   date_on_sale_to_gmt(): Date;
   price_html: string;
-  on_sale: boolean;
   purchasable: boolean;
   total_sales: number;
   virtual: boolean;
@@ -463,10 +459,8 @@ interface Products {
   external_url: string;
   button_text: string;
   tax_status: string;
-  tax_class: string;
   manage_stock: boolean;
   stock_quantity: number;
-  stock_status: string;
   backorders: string;
   backorders_allowed: boolean;
   backordered: boolean;
@@ -494,6 +488,35 @@ interface Products {
   grouped_products: number[];
   menu_order: number;
   meta_data: Meta_Data[];
+  per_page: number;
+  page: number;
+  context: "views" | "edit" | string;
+  search: string;
+  after: string;
+  before: string;
+  modified_after: string;
+  modified_before: string;
+  dates_are_gmt: boolean;
+  exclude: number[];
+  include: number[];
+  offset: number;
+  order: "asc" | "desc" | string;
+  orderby: "id" | "include" | "name" | "date" | "title" | "slug" | "price" | "popularity" | "rating" | string;
+  parent: number[];
+  parent_exclude: number[];
+  status: "draft" | "any" | "pending" | "publish" | "private" | string;
+  type: "simple" | "grouped" | "external" | "variable" | string;
+  sku: string;
+  featured: boolean;
+  category: string;
+  tag: string;
+  attribute: string;
+  attribute_term: string;
+  tax_class: string;
+  on_sale: boolean;
+  min_price: string;
+  max_price: string;
+  stock_status: "instock" | "outofstock" | "onbackorder" | string;
 }
 interface ProductsVariations {
   id: number;
