@@ -4,3 +4,6 @@ run.*
 index.js
 dist
 .env
+.src/test
+.reminder
+./reminder/
