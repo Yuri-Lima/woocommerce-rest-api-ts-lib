@@ -1,0 +1,1 @@
+Argument of type '""' is not assignable to parameter of type 'WooRestApiEndpoint'.
