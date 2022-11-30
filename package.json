@@ -24,6 +24,7 @@
     "build": "npm run prepack",
     "dep:update": "ncu && ncu --doctor -u && ncu -u",
     "test": "jest",
+    "data:generate": "ts-node ./src/test/generate-data.ts",
     "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint . --ext .ts",
     "lint-and-fix": "eslint . --ext .ts --fix",
