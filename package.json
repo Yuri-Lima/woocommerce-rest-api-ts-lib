@@ -24,6 +24,7 @@
     "build": "npm run prepack",
     "dep:update": "ncu && ncu --doctor -u && ncu -u",
     "test": "jest",
+    "data:generate": "ts-node ./src/test/generate-data.ts",
     "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint . --ext .ts",
     "lint-and-fix": "eslint . --ext .ts --fix",
@@ -73,7 +74,8 @@
     "prettier": "2.8.0",
     "semantic-release": "^19.0.5",
     "ts-jest": "^29.0.3",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "woocommerce-rest-ts-api": "^2.0.0"
   },
   "homepage": "https://yurilima.uk/",
   "repository": {
