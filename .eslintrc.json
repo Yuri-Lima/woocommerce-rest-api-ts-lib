@@ -23,7 +23,7 @@
   "rules": {
     "indent": [
       2,
-      2
+      4
     ],
     "@typescript-eslint/no-explicit-any": ["off"], // allow any
     "no-console": 1 // warn
