@@ -247,6 +247,7 @@ api.delete("products/1", {
 - [Anthony Fu - Publish ESM and CJS in a single package](https://antfu.me/posts/publish-esm-and-cjs)
 - [Semantic Releases - egghead](https://egghead.io/lessons/javascript-automating-releases-with-semantic-release)
 - [GH006 Protected Branch Update Failed - paulmowat](https://www.paulmowat.co.uk/blog/resolve-github-action-gh006-protected-branch-update-failed)
+- [swizec - jest-with-typescript](https://swizec.com/blog/how-to-configure-jest-with-typescript/)
 
 > ### Contact
 **Atention** If you email me, please use as a email subject, the name of the project, in this case: **(WooCommerce TS Library) - INFO**
