@@ -33,7 +33,8 @@ describe("#methods", () => {
         queryStringAuth: false, // Force Basic Authentication as query string true and using under HTTPS
     });
 
-    test("_getUrl should return full endpoint URL", () => { // Fix #1 This is the same test as the one above
+    test("_getUrl should return full endpoint URL", () => {
+    // Fix #1 This is the same test as the one above
         const endpoint = "products";
         const expected = "https://test.dev/wp-json/wc/v3/" + endpoint;
         const url = api._getUrl(endpoint, {});
