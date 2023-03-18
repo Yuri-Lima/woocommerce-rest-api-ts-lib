@@ -20,7 +20,6 @@ describe("#options", () => {
         const endpoint = "products";
         const expected = "https://test.dev/wp-rest/wc/v3/" + endpoint;
         const url = api._getUrl(endpoint, {});
-
         expect(url).toBe(expected);
     });
 });
@@ -34,7 +33,7 @@ describe("#methods", () => {
         queryStringAuth: false, // Force Basic Authentication as query string true and using under HTTPS
     });
 
-    test("_getUrl should return full endpoint URL", () => {
+    test("_getUrl should return full endpoint URL", () => { // Fix #1 This is the same test as the one above
         const endpoint = "products";
         const expected = "https://test.dev/wp-json/wc/v3/" + endpoint;
         const url = api._getUrl(endpoint, {});
@@ -73,7 +72,7 @@ describe("#requests", () => {
             ok: true,
         });
 
-        return api.post("orders", {}).then((response: any) => {
+        return api.post("coupons", {}, {}).then((response: any) => {
             expect(response.status).toBe(201);
         });
     });
@@ -84,7 +83,7 @@ describe("#requests", () => {
             ok: true,
         });
 
-        return api.get("orders", {}).then((response: any) => {
+        return api.get("orders").then((response: any) => {
             expect(response.status).toBe(200);
         });
     });

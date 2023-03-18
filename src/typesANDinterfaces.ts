@@ -19,14 +19,13 @@ export declare type WooRestApiEndpoint =
   | "orders"
   | "products"
   | "system_status"
-  | ""
-// | "reports" // TODO: add support for reports
-// | "settings" // TODO: add support for settings
-// | "webhooks" // TODO: add support for webhooks
-// | "shipping" // TODO: add support for shipping
-// | "shipping_methods" // TODO: add support for shipping_methods
-// | "taxes" // TODO: add support for taxes
-// | "payment_gateways" // TODO: add support for payment_gateways
+  | "reports" // TODO: add support for reports
+  | "settings" // TODO: add support for settings
+  | "webhooks" // TODO: add support for webhooks
+  | "shipping" // TODO: add support for shipping
+  | "shipping_methods" // TODO: add support for shipping_methods
+  | "taxes" // TODO: add support for taxes
+  | "payment_gateways" // TODO: add support for payment_gateways
 
 export declare type IWooRestApiQuery = Record<string, unknown>;
 
@@ -317,7 +316,7 @@ type SystemStatusSecurity = {
 /* End of Types */
 
 /* Start of Interfaces */
-interface Coupons {
+export interface Coupons {
   id: number;
   code: string;
   amount: string;
