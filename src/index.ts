@@ -11,7 +11,7 @@ import {
     ProductsMainParams,
     SystemStatusParams,
     CouponsParams,
-    CustomersParams,
+    CustomersParams
 } from "./typesANDinterfaces.js"; // Typescript types for the library
 
 /**
@@ -128,7 +128,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {String}
    */
-    _normalizeQueryString(url: string, params: Record<string, any>): string {
+    _normalizeQueryString(url: string, params: Partial<Record<string, any>>): string {
     /**
      * Exit if url and params are not defined
      */
@@ -136,12 +136,16 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
             return url;
         }
         const query = new Url(url, true).query; // Parse the query string returned by the url
+        
+        // console.log("params:", params);
         const values = [];
 
         let queryString = "";
 
         // Include params object into URL.searchParams.
-        this._parseParamsObject(params, query);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const a = this._parseParamsObject(params, query);
+        // console.log("A:", a);
 
         /**
      * Loop through the params object and push the key and value into the values array
@@ -152,6 +156,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         }
 
         values.sort(); // Sort the values array
+        
 
         for (const i in values) {
             /*
@@ -175,7 +180,9 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         /**
      * Return the url with the queryString
      */
-        return url.split("?")[0] + "?" + queryString;
+        const urlObject = url.split("?")[0] + "?" + queryString
+        
+        return urlObject;
     }
 
     /**
@@ -186,7 +193,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {String}
    */
-    _getUrl(endpoint: string, params: Record<string, unknown>): string {
+    _getUrl(endpoint: string, params: Partial<Record<string, unknown>>): string {
         const api = this._opt.wpAPIPrefix + "/"; // Add prefix to endpoint
 
         let url =
@@ -204,9 +211,9 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         }
 
         /**
-     * If isHttps is false, normalize the query string
+     * If isHttps is true, normalize the query string
      */
-        if (!this._opt.isHttps) {
+        if (this._opt.isHttps) {
             return this._normalizeQueryString(url, params);
         }
 
@@ -249,10 +256,11 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
     _request(
         method: WooRestApiMethod,
         endpoint: string,
-        data: Record<string, unknown>,
-        params: Partial<Record<string, unknown>> = {}
+        data?: Record<string, unknown>,
+        params: Record<string, unknown> = {}
     ): Promise<any> {
         const url = this._getUrl(endpoint, params);
+        
 
         const header: RawAxiosRequestHeaders = {
             Accept: "application/json",
@@ -323,11 +331,8 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {Object}
    */
-    get<T extends WooRestApiEndpoint>(
-        endpoint: T,
-        params: Partial<WooRestApiParams> = {}
-    ): Promise<any> {
-        return this._request("GET", endpoint, {}, params);
+    get(endpoint: WooRestApiEndpoint, params?: Partial<WooRestApiParams>): Promise<any> {
+        return this._request("GET", endpoint, undefined, params);
     }
 
     /**
@@ -342,7 +347,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
     post<T extends WooRestApiEndpoint>(
         endpoint: T,
         data: Record<string, unknown>,
-        params: Partial<WooRestApiParams> = {}
+        params?: Partial<WooRestApiParams>
     ): Promise<any> {
         return this._request("POST", endpoint, data, params);
     }
@@ -359,7 +364,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
     put<T extends WooRestApiEndpoint>(
         endpoint: T,
         data: Record<string, unknown>,
-        params: Partial<WooRestApiParams> = {}
+        params?: Partial<WooRestApiParams>
     ): Promise<any> {
         return this._request("PUT", endpoint, data, params);
     }
@@ -375,7 +380,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    */
     delete<T extends WooRestApiEndpoint>(
         endpoint: T,
-        params: Partial<WooRestApiParams> = {}
+        params?: Partial<WooRestApiParams>
     ): Promise<any> {
         return this._request("DELETE", endpoint, {}, params);
     }
@@ -390,7 +395,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    */
     options<T extends WooRestApiEndpoint>(
         endpoint: T,
-        params: Partial<WooRestApiParams> = {}
+        params?: Partial<WooRestApiParams>
     ): Promise<any> {
         return this._request("OPTIONS", endpoint, {}, params);
     }
