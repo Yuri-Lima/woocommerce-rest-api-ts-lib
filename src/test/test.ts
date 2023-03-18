@@ -65,52 +65,48 @@ describe("#requests", () => {
         queryStringAuth: false, // Force Basic Authentication as query string true and using under HTTPS
     });
 
-    test("should return content for basic auth", () => {
+    test("should return content for basic auth", async () => {
         expect.assertions(1);
 
-        nock(`https://test.dev/wp-json/wc/v3`).post("/orders", {}).reply(201, {
+        nock(`https://test.dev/wp-json/wc/v3`).post("/coupons").reply(201, {
             ok: true,
         });
 
-        return api.post("coupons", {}, {}).then((response: any) => {
-            expect(response.status).toBe(201);
-        });
+        const response = await api.post("coupons", {}, {});
+        expect(response.status).toBe(201);
     });
 
-    test("should return content for get requests", () => {
+    test("should return content for get requests", async () => {
         expect.assertions(1);
         nock("https://test.dev/wp-json/wc/v3").get("/orders").reply(200, {
             ok: true,
         });
 
-        return api.get("orders").then((response: any) => {
-            expect(response.status).toBe(200);
-        });
+        const response = await api.get("orders");
+        expect(response.status).toBe(200);
     });
 
-    test("should return content for put requests", () => {
+    test("should return content for put requests", async () => {
         expect.assertions(1);
         nock("https://test.dev/wp-json/wc/v3").put("/orders").reply(200, {
             ok: true,
         });
 
-        return api.put("orders", {}).then((response: any) => {
-            expect(response.status).toBe(200);
-        });
+        const response = await api.put("orders", {});
+        expect(response.status).toBe(200);
     });
 
-    test("should return content for delete requests", () => {
+    test("should return content for delete requests", async () => {
         expect.assertions(1);
         nock("https://test.dev/wp-json/wc/v3").delete("/orders").reply(200, {
             ok: true,
         });
 
-        return api.delete("orders", {}).then((response: any) => {
-            expect(response.status).toBe(200);
-        });
+        const response = await api.delete("orders", {});
+        expect(response.status).toBe(200);
     });
 
-    test("should return content for options requests", () => {
+    test("should return content for options requests", async () => {
         expect.assertions(1);
         nock("https://test.dev/wp-json/wc/v3")
             .intercept("/orders", "OPTIONS")
@@ -118,12 +114,11 @@ describe("#requests", () => {
                 ok: true,
             });
 
-        return api.options("orders", {}).then((response: any) => {
-            expect(response.status).toBe(200);
-        });
+        const response = await api.options("orders", {});
+        expect(response.status).toBe(200);
     });
 
-    test("should return content for OAuth", () => {
+    test("should return content for OAuth", async () => {
         expect.assertions(1);
         const oAuth = new WooCommerceRestApi({
             url: "http://test.dev",
@@ -140,8 +135,7 @@ describe("#requests", () => {
                 ok: true,
             });
 
-        return oAuth.get("orders", {}).then((response: any) => {
-            expect(response.status).toBe(200);
-        });
+        const response = await oAuth.get("orders");
+        expect(response.status).toBe(200);
     });
 });
