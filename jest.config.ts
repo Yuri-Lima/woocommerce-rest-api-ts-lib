@@ -11,10 +11,10 @@ const config: Config = {
     collectCoverage: true,
     collectCoverageFrom: ["src/**/*.ts"],
     coverageReporters: ["json", "lcov", "text", "clover"],
-    coverageDirectory: "coverage",  
+    coverageDirectory: "coverage",
     transform: {
         "^.+\\.tsx?$": "ts-jest",
-    }  
+    },
 };
 
 export default config;

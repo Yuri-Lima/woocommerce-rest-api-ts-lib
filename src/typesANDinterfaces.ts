@@ -25,7 +25,7 @@ export declare type WooRestApiEndpoint =
   | "shipping" // TODO: add support for shipping
   | "shipping_methods" // TODO: add support for shipping_methods
   | "taxes" // TODO: add support for taxes
-  | "payment_gateways" // TODO: add support for payment_gateways
+  | "payment_gateways"; // TODO: add support for payment_gateways
 
 export declare type IWooRestApiQuery = Record<string, unknown>;
 
@@ -500,7 +500,17 @@ interface Products {
   include: number[];
   offset: number;
   order: "asc" | "desc" | string;
-  orderby: "id" | "include" | "name" | "date" | "title" | "slug" | "price" | "popularity" | "rating" | string;
+  orderby:
+    | "id"
+    | "include"
+    | "name"
+    | "date"
+    | "title"
+    | "slug"
+    | "price"
+    | "popularity"
+    | "rating"
+    | string;
   parent: number[];
   parent_exclude: number[];
   status: "draft" | "any" | "pending" | "publish" | "private" | string;

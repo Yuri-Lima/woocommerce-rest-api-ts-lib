@@ -11,7 +11,7 @@ import {
     ProductsMainParams,
     SystemStatusParams,
     CouponsParams,
-    CustomersParams
+    CustomersParams,
 } from "./typesANDinterfaces.js"; // Typescript types for the library
 
 /**
@@ -128,7 +128,10 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {String}
    */
-    _normalizeQueryString(url: string, params: Partial<Record<string, any>>): string {
+    _normalizeQueryString(
+        url: string,
+        params: Partial<Record<string, any>>
+    ): string {
     /**
      * Exit if url and params are not defined
      */
@@ -136,7 +139,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
             return url;
         }
         const query = new Url(url, true).query; // Parse the query string returned by the url
-        
+
         // console.log("params:", params);
         const values = [];
 
@@ -156,7 +159,6 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         }
 
         values.sort(); // Sort the values array
-        
 
         for (const i in values) {
             /*
@@ -180,8 +182,8 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         /**
      * Return the url with the queryString
      */
-        const urlObject = url.split("?")[0] + "?" + queryString
-        
+        const urlObject = url.split("?")[0] + "?" + queryString;
+
         return urlObject;
     }
 
@@ -260,7 +262,6 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         params: Record<string, unknown> = {}
     ): Promise<any> {
         const url = this._getUrl(endpoint, params);
-        
 
         const header: RawAxiosRequestHeaders = {
             Accept: "application/json",
@@ -331,7 +332,10 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {Object}
    */
-    get(endpoint: WooRestApiEndpoint, params?: Partial<WooRestApiParams>): Promise<any> {
+    get(
+        endpoint: WooRestApiEndpoint,
+        params?: Partial<WooRestApiParams>
+    ): Promise<any> {
         return this._request("GET", endpoint, undefined, params);
     }
 
