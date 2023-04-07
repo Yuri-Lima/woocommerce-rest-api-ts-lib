@@ -7,3 +7,4 @@ dist
 .src/test
 .reminder
 ./reminder/
+test
