@@ -1,0 +1,53 @@
+[{
+    "id": 720,
+    "code": "free shipping",
+    "amount": "0.00",
+    "status": "publish",
+    "date_created": "2017-03-21T15:25:02",
+    "date_created_gmt": "2017-03-21T18:25:02",
+    "date_modified": "2017-03-21T15:25:02",
+    "date_modified_gmt": "2017-03-21T18:25:02",
+    "discount_type": "fixed_cart",
+    "description": "",
+    "date_expires": "",
+    "date_expires_gmt": "",
+    "usage_count": 0,
+    "individual_use": true,
+    "product_ids": [],
+    "excluded_product_ids": [],
+    "usage_limit": 0,
+    "usage_limit_per_user": 0,
+    "limit_usage_to_x_items": 0,
+    "free_shipping": true,
+    "product_categories": [],
+    "excluded_product_categories": [],
+    "exclude_sale_items": false,
+    "minimum_amount": "0.00",
+    "maximum_amount": "0.00",
+    "email_restrictions": [],
+    "used_by": [],
+    "meta_data": [
+        {
+            "id": 721,
+            "key": "discount_type",
+            "value": "fixed_cart"
+        },
+        {
+            "id": 722,
+            "key": "coupon_amount",
+            "value": "0"
+        }
+    ],
+    "_links": {
+      "self": [
+        {
+          "href": "https://example.com/wp-json/wc/v3/coupons/720"
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://example.com/wp-json/wc/v3/coupons"
+        }
+      ]
+    }
+  }]
