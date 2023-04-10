@@ -38,16 +38,16 @@ Check out the WooCommerce API endpoints and data that can be manipulated in <htt
 
 ### ESM example:
 
-```js
-import WooCommerceRestApi from "woocommerce-rest-ts-api";
-
-const api = new WooCommerceRestApi({
-  url: "http://example.com",
-  consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  version: "wc/v3",
-  queryStringAuth: false // Force Basic Authentication as query string true and using under HTTPS
-});
+```ts
+import WooCommerceRestApi,{WooRestApiOptions} from "woocommerce-rest-ts-api";
+const opt:WooRestApiOptions = {
+    url: "http://example.com" ,
+    consumerKey:  "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    consumerSecret:  "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    version: "wc/v3",
+    queryStringAuth: false // Force Basic Authentication as query string true and using under
+}
+const api = new WooCommerceRestApi(opt);
 ```
 
 ### CJS example:
@@ -81,20 +81,23 @@ const api = new WooCommerceRestApi({
 
 ## Methods
 
-### GET
+### GET <T extends WooRestApiEndpoint>
 
 - `.get(endpoint)`
 - `.get(endpoint, params)`
+- params?: Partial<WooRestApiParams>
 
 | Params     | Type     | Description                                                   |
 |------------|----------|---------------------------------------------------------------|
 | `endpoint` | `String` | WooCommerce API endpoint, example: `customers` or `orders/12` |
 | `params`   | `Object` | Query strings params, example: `{ per_page: 20 }`             |
 
-### POST
+### POST <T extends WooRestApiEndpoint>
 
 - `.post(endpoint, data)`
 - `.post(endpoint, data, params)`
+- data: Record<string, unknown>
+- params?: Partial<WooRestApiParams>
 
 | Params     | Type     | Description                                                 |
 |------------|----------|-------------------------------------------------------------|
@@ -102,10 +105,12 @@ const api = new WooCommerceRestApi({
 | `data`     | `Object` | JS object to be converted into JSON and sent in the request |
 | `params`   | `Object` | Query strings params                                        |
 
-### PUT
+### PUT <T extends WooRestApiEndpoint>
 
 - `.put(endpoint, data)`
 - `.put(endpoint, data, params)`
+- data: Record<string, unknown>
+- params?: Partial<WooRestApiParams>
 
 | Params     | Type     | Description                                                       |
 |------------|----------|-------------------------------------------------------------------|
@@ -113,20 +118,23 @@ const api = new WooCommerceRestApi({
 | `data`     | `Object` | JS object to be converted into JSON and sent in the request       |
 | `params`   | `Object` | Query strings params                                              |
 
-### DELETE
+### DELETE <T extends WooRestApiEndpoint>
 
 - `.delete(endpoint)`
 - `.delete(endpoint, params)`
+- data: Pick<WooRestApiParams, "force">,
+- params: Pick<WooRestApiParams, "id">
 
 | Params     | Type     | Description                                                     |
 |------------|----------|-----------------------------------------------------------------|
 | `endpoint` | `String` | WooCommerce API endpoint, example: `customers/2` or `orders/12` |
 | `params`   | `Object` | Query strings params, example: `{ force: true }`                |
 
-### OPTIONS
+### OPTIONS <T extends WooRestApiEndpoint>
 
 - `.options(endpoint)`
 - `.options(endpoint, params)`
+- params?: Partial<WooRestApiParams>
 
 | Params     | Type     | Description                                                     |
 |------------|----------|-----------------------------------------------------------------|
@@ -135,9 +143,9 @@ const api = new WooCommerceRestApi({
 
 ## Example of use
 
-```js
-// import WooCommerceRestApi from "woocommerce-rest-ts-api";
-const WooCommerceRestApi = require("woocommerce-rest-ts-api").default;
+```ts
+import WooCommerceRestApi,{CouponsParams, ProductsMainParams, OrdersMainParams, WooRestApiOptions} from "woocommerce-rest-ts-api";
+// const WooCommerceRestApi = require("woocommerce-rest-ts-api").default;
 
 const api = new WooCommerceRestApi({
   url: "http://example.com",
@@ -148,88 +156,166 @@ const api = new WooCommerceRestApi({
 });
 
 // List products
-api.get("products", {
+const products = await api.get("products", {
   per_page: 20, // 20 products per page
-})
-  .then((response) => {
-    // Successful request
-    console.log("Response Status:", response.status);
-    console.log("Response Headers:", response.headers);
-    console.log("Response Data:", response.data);
-    console.log("Total of pages:", response.headers['x-wp-totalpages']);
-    console.log("Total of items:", response.headers['x-wp-total']);
-  })
-  .catch((error) => {
-    // Invalid request, for 4xx and 5xx statuses
-    console.log("Response Status:", error.response.status);
-    console.log("Response Headers:", error.response.headers);
-    console.log("Response Data:", error.response.data);
-  })
-  .finally(() => {
-    // Always executed.
-  });
+});
+products.status; // 200
+product.headers.get('x-wp-totalpages')
+products.headers.get('x-wp-total')
+products.headers.forEach((header) => {
+  console.log(header);
+});
+products.data.forEach((product) => {
+  console.log(product.name);
+});
 
 // Create a product
-api.post("products", {
-  name: "Premium Quality", // See more in https://woocommerce.github.io/woocommerce-rest-api-docs/#product-properties
-  type: "simple",
-  regular_price: "21.99",
-})
-  .then((response) => {
-    // Successful request
-    console.log("Response Status:", response.status);
-    console.log("Response Headers:", response.headers);
-    console.log("Response Data:", response.data);
-  })
-  .catch((error) => {
-    // Invalid request, for 4xx and 5xx statuses
-    console.log("Response Status:", error.response.status);
-    console.log("Response Headers:", error.response.headers);
-    console.log("Response Data:", error.response.data);
-  })
-  .finally(() => {
-    // Always executed.
-  });
+// See more in https://woocommerce.github.io/woocommerce-rest-api-docs/#product-properties
+const data:ProductsMainParams = {
+            name: "Premium Quality",
+            type: "simple",
+            regular_price: "21.99",
+            description: "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.",
+            short_description: "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.",
+            categories: [
+                {
+                    id: 9
+                },
+                {
+                    id: 14
+                }
+            ],
+            images: [
+                {
+                    src: "http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_front.jpg"
+                },
+                {
+                    src: "http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_back.jpg"
+                }
+            ]
+        };
+const products = await api.post("products", data);
+products.status; // 201
+products.data; // { id: 11, ... }
+products.headers.get('x-wp-totalpages')
+products.headers.get('x-wp-total')
 
-// Edit a product
-api.put("products/1", {
-  sale_price: "11.99", // See more in https://woocommerce.github.io/woocommerce-rest-api-docs/#product-properties
-})
-  .then((response) => {
-    // Successful request
-    console.log("Response Status:", response.status);
-    console.log("Response Headers:", response.headers);
-    console.log("Response Data:", response.data);
-  })
-  .catch((error) => {
-    // Invalid request, for 4xx and 5xx statuses
-    console.log("Response Status:", error.response.status);
-    console.log("Response Headers:", error.response.headers);
-    console.log("Response Data:", error.response.data);
-  })
-  .finally(() => {
-    // Always executed.
-  });
+// Edit/Update a product
+  const data:ProductsMainParams = {
+      name: "Premium Quality Updated-" + randomstring.generate({length:4, capitalization:"uppercase", charset: "alphanumeric"}),
+      type: "simple",
+      regular_price: "30.22",
+      description: "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.",
+      short_description: "Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.",
+      categories: [
+          {
+              id: 9
+          },
+          {
+              id: 14
+          }
+      ],
+      images: [
+          {
+              src: "http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_front.jpg"
+          },
+          {
+              src: "http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_back.jpg"
+          }
+      ]
+  };
+  const products = await api.put("products", data, {id: 11});
+  products.status; // 201
+  products.data; // { id: 11, ... }
+  products.headers.get('x-wp-totalpages')
+  products.headers.get('x-wp-total')
 
 // Delete a product
-api.delete("products/1", {
-  force: true, // Forces to delete instead of move to the Trash
-})
-  .then((response) => {
-    // Successful request
-    console.log("Response Status:", response.status);
-    console.log("Response Headers:", response.headers);
-    console.log("Response Data:", response.data);
-  })
-  .catch((error) => {
-    // Invalid request, for 4xx and 5xx statuses
-    console.log("Response Status:", error.response.status);
-    console.log("Response Headers:", error.response.headers);
-    console.log("Response Data:", error.response.data);
-  })
-  .finally(() => {
-    // Always executed.
-  });
+const products = await wooCommerce.delete("products", {force: true}, {id: 11});
+products.status; // 201
+products.data; // { id: 11, ... }
+products.headers.get('x-wp-totalpages')
+products.headers.get('x-wp-total')
+
+// Create a order
+const data:OrdersMainParams = {
+      payment_method: "bacs",
+      payment_method_title: "Direct Bank Transfer",
+      set_paid: true,
+      billing: {
+          first_name: `John ${Math.random()}`,
+          last_name: "Doe",
+          address_1: "969 Market",
+          address_2: "",
+          city: "San Francisco",
+          state: "CA",
+          postcode: "94103",
+          country: "US",
+          email: "john.doe@example.com",
+          phone: "85996859001",
+          company: "WooCommerce"
+      },
+      shipping: {
+          first_name: "John",
+          last_name: "Doe",
+          address_1: "969 Market",
+          address_2: "",
+          city: "San Francisco",
+          state: "CA",
+          postcode: "94103",
+          country: "US",
+          company: "WooCommerce"
+      },
+      line_items: [
+          {
+              product_id: 93,
+              quantity: 2
+          },
+          {
+              product_id: 22,
+              variation_id: 23,
+              quantity: 1
+          }
+      ],
+      shipping_lines: [
+          {
+              method_id: "flat_rate",
+              method_title: "Flat Rate",
+              total: "10.00"
+          }
+      ]
+  };
+const order = await api.post("orders", data);
+order.status; // 201
+order.data; // { id: 11, ... }
+order.headers.get('x-wp-totalpages')
+order.headers.get('x-wp-total')
+
+// Edit/Update a order
+const data:OrdersMainParams = {
+      payment_method: "bacs",
+      payment_method_title: "Direct Bank Transfer",
+      set_paid: true,
+      billing: {
+          first_name: `Yuri ${Math.random()}`,
+          last_name: "Doe",
+          address_1: "969 Market",
+          address_2: "",
+          city: "San Francisco",
+      },
+  };
+const order = await api.put("orders", data, {id: 11});
+order.status; // 201
+order.data; // { id: 11, ... }
+order.headers.get('x-wp-totalpages')
+order.headers.get('x-wp-total')
+
+// Delete a order
+const order = await api.delete("orders", {force: true}, {id: 11});
+order.status; // 201
+order.data; // { id: 11, ... }
+order.headers.get('x-wp-totalpages')
+order.headers.get('x-wp-total')
 ```
 
 ## Changelog
