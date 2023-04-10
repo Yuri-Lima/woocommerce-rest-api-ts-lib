@@ -38,16 +38,16 @@ Check out the WooCommerce API endpoints and data that can be manipulated in <htt
 
 ### ESM example:
 
-```js
-import WooCommerceRestApi from "woocommerce-rest-ts-api";
-
-const api = new WooCommerceRestApi({
-  url: "http://example.com",
-  consumerKey: "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  consumerSecret: "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-  version: "wc/v3",
-  queryStringAuth: false // Force Basic Authentication as query string true and using under HTTPS
-});
+```ts
+import WooCommerceRestApi,{WooRestApiOptions} from "woocommerce-rest-ts-api";
+const opt:WooRestApiOptions = {
+    url: "http://example.com" ,
+    consumerKey:  "ck_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    consumerSecret:  "cs_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    version: "wc/v3",
+    queryStringAuth: false // Force Basic Authentication as query string true and using under
+}
+const api = new WooCommerceRestApi(opt);
 ```
 
 ### CJS example:
