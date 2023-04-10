@@ -12,23 +12,38 @@ import {
     SystemStatusParams,
     CouponsParams,
     CustomersParams,
+    DELETE,
 } from "./typesANDinterfaces.js"; // Typescript types for the library
+
+export {
+    WooRestApiMethod,
+    IWooRestApiQuery,
+    IWooRestApiOptions,
+    WooRestApiEndpoint,
+    OrdersMainParams,
+    ProductsMainParams,
+    SystemStatusParams,
+    CouponsParams,
+    CustomersParams,
+    DELETE,
+} from "./typesANDinterfaces.js"; // Export all the types
 
 /**
  * Set the axiosConfig property to the axios config object.
  * Could reveive any axios |... config objects.
  * @param {AxiosRequestConfig} axiosConfig
  */
-type WooRestApiOptions = IWooRestApiOptions<AxiosRequestConfig>;
+export type WooRestApiOptions = IWooRestApiOptions<AxiosRequestConfig>;
 
 /**
  * Set all the possible query params for the WooCommerce REST API.
  */
-type WooRestApiParams = CouponsParams &
+export type WooRestApiParams = CouponsParams &
   CustomersParams &
   OrdersMainParams &
   ProductsMainParams &
-  SystemStatusParams;
+  SystemStatusParams &
+  DELETE
 
 /**
  * WooCommerce REST API wrapper
@@ -198,27 +213,30 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
     _getUrl(endpoint: string, params: Partial<Record<string, unknown>>): string {
         const api = this._opt.wpAPIPrefix + "/"; // Add prefix to endpoint
 
-        let url =
-      this._opt.url.slice(-1) === "/" ? this._opt.url : this._opt.url + "/";
+        let url = this._opt.url.slice(-1) === "/" ? this._opt.url : this._opt.url + "/";
 
         url = url + api + this._opt.version + "/" + endpoint;
+        // Add id param to url
+        if (params.id) {
+            url = url + "/" + params.id;
+            delete params.id;
+        }
 
         /**
      * If port is defined, add it to the url
      */
         if (this._opt.port) {
             const hostname = new Url(url).hostname;
-
             url = url.replace(hostname, hostname + ":" + this._opt.port);
         }
 
         /**
-     * If isHttps is true, normalize the query string
-     */
-        if (this._opt.isHttps) {
-            return this._normalizeQueryString(url, params);
-        }
-
+         * If isHttps is true, normalize the query string
+         */
+        // if (this._opt.isHttps) {
+        //     url = this._normalizeQueryString(url, params);
+        //     return url;
+        // }
         return url;
     }
 
@@ -384,9 +402,10 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    */
     delete<T extends WooRestApiEndpoint>(
         endpoint: T,
-        params?: Partial<WooRestApiParams>
+        data: Pick<WooRestApiParams, "force">,
+        params: Pick<WooRestApiParams, "id">
     ): Promise<any> {
-        return this._request("DELETE", endpoint, {}, params);
+        return this._request("DELETE", endpoint, data, params);
     }
 
     /**
