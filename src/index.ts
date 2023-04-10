@@ -4,7 +4,7 @@ import OAuth from "oauth-1.0a";
 import Url from "url-parse";
 import {
     WooRestApiMethod,
-    IWooRestApiQuery,
+    // IWooRestApiQuery,
     IWooRestApiOptions,
     WooRestApiEndpoint,
     OrdersMainParams,
