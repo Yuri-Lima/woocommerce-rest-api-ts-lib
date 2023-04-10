@@ -36,6 +36,13 @@ export type IWooCredentials = {
   consumerSecret: string;
 };
 
+export type WooCommerceRestApiTypeFunctions = {
+  get: <T>(endpoint: string, params?: T) => Promise<any>;
+  post: <T>(endpoint: string, params?: T) => Promise<any>;
+  put: <T>(endpoint: string, params?: T) => Promise<any>;
+  delete: <T>(endpoint: string, params?: T) => Promise<any>;
+};
+
 export interface IWooRestApiOptions<T> extends IWooCredentials {
   /* Your Store URL, example: http://woo.dev/ */
   url: string;
@@ -87,7 +94,7 @@ export type Links = {
   }>;
 };
 
-type Billing = {
+export type Billing = {
   first_name: string;
   last_name: string;
   company: string;
@@ -100,7 +107,8 @@ type Billing = {
   email: string;
   phone: string;
 };
-type Shipping = {
+
+export type Shipping = {
   first_name: string;
   last_name: string;
   company: string;
@@ -111,7 +119,8 @@ type Shipping = {
   postcode: string;
   country: string;
 };
-type Taxes = {
+
+export type Taxes = {
   id: number;
   rate_code: string;
   rate_id: number;
@@ -121,7 +130,8 @@ type Taxes = {
   shipping_tax_total: string;
   meta_data: Meta_Data;
 };
-type Shipping_Lines = {
+
+export type Shipping_Lines = {
   id: number;
   method_title: string;
   method_id: string;
@@ -130,7 +140,8 @@ type Shipping_Lines = {
   taxes: Taxes[];
   meta_data: Meta_Data;
 };
-type Line_Items = {
+
+export type Line_Items = {
   id: number;
   name: string;
   product_id: number;
@@ -146,7 +157,8 @@ type Line_Items = {
   sku: string;
   price: number;
 };
-type Tax_Lines = {
+
+export type Tax_Lines = {
   id: number;
   rate_code: string;
   rate_id: number;
@@ -156,7 +168,8 @@ type Tax_Lines = {
   shipping_tax_total: string;
   meta_data: Meta_Data;
 };
-type Fee_Lines = {
+
+export type Fee_Lines = {
   id: number;
   name: string;
   tax_class: string;
@@ -166,72 +179,82 @@ type Fee_Lines = {
   taxes: Taxes[];
   meta_data: Meta_Data;
 };
-type Coupon_Lines = {
-  id: number;
-  code: string;
-  discount: string;
-  discount_tax: string;
-  meta_data: Meta_Data;
+
+export type Coupon_Lines = {
+  id?: number;
+  code?: string;
+  discount?: string;
+  discount_tax?: string;
+  meta_data?: Meta_Data;
 };
-type Refunds = {
-  id: number;
-  reason: string;
-  total: string;
+
+export type Refunds = {
+  id?: number;
+  reason?: string;
+  total?: string;
 };
-type Orders_Refunds_Lines = {
-  id: number;
-  total: string;
-  subtotal: string;
-  refund_total: number;
+
+export type Orders_Refunds_Lines = {
+  id?: number;
+  total?: string;
+  subtotal?: string;
+  refund_total?: number;
 };
-type Orders_Refunds_Line_Items = {
-  id: number;
-  name: string;
-  product_id: number;
-  variation_id: number;
-  quantity: number;
-  tax_class: string;
-  subtotal: string;
-  subtotal_tax: string;
-  total: string;
-  total_tax: string;
-  taxes: Orders_Refunds_Lines[];
-  meta_data: Meta_Data[];
-  sku: string;
-  price: string;
-  refund_total: number;
+
+export type Orders_Refunds_Line_Items = {
+  id?: number;
+  name?: string;
+  product_id?: number;
+  variation_id?: number;
+  quantity?: number;
+  tax_class?: string;
+  subtotal?: string;
+  subtotal_tax?: string;
+  total?: string;
+  total_tax?: string;
+  taxes?: Orders_Refunds_Lines[];
+  meta_data?: Meta_Data[];
+  sku?: string;
+  price?: string;
+  refund_total?: number;
 };
-type Downloads = {
-  id: number;
-  name: string;
-  file: string;
+
+export type Downloads = {
+  id?: number;
+  name?: string;
+  file?: string;
 };
-type Dimensions = {
-  length: string;
-  width: string;
-  height: string;
+
+export type Dimensions = {
+  length?: string;
+  width?: string;
+  height?: string;
 };
-type Categories = {
-  id: number;
-  name: string;
-  slug: string;
+
+export type Categories = {
+  id?: number;
+  name?: string;
+  slug?: string;
 };
-type Tags = {
-  id: number;
-  name: string;
-  slug: string;
+
+export type Tags = {
+  id?: number;
+  name?: string;
+  slug?: string;
 };
-type Images = {
-  id: number;
-  date_created(): Date;
-  date_created_gmt(): Date;
-  date_modified(): Date;
-  date_modified_gmt(): Date;
-  src: string;
-  name: string;
-  alt: string;
+
+export type Images = {
+  id?: number;
+  date_created?: Date;
+  date_created_gmt?: Date;
+  date_modified?: Date;
+  date_modified_gmt?: Date;
+  src?: string;
+  name?: string;
+  alt?: string;
 };
-type Attributes = {
+
+export type Attributes = {
   id: number;
   name: string;
   position: number;
@@ -239,12 +262,14 @@ type Attributes = {
   variation: boolean;
   options: string[];
 };
-type Default_Attributes = {
+
+export type Default_Attributes = {
   id: number;
   name: string;
   option: string;
 };
-type SystemStatusEnvironment = {
+
+export type SystemStatusEnvironment = {
   home_url: string;
   site_url: string;
   wc_version: string;
@@ -276,13 +301,15 @@ type SystemStatusEnvironment = {
   remote_get_successful: boolean;
   remote_get_response: string;
 };
-type SystemStatusDatabase = {
+
+export type SystemStatusDatabase = {
   wc_database_version: string;
   database_prefix: string;
   maxmind_geoip_database: string;
   database_tables: string[];
 };
-type SystemStatusTheme = {
+
+export type SystemStatusTheme = {
   name: string;
   version: string;
   version_latest: string;
@@ -297,7 +324,8 @@ type SystemStatusTheme = {
   parent_version: string;
   parent_author_url: string;
 };
-type SystemStatusSettings = {
+
+export type SystemStatusSettings = {
   api_enabled: boolean;
   force_ssl: boolean;
   currency: string;
@@ -309,21 +337,27 @@ type SystemStatusSettings = {
   geolocate_enabled: boolean;
   taxnomies: string[];
 };
-type SystemStatusSecurity = {
+
+export type SystemStatusSecurity = {
   secure_connection: boolean;
   hide_errors: boolean;
 };
 /* End of Types */
+
+export interface DELETE {
+  id: number | string;
+  force?: boolean |string;
+}
 
 /* Start of Interfaces */
 export interface Coupons {
   id: number;
   code: string;
   amount: string;
-  date_created(): Date;
-  date_created_gmt(): Date;
-  date_modified(): Date;
-  date_modified_gmt(): Date;
+  date_created: Date;
+  date_created_gmt: Date;
+  date_modified: Date;
+  date_modified_gmt: Date;
   discount_type: string;
   description: string;
   date_expires: string;
@@ -346,12 +380,12 @@ export interface Coupons {
   meta_data: Meta_Data[];
 }
 
-interface Customers {
+export interface Customers {
   id: number;
-  date_created(): Date;
-  date_created_gmt(): Date;
-  date_modified(): Date;
-  date_modified_gmt(): Date;
+  date_created: Date;
+  date_created_gmt: Date;
+  date_modified: Date;
+  date_modified_gmt: Date;
   email: string;
   first_name: string;
   last_name: string;
@@ -364,7 +398,7 @@ interface Customers {
   meta_data: Meta_Data[];
 }
 
-interface Orders {
+export interface Orders {
   id: number;
   parent_id: number;
   number: string;
@@ -373,10 +407,10 @@ interface Orders {
   version: string;
   status: string;
   currency: string;
-  date_created(): Date;
-  date_created_gmt(): Date;
-  date_modified(): Date;
-  date_modified_gmt(): Date;
+  date_created: Date;
+  date_created_gmt: Date;
+  date_modified: Date;
+  date_modified_gmt: Date;
   discount_total: string;
   discount_tax: string;
   shipping_total: string;
@@ -408,19 +442,20 @@ interface Orders {
   refunds: Refunds[];
   set_paid: boolean;
 }
-interface OrdersNotes {
+export interface OrdersNotes {
   id: number;
   author: string;
-  date_created(): Date;
-  date_created_gmt(): Date;
+  date_created: Date;
+  date_created_gmt: Date;
   note: string;
   customer_note: boolean;
   added_by_user: boolean;
 }
-interface OrdersRefunds {
+
+export interface OrdersRefunds {
   id: number;
-  date_created(): Date;
-  date_created_gmt(): Date;
+  date_created: Date;
+  date_created_gmt: Date;
   amount: string;
   reason: string;
   refunded_by: number;
@@ -429,24 +464,26 @@ interface OrdersRefunds {
   line_items: Orders_Refunds_Line_Items[];
   api_refund: boolean;
 }
-interface Products {
+
+export interface Products {
   id: number;
   name: string;
   slug: string;
   permalink: string;
-  date_created(): Date;
-  date_created_gmt(): Date;
-  date_modified(): Date;
-  date_modified_gmt(): Date;
+  date_created: Date;
+  date_created_gmt: Date;
+  date_modified: Date;
+  date_modified_gmt: Date;
   catalog_visibility: string;
   description: string;
+  short_description: string;
   price: string;
   regular_price: string;
   sale_price: string;
-  date_on_sale_from(): Date;
-  date_on_sale_from_gmt(): Date;
-  date_on_sale_to(): Date;
-  date_on_sale_to_gmt(): Date;
+  date_on_sale_from: Date;
+  date_on_sale_from_gmt: Date;
+  date_on_sale_to: Date;
+  date_on_sale_to_gmt: Date;
   price_html: string;
   purchasable: boolean;
   total_sales: number;
@@ -527,22 +564,23 @@ interface Products {
   max_price: string;
   stock_status: "instock" | "outofstock" | "onbackorder" | string;
 }
-interface ProductsVariations {
+
+export interface ProductsVariations {
   id: number;
-  date_created(): Date;
-  date_created_gmt(): Date;
-  date_modified(): Date;
-  date_modified_gmt(): Date;
+  date_created: Date;
+  date_created_gmt: Date;
+  date_modified: Date;
+  date_modified_gmt: Date;
   description: string;
   permalink: string;
   sku: string;
   price: string;
   regular_price: string;
   sale_price: string;
-  date_on_sale_from(): Date;
-  date_on_sale_from_gmt(): Date;
-  date_on_sale_to(): Date;
-  date_on_sale_to_gmt(): Date;
+  date_on_sale_from: Date;
+  date_on_sale_from_gmt: Date;
+  date_on_sale_to: Date;
+  date_on_sale_to_gmt: Date;
   on_sale: boolean;
   status: string;
   purchasable: boolean;
@@ -568,7 +606,8 @@ interface ProductsVariations {
   menu_order: number;
   meta_data: Meta_Data[];
 }
-interface ProductsAttributes {
+
+export interface ProductsAttributes {
   id: number;
   name: string;
   slug: string;
@@ -576,7 +615,8 @@ interface ProductsAttributes {
   order_by: string;
   has_archives: boolean;
 }
-interface ProductsAttributesTerms {
+
+export interface ProductsAttributesTerms {
   id: number;
   name: string;
   slug: string;
@@ -584,7 +624,8 @@ interface ProductsAttributesTerms {
   menu_order: number;
   count: number;
 }
-interface ProductsCategories {
+
+export interface ProductsCategories {
   id: number;
   name: string;
   slug: string;
@@ -595,24 +636,27 @@ interface ProductsCategories {
   menu_order: number;
   count: number;
 }
-interface ProductsShippingClasses {
+
+export interface ProductsShippingClasses {
   id: number;
   name: string;
   slug: string;
   description: string;
   count: number;
 }
-interface ProductsTags {
+
+export interface ProductsTags {
   id: number;
   name: string;
   slug: string;
   description: string;
   count: number;
 }
-interface ProductsReviews {
+
+export interface ProductsReviews {
   id: number;
-  date_created(): Date;
-  date_created_gmt(): Date;
+  date_created: Date;
+  date_created_gmt: Date;
   parent_id: number;
   status: string;
   reviewer: string;
@@ -620,6 +664,7 @@ interface ProductsReviews {
   review: string;
   verified: boolean;
 }
+
 // interface Reports {} // TODO
 // interface ReportsCoupons {} // TODO
 // interface ReportsCustomers {} // TODO
@@ -630,7 +675,8 @@ interface ProductsReviews {
 // interface ReportsSales {} // TODO
 // interface TaxRates {} // TODO
 // interface TaxClasses {} // TODO
-interface Webhooks {
+
+export interface Webhooks {
   id: number;
   name: string;
   status: "all" | "active" | "paused" | "disabled" | string;
@@ -640,10 +686,10 @@ interface Webhooks {
   hooks: string[];
   delivery_url: string;
   secret: string;
-  date_created(): Date;
-  date_created_gmt(): Date;
-  date_modified(): Date;
-  date_modified_gmt(): Date;
+  date_created: Date;
+  date_created_gmt: Date;
+  date_modified: Date;
+  date_modified_gmt: Date;
   links: Partial<Links>;
   context: "view" | "edit" | string;
   page: 1 | number;
@@ -665,7 +711,8 @@ interface Webhooks {
 // interface ShippingZonesLocations {} // TODO
 // interface ShippingZonesMethods {} // TODO
 // interface ShippingMethods {} // TODO
-interface SystemStatus {
+
+export interface SystemStatus {
   environment: SystemStatusEnvironment;
   database: SystemStatusDatabase;
   active_plugins: string[];
@@ -681,9 +728,9 @@ export type CouponsParams = Partial<Coupons>; // Partial means all properties ar
 
 export type CustomersParams = Partial<Customers>; // Partial means all properties are optional [Temporary]
 
-type OrdersParams = Partial<Orders>; // Partial means all properties are optional [Temporary]
-type OrdersNotesParams = Partial<OrdersNotes>; // Partial means all properties are optional [Temporary]
-type OrdersRefundsParams = Partial<OrdersRefunds>; // Partial means all properties are optional [Temporary]
+export type OrdersParams = Partial<Orders>; // Partial means all properties are optional [Temporary]
+export type OrdersNotesParams = Partial<OrdersNotes>; // Partial means all properties are optional [Temporary]
+export type OrdersRefundsParams = Partial<OrdersRefunds>; // Partial means all properties are optional [Temporary]
 /**
  * Union type for all possible params for Orders
  */
@@ -716,3 +763,5 @@ export type SystemStatusParams = Partial<SystemStatus>; // Partial means all pro
 
 // Webhooks
 export type WebhooksParams = Partial<Webhooks>; // Partial means all properties are optional [Temporary]
+
+
