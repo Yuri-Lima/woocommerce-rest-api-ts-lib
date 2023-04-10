@@ -13,7 +13,7 @@
 
 "use strict";
 // import { randomUUID } from 'crypto'
-import WooCommerceRestApi,{CouponsParams, ProductsMainParams} from "../index";
+import WooCommerceRestApi, {CouponsParams, ProductsMainParams, WooRestApiOptions, WooRestApiMethod, OrdersMainParams} from "../index";
 import couponsJson from "./coupons.json";
 import productsJson from "./productsJson.json";
 import productsJsonResponse from "./productsJson-response.json";
@@ -48,14 +48,15 @@ const WOODatePlus = async(data: Partial<{ years: any; month: any; days: any; hou
     return newDate.toISO()
 }
 
-const testSecrets = {
-    url: <string>process.env.URL,
-    consumerKey: <string>process.env.CONSUMERKEY,
-    consumerSecret: <string>process.env.CONSUMERSECRET
+const opt:WooRestApiOptions = {
+    url: <string>process.env.URL ,
+    consumerKey:  <string>process.env.CONSUMERKEY,
+    consumerSecret: <string>process.env.CONSUMERSECRET,
+    version: "wc/v3",
+    queryStringAuth: false
 }
-
+const env = {...opt};
 describe.only("#options/#methods", () => {
-    const env = {...testSecrets};
     let wooCommerce: WooCommerceRestApi<{url: string,consumerKey: string,consumerSecret: string}>;
     beforeAll(() => {
         wooCommerce = new WooCommerceRestApi({
@@ -66,6 +67,45 @@ describe.only("#options/#methods", () => {
             queryStringAuth: false
         })
     });
+
+    // #Constructor
+    test("instance should be an object", () => {
+        expect(typeof wooCommerce).toBe(typeof {});
+    });
+    test("url is required", () => {
+        expect(() => {
+            const wooCommerceInstance = new WooCommerceRestApi({
+                url: "",
+                consumerKey: env.consumerKey,
+                consumerSecret: env.consumerSecret,
+                version: "wc/v3",
+                queryStringAuth: false
+            })
+        }).toThrow("url is required");
+    });
+    test("consumerKey is required", () => {
+        expect(() => {
+            const wooCommerceInstance = new WooCommerceRestApi({
+                url: env.url ,
+                consumerKey: "",
+                consumerSecret: env.consumerSecret,
+                version: "wc/v3",
+                queryStringAuth: false
+            })
+        }).toThrow("consumerKey is required");
+    });
+    test("consumerSecret is required", () => {
+        expect(() => {
+            const wooCommerceInstance = new WooCommerceRestApi({
+                url: env.url ,
+                consumerKey: env.consumerSecret,
+                consumerSecret: "",
+                version: "wc/v3",
+                queryStringAuth: false
+            })
+        }).toThrow("consumerSecret is required");
+    });
+        
     // #Options
     test("wpAPIPrefix should set WP REST API custom path", () => {
         
@@ -96,7 +136,7 @@ describe.only("#options/#methods", () => {
 });
 
 describe.only("Test Coupons", () => {
-    const env = {...testSecrets};
+
     let wooCommerce: WooCommerceRestApi<{url: string,consumerKey: string,consumerSecret: string}>;
     let each: typeof userOrder[0];
     let first_name: string;
@@ -143,6 +183,30 @@ describe.only("Test Coupons", () => {
         if (coupons.data.length > 0) {
             const expectedKeys = Object.keys(couponsJson[0]); // Array of the keys of the couponsJson object
             const keys = Object.keys(coupons.data[0]) // Array of the keys of the first coupon in the coupons.data array    
+            console.table([{ Keys: expectedKeys.length, Expected: keys.length, diff: expectedKeys.length - keys.length}]);
+            ConsoleMacthKeys(keys, expectedKeys);
+            keys.forEach((key:any, index) => {
+                expect(keys[index]).toEqual(expectedKeys[index]);
+            }
+            );
+        }
+    }, 20000); // 20 seconds
+
+    // Get Per page
+    test("should return a list with all coupons created per page", async () => {
+        const coupons = await wooCommerce.get("coupons", { per_page: 3 });
+        expect(coupons).toBeInstanceOf(Object);
+
+        // coupons.data has to be an array with a length of 3
+        expect(coupons.data.length).toBe(3);
+
+        if (coupons.headers["x-wp-totalpages"] > 1) {
+            expect(coupons).toHaveProperty("data", expect.any(Array));
+        }
+
+        if (coupons.data.length > 0) {
+            const expectedKeys = Object.keys(couponsJson[0]); // Array of the keys of the couponsJson object
+            const keys = Object.keys(coupons.data[0]) // Array of the keys of the first coupon in the coupons.data array
             console.table([{ Keys: expectedKeys.length, Expected: keys.length, diff: expectedKeys.length - keys.length}]);
             ConsoleMacthKeys(keys, expectedKeys);
             keys.forEach((key:any, index) => {
@@ -289,7 +353,6 @@ describe.only("Test Coupons", () => {
 });
 
 describe.only("Test Products", () => {
-    const env = {...testSecrets};
     let wooCommerce: WooCommerceRestApi<{url: string,consumerKey: string,consumerSecret: string}>;
     beforeAll(() => {
         wooCommerce = new WooCommerceRestApi({
@@ -392,7 +455,7 @@ describe.only("Test Products", () => {
     }
     , 20000); // 20 seconds
 
-    test("should update a product", async () => {
+    test("should update/edit a product", async () => {
         const getAllProducts = await wooCommerce.get("products");
         if (getAllProducts.headers["x-wp-totalpages"] > 1) {
             expect(getAllProducts).toHaveProperty("data", expect.any(Array));
@@ -464,7 +527,6 @@ describe.only("Test Products", () => {
 });
 
 describe.only("Test Orders", () => {
-    const env = {...testSecrets};
     let wooCommerce: WooCommerceRestApi<{url: string,consumerKey: string,consumerSecret: string}>;
     
     beforeAll(() => {
@@ -522,7 +584,7 @@ describe.only("Test Orders", () => {
     , 20000); // 20 seconds
 
     test("should create an order", async () => {
-        const data = {
+        const data:OrdersMainParams = {
             payment_method: "bacs",
             payment_method_title: "Direct Bank Transfer",
             set_paid: true,
@@ -536,7 +598,8 @@ describe.only("Test Orders", () => {
                 postcode: "94103",
                 country: "US",
                 email: "john.doe@example.com",
-                phone: "85996859001"
+                phone: "85996859001",
+                company: "WooCommerce"
             },
             shipping: {
                 first_name: "John",
@@ -546,7 +609,8 @@ describe.only("Test Orders", () => {
                 city: "San Francisco",
                 state: "CA",
                 postcode: "94103",
-                country: "US"
+                country: "US",
+                company: "WooCommerce"
             },
             line_items: [
                 {
@@ -568,7 +632,7 @@ describe.only("Test Orders", () => {
             ]
         };
         const order = await wooCommerce.post("orders", data);
-        console.log("Order", order.data);
+        // console.log("Order", order.data);
         expect(order).toBeInstanceOf(Object);
         if (order.headers["x-wp-totalpages"] > 1) {
             expect(order).toHaveProperty("data", expect.any(Array));
@@ -591,7 +655,7 @@ describe.only("Test Orders", () => {
         if (getAllCoupons.headers["x-wp-totalpages"] > 1) {
             expect(getAllCoupons).toHaveProperty("data", expect.any(Array));
         }
-        const data = {
+        const data:OrdersMainParams = {
             payment_method: "bacs",
             payment_method_title: "Direct Bank Transfer",
             set_paid: true,
@@ -604,7 +668,7 @@ describe.only("Test Orders", () => {
             },
         };
         const order = await wooCommerce.put("orders",  data, {id: getAllCoupons.data[0].id});
-        console.log("Order", order.data);
+        // console.log("Order", order.data);
         expect(order).toBeInstanceOf(Object);
         if (order.headers["x-wp-totalpages"] > 1) {
             expect(order).toHaveProperty("data", expect.any(Array));
@@ -649,7 +713,6 @@ describe.only("Test Orders", () => {
 });
 
 describe("Test Customers", () => {
-    const env = {...testSecrets};
     let wooCommerce: WooCommerceRestApi<{url: string,consumerKey: string,consumerSecret: string}>;
     
     beforeAll(() => {
