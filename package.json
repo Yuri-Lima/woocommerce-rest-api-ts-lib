@@ -1,6 +1,6 @@
 {
   "name": "woocommerce-rest-ts-api",
-  "version": "6.0.1",
+  "version": "7.0.0",
   "description": "WooCommerce REST API - Type Script Library",
   "author": "Yuri Lima",
   "license": "MIT",
