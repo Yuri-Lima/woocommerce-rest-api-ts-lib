@@ -43,7 +43,7 @@ export type WooRestApiParams = CouponsParams &
   OrdersMainParams &
   ProductsMainParams &
   SystemStatusParams &
-  DELETE
+  DELETE;
 
 /**
  * WooCommerce REST API wrapper
@@ -210,7 +210,8 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
     _getUrl(endpoint: string, params: Partial<Record<string, unknown>>): string {
         const api = this._opt.wpAPIPrefix + "/"; // Add prefix to endpoint
 
-        let url = this._opt.url.slice(-1) === "/" ? this._opt.url : this._opt.url + "/";
+        let url =
+      this._opt.url.slice(-1) === "/" ? this._opt.url : this._opt.url + "/";
 
         url = url + api + this._opt.version + "/" + endpoint;
         // Add id param to url
@@ -228,8 +229,8 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         }
 
         /**
-         * If isHttps is true, normalize the query string
-         */
+     * If isHttps is true, normalize the query string
+     */
         // if (this._opt.isHttps) {
         //     url = this._normalizeQueryString(url, params);
         //     return url;
