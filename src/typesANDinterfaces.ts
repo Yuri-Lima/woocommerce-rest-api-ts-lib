@@ -1,10 +1,10 @@
 export declare type WooRestApiVersion =
   | "wc/v3"
-  | "wc/v2"
-  | "wc/v1"
-  | "wc-api/v3"
-  | "wc-api/v2"
-  | "wc-api/v1";
+  // | "wc/v2"
+  // | "wc/v1"
+  // | "wc-api/v3"
+  // | "wc-api/v2"
+  // | "wc-api/v1";
 export declare type WooRestApiEncoding = "utf-8" | "ascii";
 export declare type WooRestApiMethod =
   | "GET"
@@ -166,7 +166,7 @@ export type Tax_Lines = {
   compound: boolean;
   tax_total: string;
   shipping_tax_total: string;
-  meta_data: Meta_Data;
+  meta_data: Partial<Meta_Data>;
 };
 
 export type Fee_Lines = {
@@ -176,82 +176,82 @@ export type Fee_Lines = {
   tax_status: string;
   total: string;
   total_tax: string;
-  taxes: Taxes[];
-  meta_data: Meta_Data;
+  taxes: Partial<Taxes>[];
+  meta_data: Partial<Meta_Data>;
 };
 
 export type Coupon_Lines = {
-  id?: number;
-  code?: string;
-  discount?: string;
-  discount_tax?: string;
-  meta_data?: Meta_Data;
+  id: number;
+  code: string;
+  discount: string;
+  discount_tax: string;
+  meta_data: Partial<Meta_Data>;
 };
 
 export type Refunds = {
-  id?: number;
-  reason?: string;
-  total?: string;
+  id: number;
+  reason: string;
+  total: string;
 };
 
 export type Orders_Refunds_Lines = {
-  id?: number;
-  total?: string;
-  subtotal?: string;
-  refund_total?: number;
+  id: number;
+  total: string;
+  subtotal: string;
+  refund_total: number;
 };
 
 export type Orders_Refunds_Line_Items = {
-  id?: number;
-  name?: string;
-  product_id?: number;
-  variation_id?: number;
-  quantity?: number;
-  tax_class?: string;
-  subtotal?: string;
-  subtotal_tax?: string;
-  total?: string;
-  total_tax?: string;
-  taxes?: Orders_Refunds_Lines[];
-  meta_data?: Meta_Data[];
-  sku?: string;
-  price?: string;
-  refund_total?: number;
+  id: number;
+  name: string;
+  product_id: number;
+  variation_id: number;
+  quantity: number;
+  tax_class: string;
+  subtotal: string;
+  subtotal_tax: string;
+  total: string;
+  total_tax: string;
+  taxes: Partial<Orders_Refunds_Lines>[];
+  meta_data: Partial<Meta_Data>[];
+  sku: string;
+  price: string;
+  refund_total: number;
 };
 
 export type Downloads = {
-  id?: number;
-  name?: string;
-  file?: string;
+  id: number;
+  name: string;
+  file: string;
 };
 
 export type Dimensions = {
-  length?: string;
-  width?: string;
-  height?: string;
+  length: string;
+  width: string;
+  height: string;
 };
 
 export type Categories = {
-  id?: number;
-  name?: string;
-  slug?: string;
+  id: number;
+  name: string;
+  slug: string;
 };
 
 export type Tags = {
-  id?: number;
-  name?: string;
-  slug?: string;
+  id: number;
+  name: string;
+  slug: string;
 };
 
 export type Images = {
-  id?: number;
-  date_created?: Date;
-  date_created_gmt?: Date;
-  date_modified?: Date;
-  date_modified_gmt?: Date;
-  src?: string;
-  name?: string;
-  alt?: string;
+  id: number;
+  date_created: Date;
+  date_created_gmt: Date;
+  date_modified: Date;
+  date_modified_gmt: Date;
+  src: string;
+  name: string;
+  alt: string;
 };
 
 export type Attributes = {
@@ -423,7 +423,7 @@ export interface Orders {
   customer_ip_address: string;
   customer_user_agent: string;
   customer_note: string;
-  billing: Billing;
+  billing: Partial<Billing>;
   shipping: Shipping;
   payment_method: string;
   payment_method_title: string;
@@ -433,13 +433,13 @@ export interface Orders {
   date_completed: string;
   date_completed_gmt: string;
   cart_hash: string;
-  meta_data: Meta_Data[];
-  line_items: Line_Items[];
-  tax_lines: Tax_Lines[];
-  shipping_lines: Shipping_Lines[];
-  fee_lines: Fee_Lines[];
-  coupon_lines: Coupon_Lines[];
-  refunds: Refunds[];
+  meta_data: Partial<Meta_Data>[];
+  line_items: Partial<Line_Items>[];
+  tax_lines: Partial<Tax_Lines>[];
+  shipping_lines: Partial<Shipping_Lines>[];
+  fee_lines: Partial<Fee_Lines>[];
+  coupon_lines: Partial<Coupon_Lines>[];
+  refunds: Partial<Refunds>[];
   set_paid: boolean;
 }
 export interface OrdersNotes {
@@ -460,8 +460,8 @@ export interface OrdersRefunds {
   reason: string;
   refunded_by: number;
   refunded_payment: boolean;
-  meta_data: Meta_Data[];
-  line_items: Orders_Refunds_Line_Items[];
+  meta_data: Partial<Meta_Data>[];
+  line_items: Partial<Orders_Refunds_Line_Items>[];
   api_refund: boolean;
 }
 
@@ -489,7 +489,7 @@ export interface Products {
   total_sales: number;
   virtual: boolean;
   downloadable: boolean;
-  downloads: Downloads[];
+  downloads: Partial<Downloads>[];
   download_limit: number;
   download_expiry: number;
   external_url: string;
@@ -502,7 +502,7 @@ export interface Products {
   backordered: boolean;
   sold_individually: boolean;
   weight: string;
-  dimensions: Dimensions;
+  dimensions: Partial<Dimensions>;
   shipping_required: boolean;
   shipping_taxable: boolean;
   shipping_class: string;
@@ -515,15 +515,15 @@ export interface Products {
   cross_sell_ids: number[];
   parent_id: number;
   purchase_note: string;
-  categories: Categories[];
-  tags: Tags[];
-  images: Images[];
-  attributes: Attributes[];
-  default_attributes: Default_Attributes[];
+  categories: Partial<Categories>[];
+  tags: Partial<Tags>[];
+  images: Partial<Images>[];
+  attributes: Partial<Attributes>[];
+  default_attributes: Partial<Default_Attributes>[];
   variations: number[];
   grouped_products: number[];
   menu_order: number;
-  meta_data: Meta_Data[];
+  meta_data: Partial<Meta_Data>[];
   per_page: number;
   page: number;
   context: "views" | "edit" | string;
@@ -586,7 +586,7 @@ export interface ProductsVariations {
   purchasable: boolean;
   virtual: boolean;
   downloadable: boolean;
-  downloads: Downloads[];
+  downloads: Partial<Downloads>[];
   download_limit: number;
   download_expiry: number;
   tax_status: string;
@@ -598,13 +598,13 @@ export interface ProductsVariations {
   backorders_allowed: boolean;
   backordered: boolean;
   weight: string;
-  dimensions: Dimensions;
+  dimensions: Partial<Dimensions>;
   shipping_class: string;
   shipping_class_id: number;
-  image: Images;
-  attributes: Attributes[];
+  image: Partial<Images>;
+  attributes: Partial<Attributes>[];
   menu_order: number;
-  meta_data: Meta_Data[];
+  meta_data: Partial<Meta_Data>[];
 }
 
 export interface ProductsAttributes {
@@ -632,7 +632,7 @@ export interface ProductsCategories {
   parent: number;
   description: string;
   display: string;
-  image: Images;
+  image: Partial<Images>;
   menu_order: number;
   count: number;
 }
@@ -713,12 +713,12 @@ export interface Webhooks {
 // interface ShippingMethods {} // TODO
 
 export interface SystemStatus {
-  environment: SystemStatusEnvironment;
-  database: SystemStatusDatabase;
+  environment: Partial<SystemStatusEnvironment>;
+  database: Partial<SystemStatusDatabase>;
   active_plugins: string[];
-  theme: SystemStatusTheme;
-  settings: SystemStatusSettings;
-  security: SystemStatusSecurity;
+  theme: Partial<SystemStatusTheme>;
+  settings: Partial<SystemStatusSettings>;
+  security: Partial<SystemStatusSecurity>;
   pages: string[];
 }
 // interface SystemStatusTools {} // TODO
