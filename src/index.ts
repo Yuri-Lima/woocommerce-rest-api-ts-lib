@@ -4,7 +4,7 @@ import OAuth from "oauth-1.0a";
 import Url from "url-parse";
 import {
     WooRestApiMethod,
-    IWooRestApiQuery,
+    // IWooRestApiQuery,
     IWooRestApiOptions,
     WooRestApiEndpoint,
     OrdersMainParams,
@@ -72,21 +72,21 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         /**
      * Check if the url is defined.
      */
-        if (!this._opt.url) {
+        if (!this._opt.url || this._opt.url === "") {
             throw new OptionsException("url is required");
         }
 
         /**
      * Check if the consumerKey is defined.
      */
-        if (!this._opt.consumerKey) {
+        if (!this._opt.consumerKey || this._opt.consumerKey === "") {
             throw new OptionsException("consumerKey is required");
         }
 
         /**
      * Check if the consumerSecret is defined.
      */
-        if (!this._opt.consumerSecret) {
+        if (!this._opt.consumerSecret || this._opt.consumerSecret === "") {
             throw new OptionsException("consumerSecret is required");
         }
 
@@ -117,22 +117,19 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    * @param {Object} query
    * @return {Object} IWooRestApiQuery
    */
-    _parseParamsObject<T>(
-        params: Record<string, T>,
-        query: Record<string, any>
-    ): IWooRestApiQuery {
-        for (const key in params) {
-            if (typeof params[key] === "object") {
-                // If the value is an object, loop through it and add it to the query object
-                for (const subKey in params[key]) {
-                    query[key + "[" + subKey + "]"] = params[key][subKey];
-                }
-            } else {
-                query[key] = params[key]; // If the value is not an object, add it to the query object
-            }
-        }
-        return query; // Return the query object
-    }
+    // _parseParamsObject<T>(params: Record<string, T>, query: Record<string, any>): IWooRestApiQuery {
+    //     for (const key in params) {
+    //         if (typeof params[key] === "object") {
+    //             // If the value is an object, loop through it and add it to the query object
+    //             for (const subKey in params[key]) {
+    //                 query[key + "[" + subKey + "]"] = params[key][subKey];
+    //             }
+    //         } else {
+    //             query[key] = params[key]; // If the value is not an object, add it to the query object
+    //         }
+    //     }
+    //     return query; // Return the query object
+    // }
 
     /**
    * Normalize query string for oAuth 1.0a
@@ -162,7 +159,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
 
         // Include params object into URL.searchParams.
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const a = this._parseParamsObject(params, query);
+        // const a = this._parseParamsObject(params, query);
         // console.log("A:", a);
 
         /**
@@ -350,8 +347,8 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {Object}
    */
-    get(
-        endpoint: WooRestApiEndpoint,
+    get<T extends WooRestApiEndpoint>(
+        endpoint: T,
         params?: Partial<WooRestApiParams>
     ): Promise<any> {
         return this._request("GET", endpoint, undefined, params);
