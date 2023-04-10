@@ -1,10 +1,9 @@
-export declare type WooRestApiVersion =
-  | "wc/v3"
-  // | "wc/v2"
-  // | "wc/v1"
-  // | "wc-api/v3"
-  // | "wc-api/v2"
-  // | "wc-api/v1";
+export declare type WooRestApiVersion = "wc/v3";
+// | "wc/v2"
+// | "wc/v1"
+// | "wc-api/v3"
+// | "wc-api/v2"
+// | "wc-api/v1";
 export declare type WooRestApiEncoding = "utf-8" | "ascii";
 export declare type WooRestApiMethod =
   | "GET"
@@ -346,7 +345,7 @@ export type SystemStatusSecurity = {
 
 export interface DELETE {
   id: number | string;
-  force?: boolean |string;
+  force?: boolean | string;
 }
 
 /* Start of Interfaces */
@@ -763,5 +762,3 @@ export type SystemStatusParams = Partial<SystemStatus>; // Partial means all pro
 
 // Webhooks
 export type WebhooksParams = Partial<Webhooks>; // Partial means all properties are optional [Temporary]
-
-
