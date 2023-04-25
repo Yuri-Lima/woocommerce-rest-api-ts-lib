@@ -110,7 +110,7 @@
   ],
   "include": [
     "src/**/*.ts"
-],
+, "config/jsonTOenv.ts"],
   "exclude": [
     "node_modules",
     "dist",
