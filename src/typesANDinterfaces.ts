@@ -12,19 +12,7 @@ export declare type WooRestApiMethod =
   | "DELETE"
   | "OPTIONS";
 
-export declare type WooRestApiEndpoint =
-  | "coupons"
-  | "customers"
-  | "orders"
-  | "products"
-  | "system_status"
-  | "reports" // TODO: add support for reports
-  | "settings" // TODO: add support for settings
-  | "webhooks" // TODO: add support for webhooks
-  | "shipping" // TODO: add support for shipping
-  | "shipping_methods" // TODO: add support for shipping_methods
-  | "taxes" // TODO: add support for taxes
-  | "payment_gateways"; // TODO: add support for payment_gateways
+export declare type WooRestApiEndpoint: string;
 
 export declare type IWooRestApiQuery = Record<string, unknown>;
 
