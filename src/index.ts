@@ -220,6 +220,13 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
             delete params.id;
         }
 
+        // Add query params to url
+        if (Object.keys(params).length !== 0) {
+            for (const key in params) {
+                url = url + "?" + key + "=" + params[key];
+            }
+        }
+
         /**
      * If port is defined, add it to the url
      */
