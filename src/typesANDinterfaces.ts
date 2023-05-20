@@ -17,6 +17,11 @@ export declare type WooRestApiEndpoint =
   | "customers"
   | "orders"
   | "products"
+  | "products/attributes"
+  | "products/categories"
+  | "products/shipping_classes"
+  | "products/tags"
+  | "products/reviews"
   | "system_status"
   | "reports" // TODO: add support for reports
   | "settings" // TODO: add support for settings
@@ -672,8 +677,28 @@ export interface ProductsReviews {
 // interface ReportsReviews {} // TODO
 // interface ReportsTopSellers {} // TODO
 // interface ReportsSales {} // TODO
-// interface TaxRates {} // TODO
-// interface TaxClasses {} // TODO
+
+export interface TaxRates {
+  id: number;
+  country: string;
+  state: string;
+  postcode: string;
+  city: string;
+  postcodes: string[];
+  cities: string[];
+  rate: string;
+  name: string;
+  priority: number;
+  compound: boolean;
+  shipping: boolean;
+  order: number;
+  class: string;
+}
+
+export interface TaxClasses {
+  slug: string;
+  name: string;
+}
 
 export interface Webhooks {
   id: number;
@@ -703,13 +728,90 @@ export interface Webhooks {
   orderby: "id" | "include" | "name" | "date" | "title" | "slug" | string;
   force: boolean;
 }
-// interface Settings {} // TODO
-// interface SettingsOptions {} // TODO
-// interface PaymentGateways {} // TODO
-// interface ShippingZones {} // TODO
-// interface ShippingZonesLocations {} // TODO
-// interface ShippingZonesMethods {} // TODO
-// interface ShippingMethods {} // TODO
+
+export interface Settings {
+  id: string;
+  label: string;
+  description: string;
+  parent_id: string;
+  sub_groups: string[];
+}
+
+export interface SettingsOptions {
+  id: string;
+  label: string;
+  description: string;
+  type: string;
+  default: string;
+  options: {
+    [key: string]: string;
+  };
+  tip: string;
+  value: string;
+  group_id: string;
+}
+
+export interface PaymentGatewaysSettings {
+  id: string;
+  label: string;
+  description: string;
+  type: "text" | "email" | "number" | "color" | "password" | "textarea" | "select" | "multiselect" | "radio" | "image_width" | "checkbox";
+  value: string;
+  default: string;
+  tip: string;
+  placeholder: string;
+}
+
+export interface PaymentGateways {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  enabled: boolean;
+  method_title: string;
+  method_description: string;
+  method_supports: string[];
+  settings: Partial<PaymentGatewaysSettings>[];
+}
+
+export interface ShippingZones {
+  id: number;
+  name: string;
+  order: number;
+}
+
+export interface ShippingZonesLocations {
+  code: string;
+  type: "postcode" | "state" | "country" | "continent"
+}
+
+export interface ShippingZonesMethodsSettings {
+  id: string;
+  label: string;
+  description: string;
+  type: "text" | "email" | "number" | "color" | "password" | "textarea" | "select" | "multiselect" | "radio" | "image_width" | "checkbox";
+  value: string;
+  default: string;
+  tip: string;
+  placeholder: string;
+}
+
+export interface ShippingZonesMethods {
+  instace_id: number;
+  title: string;
+  order: number;
+  enabled: boolean;
+  method_id: string;
+  method_title: string;
+  method_description: string;
+  method_supports: Partial<ShippingZonesMethodsSettings>[];
+}
+
+export interface ShippingMethods {
+  id: string;
+  title: string;
+  description: string;
+}
 
 export interface SystemStatus {
   environment: Partial<SystemStatusEnvironment>;
@@ -746,6 +848,7 @@ type ProductsCategoriesParams = Partial<ProductsCategories>; // Partial means al
 type ProductsShippingClassesParams = Partial<ProductsShippingClasses>; // Partial means all properties are optional [Temporary]
 type ProductsTagsParams = Partial<ProductsTags>; // Partial means all properties are optional [Temporary]
 type ProductsReviewsParams = Partial<ProductsReviews>; // Partial means all properties are optional [Temporary]
+
 /**
  * Union type for all possible params for Products
  */
@@ -756,6 +859,25 @@ export type ProductsMainParams =
   | ProductsShippingClassesParams
   | ProductsTagsParams
   | ProductsReviewsParams; // Partial means all properties are optional [Temporary]
+
+
+// Tax
+export type TaxRatesParams = Partial<TaxRates>; // Partial means all properties are optional [Temporary]
+export type TaxClassesParams = Partial<TaxClasses>; // Partial means all properties are optional [Temporary]
+
+// Settings
+export type SettingsParams = Partial<Settings>; // Partial means all properties are optional [Temporary]
+export type SettingsOptionsParams = Partial<SettingsOptions>; // Partial means all properties are optional [Temporary]
+
+// Payment Gateways
+export type PaymentGatewaysParams = Partial<PaymentGateways>; // Partial means all properties are optional [Temporary]
+export type PaymentGatewaysSettingsParams = Partial<PaymentGatewaysSettings>; // Partial means all properties are optional [Temporary]
+
+// Shipping
+export type ShippingZonesParams = Partial<ShippingZones>; // Partial means all properties are optional [Temporary]
+export type ShippingZonesLocationsParams = Partial<ShippingZonesLocations>; // Partial means all properties are optional [Temporary]
+export type ShippingZonesMethodsParams = Partial<ShippingZonesMethods>; // Partial means all properties are optional [Temporary]
+export type ShippingMethodsParams = Partial<ShippingMethods>; // Partial means all properties are optional [Temporary]
 
 // SystemStatus
 export type SystemStatusParams = Partial<SystemStatus>; // Partial means all properties are optional [Temporary8]
