@@ -848,6 +848,7 @@ type ProductsCategoriesParams = Partial<ProductsCategories>; // Partial means al
 type ProductsShippingClassesParams = Partial<ProductsShippingClasses>; // Partial means all properties are optional [Temporary]
 type ProductsTagsParams = Partial<ProductsTags>; // Partial means all properties are optional [Temporary]
 type ProductsReviewsParams = Partial<ProductsReviews>; // Partial means all properties are optional [Temporary]
+
 /**
  * Union type for all possible params for Products
  */
@@ -858,6 +859,25 @@ export type ProductsMainParams =
   | ProductsShippingClassesParams
   | ProductsTagsParams
   | ProductsReviewsParams; // Partial means all properties are optional [Temporary]
+
+
+// Tax
+export type TaxRatesParams = Partial<TaxRates>; // Partial means all properties are optional [Temporary]
+export type TaxClassesParams = Partial<TaxClasses>; // Partial means all properties are optional [Temporary]
+
+// Settings
+export type SettingsParams = Partial<Settings>; // Partial means all properties are optional [Temporary]
+export type SettingsOptionsParams = Partial<SettingsOptions>; // Partial means all properties are optional [Temporary]
+
+// Payment Gateways
+export type PaymentGatewaysParams = Partial<PaymentGateways>; // Partial means all properties are optional [Temporary]
+export type PaymentGatewaysSettingsParams = Partial<PaymentGatewaysSettings>; // Partial means all properties are optional [Temporary]
+
+// Shipping
+export type ShippingZonesParams = Partial<ShippingZones>; // Partial means all properties are optional [Temporary]
+export type ShippingZonesLocationsParams = Partial<ShippingZonesLocations>; // Partial means all properties are optional [Temporary]
+export type ShippingZonesMethodsParams = Partial<ShippingZonesMethods>; // Partial means all properties are optional [Temporary]
+export type ShippingMethodsParams = Partial<ShippingMethods>; // Partial means all properties are optional [Temporary]
 
 // SystemStatus
 export type SystemStatusParams = Partial<SystemStatus>; // Partial means all properties are optional [Temporary8]
