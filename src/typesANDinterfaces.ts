@@ -774,7 +774,12 @@ export interface PaymentGatewaysSettings {
   placeholder: string;
 }
 
-// interface ShippingZones {} // TODO
+export interface ShippingZones {
+  id: number;
+  name: string;
+  order: number;
+}
+
 // interface ShippingZonesLocations {} // TODO
 // interface ShippingZonesMethods {} // TODO
 // interface ShippingMethods {} // TODO
