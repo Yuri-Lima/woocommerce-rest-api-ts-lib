@@ -751,18 +751,6 @@ export interface SettingsOptions {
   group_id: string;
 }
 
-export interface PaymentGateways {
-  id: string;
-  title: string;
-  description: string;
-  order: number;
-  enabled: boolean;
-  method_title: string;
-  method_description: string;
-  method_supports: string[];
-  settings: Partial<Settings>[];
-}
-
 export interface PaymentGatewaysSettings {
   id: string;
   label: string;
@@ -772,6 +760,18 @@ export interface PaymentGatewaysSettings {
   default: string;
   tip: string;
   placeholder: string;
+}
+
+export interface PaymentGateways {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  enabled: boolean;
+  method_title: string;
+  method_description: string;
+  method_supports: string[];
+  settings: Partial<PaymentGatewaysSettings>[];
 }
 
 export interface ShippingZones {
