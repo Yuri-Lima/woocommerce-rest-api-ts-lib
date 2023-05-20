@@ -17,6 +17,11 @@ export declare type WooRestApiEndpoint =
   | "customers"
   | "orders"
   | "products"
+  | "products/attributes"
+  | "products/categories"
+  | "products/shipping_classes"
+  | "products/tags"
+  | "products/reviews"
   | "system_status"
   | "reports" // TODO: add support for reports
   | "settings" // TODO: add support for settings
