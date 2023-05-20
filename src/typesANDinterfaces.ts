@@ -695,7 +695,10 @@ export interface TaxRates {
   class: string;
 }
 
-// interface TaxClasses {} // TODO
+export interface TaxClasses {
+  slug: string;
+  name: string;
+}
 
 export interface Webhooks {
   id: number;
