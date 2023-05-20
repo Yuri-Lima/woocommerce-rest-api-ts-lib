@@ -728,6 +728,7 @@ export interface Webhooks {
   orderby: "id" | "include" | "name" | "date" | "title" | "slug" | string;
   force: boolean;
 }
+
 export interface Settings {
   id: string;
   label: string;
@@ -735,7 +736,21 @@ export interface Settings {
   parent_id: string;
   sub_groups: string[];
 }
-// interface SettingsOptions {} // TODO
+
+export interface SettingsOptions {
+  id: string;
+  label: string;
+  description: string;
+  type: string;
+  default: string;
+  options: {
+    [key: string]: string;
+  };
+  tip: string;
+  value: string;
+  group_id: string;
+}
+
 // interface PaymentGateways {} // TODO
 // interface ShippingZones {} // TODO
 // interface ShippingZonesLocations {} // TODO
