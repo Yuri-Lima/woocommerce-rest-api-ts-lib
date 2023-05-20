@@ -751,7 +751,29 @@ export interface SettingsOptions {
   group_id: string;
 }
 
-// interface PaymentGateways {} // TODO
+export interface PaymentGateways {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  enabled: boolean;
+  method_title: string;
+  method_description: string;
+  method_supports: string[];
+  settings: Partial<Settings>[];
+}
+
+export interface PaymentGatewaysSettings {
+  id: string;
+  label: string;
+  description: string;
+  type: "text" | "email" | "number" | "color" | "password" | "textarea" | "select" | "multiselect" | "radio" | "image_width" | "checkbox";
+  value: string;
+  default: string;
+  tip: string;
+  placeholder: string;
+}
+
 // interface ShippingZones {} // TODO
 // interface ShippingZonesLocations {} // TODO
 // interface ShippingZonesMethods {} // TODO
