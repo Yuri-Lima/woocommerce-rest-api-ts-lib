@@ -34,7 +34,8 @@
     "build:cjs:esm": "npx tsup ./src/index.ts --format cjs,esm --sourcemap",
     "prepack": "npm run clean && npm run build:cjs:esm && npm run build:types",
     "semantic-release": "semantic-release",
-    "commit": "cz"
+    "commit": "cz",
+    "postinstall": "tsc --outDir ./build"
   },
   "lint-staged": {
     "*.{ts,js,json}": [
