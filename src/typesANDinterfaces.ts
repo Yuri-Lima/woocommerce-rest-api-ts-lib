@@ -780,7 +780,10 @@ export interface ShippingZones {
   order: number;
 }
 
-// interface ShippingZonesLocations {} // TODO
+export interface ShippingZonesLocations {
+  code: string;
+  type: "postcode" | "state" | "country" | "continent"
+}
 // interface ShippingZonesMethods {} // TODO
 // interface ShippingMethods {} // TODO
 
