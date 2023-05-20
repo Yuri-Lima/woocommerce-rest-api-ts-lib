@@ -677,7 +677,24 @@ export interface ProductsReviews {
 // interface ReportsReviews {} // TODO
 // interface ReportsTopSellers {} // TODO
 // interface ReportsSales {} // TODO
-// interface TaxRates {} // TODO
+
+export interface TaxRates {
+  id: number;
+  country: string;
+  state: string;
+  postcode: string;
+  city: string;
+  postcodes: string[];
+  cities: string[];
+  rate: string;
+  name: string;
+  priority: number;
+  compound: boolean;
+  shipping: boolean;
+  order: number;
+  class: string;
+}
+
 // interface TaxClasses {} // TODO
 
 export interface Webhooks {
