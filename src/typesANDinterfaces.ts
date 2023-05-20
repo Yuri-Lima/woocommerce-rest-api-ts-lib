@@ -807,7 +807,11 @@ export interface ShippingZonesMethods {
   method_supports: Partial<ShippingZonesMethodsSettings>[];
 }
 
-// interface ShippingMethods {} // TODO
+export interface ShippingMethods {
+  id: string;
+  title: string;
+  description: string;
+}
 
 export interface SystemStatus {
   environment: Partial<SystemStatusEnvironment>;
