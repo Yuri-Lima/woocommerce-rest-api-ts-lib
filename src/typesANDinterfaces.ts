@@ -784,7 +784,29 @@ export interface ShippingZonesLocations {
   code: string;
   type: "postcode" | "state" | "country" | "continent"
 }
-// interface ShippingZonesMethods {} // TODO
+
+export interface ShippingZonesMethodsSettings {
+  id: string;
+  label: string;
+  description: string;
+  type: "text" | "email" | "number" | "color" | "password" | "textarea" | "select" | "multiselect" | "radio" | "image_width" | "checkbox";
+  value: string;
+  default: string;
+  tip: string;
+  placeholder: string;
+}
+
+export interface ShippingZonesMethods {
+  instace_id: number;
+  title: string;
+  order: number;
+  enabled: boolean;
+  method_id: string;
+  method_title: string;
+  method_description: string;
+  method_supports: Partial<ShippingZonesMethodsSettings>[];
+}
+
 // interface ShippingMethods {} // TODO
 
 export interface SystemStatus {
