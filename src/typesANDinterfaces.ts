@@ -29,7 +29,8 @@ export declare type WooRestApiEndpoint =
   | "shipping" // TODO: add support for shipping
   | "shipping_methods" // TODO: add support for shipping_methods
   | "taxes" // TODO: add support for taxes
-  | "payment_gateways"; // TODO: add support for payment_gateways
+  | "payment_gateways" // TODO: add support for payment_gateways
+  | string; // I need to have next endpoint: "orders/<id>/notes"
 
 export declare type IWooRestApiQuery = Record<string, unknown>;
 
