@@ -222,9 +222,13 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
 
         // Add query params to url
         if (Object.keys(params).length !== 0) {
-            for (const key in params) {
-                url = url + "?" + key + "=" + params[key];
-            }
+          const queryString = Object.entries(params)
+            .map(
+              ([key, value]) =>
+                `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+            )
+            .join("&");
+          url = `${url}?${queryString}`;
         }
 
         /**
