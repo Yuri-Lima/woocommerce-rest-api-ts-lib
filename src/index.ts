@@ -13,6 +13,11 @@ import {
     CouponsParams,
     CustomersParams,
     DELETE,
+    Orders,
+    Products,
+    Customers,
+    Coupons,
+    SystemStatus,
 } from "./typesANDinterfaces.js"; // Typescript types for the library
 
 export {
@@ -26,6 +31,11 @@ export {
     CouponsParams,
     CustomersParams,
     DELETE,
+    Orders,
+    Products,
+    Customers,
+    Coupons,
+    SystemStatus,
 } from "./typesANDinterfaces.js"; // Export all the types
 
 /**
@@ -39,11 +49,21 @@ export type WooRestApiOptions = IWooRestApiOptions<AxiosRequestConfig>;
  * Set all the possible query params for the WooCommerce REST API.
  */
 export type WooRestApiParams = CouponsParams &
-  CustomersParams &
-  OrdersMainParams &
-  ProductsMainParams &
-  SystemStatusParams &
-  DELETE;
+    CustomersParams &
+    OrdersMainParams &
+    ProductsMainParams &
+    SystemStatusParams &
+    DELETE;
+
+/**
+ * Response wrapper for API calls
+ */
+export interface WooCommerceApiResponse<T> {
+    data: T;
+    status: number;
+    statusText: string;
+    headers: any;
+}
 
 /**
  * WooCommerce REST API wrapper
@@ -144,9 +164,9 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         url: string,
         params: Partial<Record<string, any>>
     ): string {
-    /**
-     * Exit if url and params are not defined
-     */
+        /**
+         * Exit if url and params are not defined
+         */
         if (url.indexOf("?") === -1 && Object.keys(params).length === 0) {
             return url;
         }
@@ -182,9 +202,9 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
        * Add the key and value to the queryString
        */
             queryString +=
-        encodeURIComponent(values[i]) +
-        "=" +
-        encodeURIComponent(<string | number | boolean>query[values[i]]);
+                encodeURIComponent(values[i]) +
+                "=" +
+                encodeURIComponent(<string | number | boolean>query[values[i]]);
         }
         /**
      * Replace %5B with [ and %5D with ]
@@ -211,7 +231,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         const api = this._opt.wpAPIPrefix + "/"; // Add prefix to endpoint
 
         let url =
-      this._opt.url.slice(-1) === "/" ? this._opt.url : this._opt.url + "/";
+            this._opt.url.slice(-1) === "/" ? this._opt.url : this._opt.url + "/";
 
         url = url + api + this._opt.version + "/" + endpoint;
         // Add id param to url
@@ -222,13 +242,13 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
 
         // Add query params to url
         if (Object.keys(params).length !== 0) {
-          const queryString = Object.entries(params)
-            .map(
-              ([key, value]) =>
-                `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
-            )
-            .join("&");
-          url = `${url}?${queryString}`;
+            const queryString = Object.entries(params)
+                .map(
+                    ([key, value]) =>
+                        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
+                )
+                .join("&");
+            url = `${url}?${queryString}`;
         }
 
         /**
@@ -282,7 +302,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {Object}
    */
-    _request(
+    async _request(
         method: WooRestApiMethod,
         endpoint: string,
         data?: Record<string, unknown>,
@@ -297,10 +317,10 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         // the checking method is identical to upstream axios
         if (
             typeof process !== "undefined" &&
-      Object.prototype.toString.call(process) === "[object process]"
+            Object.prototype.toString.call(process) === "[object process]"
         ) {
             header["User-Agent"] =
-        "WooCommerce REST API - TS Client/" + this._opt.classVersion;
+                "WooCommerce REST API - TS Client/" + this._opt.classVersion;
         }
 
         let options: AxiosRequestConfig = {
@@ -348,7 +368,34 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         // Allow set and override Axios options.
         options = { ...options, ...this._opt.axiosConfig };
 
-        return axios(options);
+        try {
+            return await axios(options);
+        } catch (error: any) {
+            // Enhanced error handling
+            if (error.response) {
+                const apiError = new WooCommerceApiError(
+                    error.response.data?.message || error.message || 'API request failed',
+                    error.response.status,
+                    error.response.data,
+                    endpoint
+                );
+                throw apiError;
+            } else if (error.request) {
+                throw new WooCommerceApiError(
+                    'Network error: No response received from server',
+                    0,
+                    null,
+                    endpoint
+                );
+            } else {
+                throw new WooCommerceApiError(
+                    `Request setup error: ${error.message}`,
+                    0,
+                    null,
+                    endpoint
+                );
+            }
+        }
     }
 
     /**
@@ -359,11 +406,17 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {Object}
    */
-    get<T extends WooRestApiEndpoint>(
-        endpoint: T,
+    get<T = any>(
+        endpoint: WooRestApiEndpoint,
         params?: Partial<WooRestApiParams>
-    ): Promise<any> {
-        return this._request("GET", endpoint, undefined, params);
+    ): Promise<WooCommerceApiResponse<T>> {
+        return this._request("GET", endpoint, undefined, params)
+            .then(response => ({
+                data: response.data,
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
+            }));
     }
 
     /**
@@ -375,12 +428,18 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {Object}
    */
-    post<T extends WooRestApiEndpoint>(
-        endpoint: T,
+    post<T = any>(
+        endpoint: WooRestApiEndpoint,
         data: Record<string, unknown>,
         params?: Partial<WooRestApiParams>
-    ): Promise<any> {
-        return this._request("POST", endpoint, data, params);
+    ): Promise<WooCommerceApiResponse<T>> {
+        return this._request("POST", endpoint, data, params)
+            .then(response => ({
+                data: response.data,
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
+            }));
     }
 
     /**
@@ -392,12 +451,18 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {Object}
    */
-    put<T extends WooRestApiEndpoint>(
-        endpoint: T,
+    put<T = any>(
+        endpoint: WooRestApiEndpoint,
         data: Record<string, unknown>,
         params?: Partial<WooRestApiParams>
-    ): Promise<any> {
-        return this._request("PUT", endpoint, data, params);
+    ): Promise<WooCommerceApiResponse<T>> {
+        return this._request("PUT", endpoint, data, params)
+            .then(response => ({
+                data: response.data,
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
+            }));
     }
 
     /**
@@ -409,12 +474,18 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {Object}
    */
-    delete<T extends WooRestApiEndpoint>(
-        endpoint: T,
+    delete<T = any>(
+        endpoint: WooRestApiEndpoint,
         data: Pick<WooRestApiParams, "force">,
         params: Pick<WooRestApiParams, "id">
-    ): Promise<any> {
-        return this._request("DELETE", endpoint, data, params);
+    ): Promise<WooCommerceApiResponse<T>> {
+        return this._request("DELETE", endpoint, data, params)
+            .then(response => ({
+                data: response.data,
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
+            }));
     }
 
     /**
@@ -425,11 +496,120 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {Object}
    */
-    options<T extends WooRestApiEndpoint>(
-        endpoint: T,
+    options<T = any>(
+        endpoint: WooRestApiEndpoint,
         params?: Partial<WooRestApiParams>
-    ): Promise<any> {
-        return this._request("OPTIONS", endpoint, {}, params);
+    ): Promise<WooCommerceApiResponse<T>> {
+        return this._request("OPTIONS", endpoint, {}, params)
+            .then(response => ({
+                data: response.data,
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
+            }));
+    }
+
+    // Convenience methods with proper typing
+    /**
+     * Get all products with proper typing
+     */
+    async getProducts(params?: Record<string, any>): Promise<WooCommerceApiResponse<Products[]>> {
+        return this.get<Products[]>("products", params);
+    }
+
+    /**
+     * Get a single product by ID
+     */
+    async getProduct(id: number): Promise<WooCommerceApiResponse<Products>> {
+        return this.get<Products>("products", { id });
+    }
+
+    /**
+     * Create a new product
+     */
+    async createProduct(productData: Partial<Products>): Promise<WooCommerceApiResponse<Products>> {
+        return this.post<Products>("products", productData);
+    }
+
+    /**
+     * Update an existing product
+     */
+    async updateProduct(id: number, productData: Partial<Products>): Promise<WooCommerceApiResponse<Products>> {
+        return this.put<Products>("products", productData, { id });
+    }
+
+    /**
+     * Get all orders with proper typing
+     */
+    async getOrders(params?: Record<string, any>): Promise<WooCommerceApiResponse<Orders[]>> {
+        return this.get<Orders[]>("orders", params);
+    }
+
+    /**
+     * Get a single order by ID
+     */
+    async getOrder(id: number): Promise<WooCommerceApiResponse<Orders>> {
+        return this.get<Orders>("orders", { id });
+    }
+
+    /**
+     * Create a new order
+     */
+    async createOrder(orderData: Partial<Orders>): Promise<WooCommerceApiResponse<Orders>> {
+        return this.post<Orders>("orders", orderData);
+    }
+
+    /**
+     * Get all customers with proper typing
+     */
+    async getCustomers(params?: Partial<CustomersParams>): Promise<WooCommerceApiResponse<Customers[]>> {
+        return this.get<Customers[]>("customers", params);
+    }
+
+    /**
+     * Get a single customer by ID
+     */
+    async getCustomer(id: number): Promise<WooCommerceApiResponse<Customers>> {
+        return this.get<Customers>("customers", { id });
+    }
+
+    /**
+     * Get all coupons with proper typing
+     */
+    async getCoupons(params?: Partial<CouponsParams>): Promise<WooCommerceApiResponse<Coupons[]>> {
+        return this.get<Coupons[]>("coupons", params);
+    }
+
+    /**
+     * Get system status
+     */
+    async getSystemStatus(): Promise<WooCommerceApiResponse<SystemStatus>> {
+        return this.get<SystemStatus>("system_status");
+    }
+}
+
+/**
+ * WooCommerce API Error.
+ */
+export class WooCommerceApiError extends Error {
+    constructor(
+        message: string,
+        public statusCode?: number,
+        public response?: any,
+        public endpoint?: string
+    ) {
+        super(message);
+        this.name = 'WooCommerceApiError';
+    }
+}
+
+/**
+ * Authentication Error.
+ */
+export class AuthenticationError extends WooCommerceApiError {
+    constructor(message = 'Authentication failed') {
+        super(message, 401);
+        this.name = 'AuthenticationError';
     }
 }
 
