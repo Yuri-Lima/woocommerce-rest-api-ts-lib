@@ -1,11 +1,14 @@
 {
-    "extends": "./tsconfig.base.json", // <- this is the important part to extend the base config
-    "compilerOptions": {
-      "lib": ["ES6", "DOM"], // <-- property indicates to TypeScript what types it should reference to assist you while writing code for your project.
-      "target": "ES6", // <-- property indicates to TypeScript what version of JavaScript you want to target.
-      "module": "CommonJS", // <-- property indicates to TypeScript what module system you want yo be used when compiling your code.
-      "moduleResolution": "Node", // <-- property indicates to TypeScript how to resolve modules like import statements.
-      "outDir": "../lib/cjs", // <-- property indicates to TypeScript where to put the compiled JavaScript files.
-      "declarationDir": "../lib/cjs/types" // <-- property indicates to TypeScript where to put the compiled TypeScript declaration files.
-    }
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "ES6",
+      "DOM"
+    ],
+    "target": "ES6",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "../lib/cjs",
+    "declarationDir": "../lib/cjs/types"
   }
+}
