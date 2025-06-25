@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "axios": "^1.10.0",
+    "dynamic.envs": "^1.0.4",
     "oauth-1.0a": "^2.2.6",
     "typescript": "^5.8.3",
     "url-parse": "^1.5.10"

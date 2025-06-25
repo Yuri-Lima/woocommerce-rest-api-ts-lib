@@ -103,7 +103,8 @@
   ],
   "include": [
     "src/**/*.ts",
-    "config/jsonTOenv.ts"
+    "config/jsonTOenv.ts",
+    "jest.config.ts"
   ],
   "exclude": [
     "node_modules",
