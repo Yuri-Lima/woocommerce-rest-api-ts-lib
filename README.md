@@ -12,12 +12,14 @@
 
 A modern, type-safe TypeScript library for the WooCommerce REST API with enhanced error handling, improved type safety, and convenient methods for common operations.
 
-✨ **New Features in v7.0.2:**
+✨ **New Features in v7.1.0:**
 - 🛡️ **Enhanced Error Handling** - Custom error classes with detailed error information
 - 🔧 **Improved Type Safety** - Better response typing with `WooCommerceApiResponse<T>`
 - 🚀 **Convenience Methods** - Easy-to-use methods for common operations
 - 📦 **Modern Module Support** - Full ESM and CJS compatibility
 - 🎯 **Better Developer Experience** - Comprehensive TypeScript support
+- 🔧 **Fixed Configuration Issues** - Resolved TypeScript and ESLint compatibility problems
+- 📝 **Updated Dependencies** - Latest TypeScript 5.8.3 and modern tooling
 
 New TypeScript library for WooCommerce REST API. Supports CommonJS (CJS) and ECMAScript (ESM)
 
@@ -358,6 +360,12 @@ The library includes comprehensive TypeScript definitions for all WooCommerce en
 
 If you're upgrading from an earlier version, note these changes:
 
+### From v7.0.x to v7.1.0
+- **No Breaking Changes**: v7.1.0 is fully backward compatible
+- **Improved Stability**: Better build process and dependency management
+- **Enhanced Tooling**: Updated TypeScript and ESLint configurations
+
+### From v6.x and earlier
 1. **Response Structure**: All methods now return `WooCommerceApiResponse<T>` instead of raw Axios responses
 2. **Error Handling**: New custom error classes replace generic errors
 3. **Convenience Methods**: New methods like `getProducts()`, `getOrders()` etc. are available
@@ -365,12 +373,15 @@ If you're upgrading from an earlier version, note these changes:
 
 ## 📊 Changelog
 
-### v7.0.2 (Latest)
+### v7.1.0 (Latest)
 - ✨ Added enhanced error handling with custom error classes
 - 🔧 Improved type safety with `WooCommerceApiResponse<T>`
 - 🚀 Added convenience methods for common operations
-- 📦 Fixed TypeScript configuration issues
+- 📦 Fixed TypeScript configuration issues and ESLint compatibility
 - 🛡️ Better input validation and error messages
+- 🔧 Resolved build and publishing pipeline issues
+- 📝 Updated to TypeScript 5.8.3 with latest dependencies
+- 🎯 Improved developer experience with better tooling
 
 [See full changelog](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/blob/main/CHANGELOG.md)
 
