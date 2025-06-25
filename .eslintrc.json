@@ -40,6 +40,19 @@
             "parserOptions": {
                 "project": null
             }
+        },
+        {
+            "files": [
+                "*.js"
+            ],
+            "parser": "espree",
+            "parserOptions": {
+                "ecmaVersion": 2020,
+                "sourceType": "script"
+            },
+            "rules": {
+                "@typescript-eslint/no-var-requires": "off"
+            }
         }
     ]
 }
