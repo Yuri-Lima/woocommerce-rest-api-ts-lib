@@ -756,7 +756,18 @@ export interface PaymentGatewaysSettings {
   id: string;
   label: string;
   description: string;
-  type: "text" | "email" | "number" | "color" | "password" | "textarea" | "select" | "multiselect" | "radio" | "image_width" | "checkbox";
+  type:
+    | "text"
+    | "email"
+    | "number"
+    | "color"
+    | "password"
+    | "textarea"
+    | "select"
+    | "multiselect"
+    | "radio"
+    | "image_width"
+    | "checkbox";
   value: string;
   default: string;
   tip: string;
@@ -783,14 +794,25 @@ export interface ShippingZones {
 
 export interface ShippingZonesLocations {
   code: string;
-  type: "postcode" | "state" | "country" | "continent"
+  type: "postcode" | "state" | "country" | "continent";
 }
 
 export interface ShippingZonesMethodsSettings {
   id: string;
   label: string;
   description: string;
-  type: "text" | "email" | "number" | "color" | "password" | "textarea" | "select" | "multiselect" | "radio" | "image_width" | "checkbox";
+  type:
+    | "text"
+    | "email"
+    | "number"
+    | "color"
+    | "password"
+    | "textarea"
+    | "select"
+    | "multiselect"
+    | "radio"
+    | "image_width"
+    | "checkbox";
   value: string;
   default: string;
   tip: string;
@@ -860,7 +882,6 @@ export type ProductsMainParams =
   | ProductsShippingClassesParams
   | ProductsTagsParams
   | ProductsReviewsParams; // Partial means all properties are optional [Temporary]
-
 
 // Tax
 export type TaxRatesParams = Partial<TaxRates>; // Partial means all properties are optional [Temporary]
