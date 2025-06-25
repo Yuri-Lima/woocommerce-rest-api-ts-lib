@@ -28,7 +28,7 @@
     "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint . --ext .ts",
     "lint-and-fix": "eslint . --ext .ts --fix",
-    "prepublishOnly": "npm run dep:update && npm run format && npm run lint-and-fix",
+    "prepublishOnly": "npm run format && npm run lint-and-fix",
     "clean": "rm -rf ./dist",
     "build:types": "npx tsc --emitDeclarationOnly --declaration",
     "build:cjs:esm": "npx tsup ./src/index.ts --format cjs,esm --sourcemap",
