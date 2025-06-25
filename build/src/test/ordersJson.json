@@ -1,0 +1,1165 @@
+[
+    {
+        "id": 66621,
+        "parent_id": 0,
+        "status": "on-hold",
+        "currency": "BRL",
+        "version": "6.0.1",
+        "prices_include_tax": false,
+        "date_created": "2022-05-01T15:17:30",
+        "date_modified": "2022-05-01T15:17:30",
+        "discount_total": "0.00",
+        "discount_tax": "0.00",
+        "shipping_total": "0.00",
+        "shipping_tax": "0.00",
+        "cart_tax": "0.00",
+        "total": "374.80",
+        "total_tax": "0.00",
+        "customer_id": 1,
+        "order_key": "wc_order_T11dai6ISTCS0",
+        "billing": {
+            "first_name": "Teste",
+            "last_name": "Teste",
+            "company": "Teste",
+            "address_1": "VITOR KONDER",
+            "address_2": "",
+            "city": "florianópolis",
+            "state": "SC",
+            "postcode": "88015-400",
+            "country": "BR",
+            "email": "jardel.godinho@gmail.com",
+            "phone": "(85) 99685-9001",
+            "payment": "",
+            "billing_cpf": "005.762.739-88",
+            "billing_cnpj": "18.270.630/0001-41",
+            "billing_company": "Teste",
+            "space": "",
+            "delivery": "",
+            "billing_recipient": "teste",
+            "billing_recipient_phone": "85996859001",
+            "billing_number": "302",
+            "billing_complementary": "APTO 704",
+            "billing_neighborhood": "CENTRO",
+            "billing_msg": "testes",
+            "space_2": "",
+            "number": "302",
+            "neighborhood": "CENTRO",
+            "persontype": "J",
+            "cpf": "00576273988",
+            "rg": "",
+            "cnpj": "18270630000141",
+            "ie": "",
+            "birthdate": "",
+            "sex": "",
+            "cellphone": ""
+        },
+        "shipping": {
+            "first_name": "",
+            "last_name": "",
+            "company": "",
+            "address_1": "",
+            "address_2": "",
+            "city": "",
+            "state": "",
+            "postcode": "",
+            "country": "",
+            "phone": "",
+            "number": "",
+            "neighborhood": ""
+        },
+        "payment_method": "bacs",
+        "payment_method_title": "PIX",
+        "transaction_id": "",
+        "customer_ip_address": "127.0.0.1",
+        "customer_user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
+        "created_via": "checkout",
+        "customer_note": "",
+        "date_completed": null,
+        "date_paid": null,
+        "cart_hash": "d503384c6706e15cc7ce3abb181c8df9",
+        "number": "66621",
+        "meta_data": [
+            {
+                "id": 1559419,
+                "key": "tm_woo_api_sync_enabled_for_Loja+Base",
+                "value": "no"
+            },
+            {
+                "id": 1559449,
+                "key": "_billing_persontype",
+                "value": "2"
+            },
+            {
+                "id": 1559450,
+                "key": "_billing_cpf",
+                "value": "005.762.739-88"
+            },
+            {
+                "id": 1559451,
+                "key": "_billing_cnpj",
+                "value": "18.270.630/0001-41"
+            },
+            {
+                "id": 1559452,
+                "key": "_billing_recipient",
+                "value": "teste"
+            },
+            {
+                "id": 1559453,
+                "key": "_billing_recipient_phone",
+                "value": "85996859001"
+            },
+            {
+                "id": 1559454,
+                "key": "_billing_number",
+                "value": "302"
+            },
+            {
+                "id": 1559455,
+                "key": "_billing_complementary",
+                "value": "APTO 704"
+            },
+            {
+                "id": 1559456,
+                "key": "_billing_neighborhood",
+                "value": "CENTRO"
+            },
+            {
+                "id": 1559457,
+                "key": "_billing_msg",
+                "value": "testes"
+            },
+            {
+                "id": 1559458,
+                "key": "is_vat_exempt",
+                "value": "no"
+            },
+            {
+                "id": 1559459,
+                "key": "thwcfe_ship_to_billing",
+                "value": "1"
+            },
+            {
+                "id": 1559460,
+                "key": "_thwcfe_disabled_fields",
+                "value": "time"
+            },
+            {
+                "id": 1559461,
+                "key": "billing_cpf",
+                "value": "005.762.739-88"
+            },
+            {
+                "id": 1559462,
+                "key": "billing_cnpj",
+                "value": "18.270.630/0001-41"
+            },
+            {
+                "id": 1559463,
+                "key": "billing_company",
+                "value": "Teste"
+            },
+            {
+                "id": 1559464,
+                "key": "billing_recipient",
+                "value": "teste"
+            },
+            {
+                "id": 1559465,
+                "key": "billing_recipient_phone",
+                "value": "85996859001"
+            },
+            {
+                "id": 1559466,
+                "key": "billing_number",
+                "value": "302"
+            },
+            {
+                "id": 1559467,
+                "key": "billing_complementary",
+                "value": "APTO 704"
+            },
+            {
+                "id": 1559468,
+                "key": "billing_neighborhood",
+                "value": "CENTRO"
+            },
+            {
+                "id": 1559469,
+                "key": "billing_msg",
+                "value": "testes"
+            },
+            {
+                "id": 1559470,
+                "key": "date",
+                "value": "01/05/2022"
+            },
+            {
+                "id": 1559471,
+                "key": "time_celebration",
+                "value": "Antes das 8h00"
+            }
+        ],
+        "line_items": [
+            {
+                "id": 46981,
+                "name": "Box Petiscos",
+                "product_id": 32205,
+                "variation_id": 0,
+                "quantity": 1,
+                "tax_class": "",
+                "subtotal": "199.90",
+                "subtotal_tax": "0.00",
+                "total": "199.90",
+                "total_tax": "0.00",
+                "taxes": [],
+                "meta_data": [],
+                "sku": "",
+                "price": 199.9,
+                "parent_name": null
+            },
+            {
+                "id": 46982,
+                "name": "Cesta Café da Manhã Coqueiros",
+                "product_id": 32129,
+                "variation_id": 0,
+                "quantity": 1,
+                "tax_class": "",
+                "subtotal": "159.90",
+                "subtotal_tax": "0.00",
+                "total": "159.90",
+                "total_tax": "0.00",
+                "taxes": [],
+                "meta_data": [],
+                "sku": "",
+                "price": 159.9,
+                "parent_name": null
+            }
+        ],
+        "tax_lines": [],
+        "shipping_lines": [
+            {
+                "id": 46984,
+                "method_title": "Frete grátis",
+                "method_id": "free_shipping",
+                "instance_id": "30",
+                "total": "0.00",
+                "total_tax": "0.00",
+                "taxes": [],
+                "meta_data": [
+                    {
+                        "id": 380952,
+                        "key": "Itens",
+                        "value": "Box Petiscos &times; 1, Cesta Café da Manhã Coqueiros &times; 1",
+                        "display_key": "Itens",
+                        "display_value": "Box Petiscos &times; 1, Cesta Café da Manhã Coqueiros &times; 1"
+                    }
+                ]
+            }
+        ],
+        "fee_lines": [
+            {
+                "id": 46983,
+                "name": "Horário de Entrega (Antes das 8h00)",
+                "tax_class": "0",
+                "tax_status": "taxable",
+                "amount": "15",
+                "total": "15.00",
+                "total_tax": "0.00",
+                "taxes": [],
+                "meta_data": []
+            }
+        ],
+        "coupon_lines": [],
+        "refunds": [],
+        "date_created_gmt": "2022-05-01T18:17:30",
+        "date_modified_gmt": "2022-05-01T18:17:30",
+        "date_completed_gmt": null,
+        "date_paid_gmt": null,
+        "schedule": {
+            "date": "01/05/2022",
+            "time": "",
+            "time_celebration": "Antes das 8h00",
+            "space_3": ""
+        },
+        "currency_symbol": "R$",
+        "_links": {
+            "self": [
+                {
+                    "href": "http://localhost:10003/wp-json/wc/v3/orders/66621"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "http://localhost:10003/wp-json/wc/v3/orders"
+                }
+            ],
+            "customer": [
+                {
+                    "href": "http://localhost:10003/wp-json/wc/v3/customers/1"
+                }
+            ]
+        }
+    },
+    {
+        "id": 36875,
+        "parent_id": 0,
+        "status": "completed",
+        "currency": "BRL",
+        "version": "6.6.0",
+        "prices_include_tax": true,
+        "date_created": "2022-07-02T19:10:21",
+        "date_modified": "2022-07-03T09:49:19",
+        "discount_total": "0.00",
+        "discount_tax": "0.00",
+        "shipping_total": "15.00",
+        "shipping_tax": "0.00",
+        "cart_tax": "0.00",
+        "total": "164.90",
+        "total_tax": "0.00",
+        "customer_id": 0,
+        "order_key": "wc_order_CsufiGQ7amiLL",
+        "billing": {
+            "first_name": "Mariana",
+            "last_name": "Barreto",
+            "company": "",
+            "address_1": "Rua Nove de Julho",
+            "address_2": "",
+            "city": "São José",
+            "state": "SC",
+            "postcode": "88111-380",
+            "country": "BR",
+            "email": "maris.barreto19@gmail.com",
+            "phone": "85996859001",
+            "payment": "",
+            "billing_cpf": "061.828.689-61",
+            "billing_cnpj": "",
+            "billing_company": "",
+            "space": "",
+            "delivery": "",
+            "billing_recipient": "Vanessa Barreto Bossle",
+            "billing_recipient_phone": "85996859001",
+            "billing_number": "611",
+            "billing_complementary": "Casa Branca em frente ao salão de Beleza",
+            "billing_neighborhood": "Bairro Ipiranga",
+            "billing_msg": "Nessa, que seu dia seja repleto de amor.\r\n\r\nDaqueles que te amam e te querem bem.\r\n\r\nCom carinho,\r\nRenato, Josiani, Mana, Mari, Manu e Miguelzinho",
+            "space_2": "",
+            "number": "611",
+            "neighborhood": "Bairro Ipiranga",
+            "persontype": "F",
+            "cpf": "06182868961",
+            "rg": "",
+            "cnpj": "",
+            "ie": "",
+            "birthdate": "",
+            "sex": "",
+            "cellphone": ""
+        },
+        "shipping": {
+            "first_name": "",
+            "last_name": "",
+            "company": "",
+            "address_1": "",
+            "address_2": "",
+            "city": "",
+            "state": "",
+            "postcode": "",
+            "country": "",
+            "phone": "",
+            "number": "",
+            "neighborhood": ""
+        },
+        "payment_method": "bacs",
+        "payment_method_title": "PIX ou Transferência <img src=\"https://innovacestas.com.br/wp-content/uploads/2021/10/PIX.png\" />",
+        "transaction_id": "",
+        "customer_ip_address": "189.4.77.0",
+        "customer_user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Mobile/15E148 Safari/604.1",
+        "created_via": "checkout",
+        "customer_note": "",
+        "date_completed": "2022-07-03T09:49:19",
+        "date_paid": "2022-07-03T09:49:19",
+        "cart_hash": "a7fee777c8ff0919b8e9cbf0d90849e8",
+        "number": "36875",
+        "meta_data": [
+            {
+                "id": 996295,
+                "key": "_billing_persontype",
+                "value": "1"
+            },
+            {
+                "id": 996296,
+                "key": "_billing_cpf",
+                "value": "061.828.689-61"
+            },
+            {
+                "id": 996297,
+                "key": "_billing_cnpj",
+                "value": ""
+            },
+            {
+                "id": 996298,
+                "key": "_billing_recipient",
+                "value": "Vanessa Barreto Bossle"
+            },
+            {
+                "id": 996299,
+                "key": "_billing_recipient_phone",
+                "value": "48998051955"
+            },
+            {
+                "id": 996300,
+                "key": "_billing_number",
+                "value": "611"
+            },
+            {
+                "id": 996301,
+                "key": "_billing_complementary",
+                "value": "Casa Branca em frente ao salão de Beleza"
+            },
+            {
+                "id": 996302,
+                "key": "_billing_neighborhood",
+                "value": "Bairro Ipiranga"
+            },
+            {
+                "id": 996303,
+                "key": "_billing_msg",
+                "value": "Nessa, que seu dia seja repleto de amor.\n\nDaqueles que te amam e te querem bem.\n\nCom carinho,\nRenato, Josiani, Mana, Mari, Manu e Miguelzinho"
+            },
+            {
+                "id": 996304,
+                "key": "is_vat_exempt",
+                "value": "no"
+            },
+            {
+                "id": 996305,
+                "key": "_thwcfe_ship_to_billing",
+                "value": "1"
+            },
+            {
+                "id": 996306,
+                "key": "_thwcfe_disabled_fields",
+                "value": "time"
+            },
+            {
+                "id": 996307,
+                "key": "billing_cpf",
+                "value": "061.828.689-61"
+            },
+            {
+                "id": 996308,
+                "key": "billing_recipient",
+                "value": "Vanessa Barreto Bossle"
+            },
+            {
+                "id": 996309,
+                "key": "billing_recipient_phone",
+                "value": "48998051955"
+            },
+            {
+                "id": 996310,
+                "key": "billing_number",
+                "value": "611"
+            },
+            {
+                "id": 996311,
+                "key": "billing_complementary",
+                "value": "Casa Branca em frente ao salão de Beleza"
+            },
+            {
+                "id": 996312,
+                "key": "billing_neighborhood",
+                "value": "Bairro Ipiranga"
+            },
+            {
+                "id": 996313,
+                "key": "billing_msg",
+                "value": "Nessa, que seu dia seja repleto de amor.\r\n\r\nDaqueles que te amam e te querem bem.\r\n\r\nCom carinho,\r\nRenato, Josiani, Mana, Mari, Manu e Miguelzinho"
+            },
+            {
+                "id": 996314,
+                "key": "date",
+                "value": "03/07/2022"
+            },
+            {
+                "id": 996315,
+                "key": "time_celebration",
+                "value": "Período da Manhã"
+            },
+            {
+                "id": 996316,
+                "key": "_wc_facebook_for_woocommerce_order_placed",
+                "value": "yes"
+            },
+            {
+                "id": 996320,
+                "key": "_new_order_email_sent",
+                "value": "true"
+            },
+            {
+                "id": 996321,
+                "key": "_wc_facebook_for_woocommerce_purchase_tracked",
+                "value": "yes"
+            },
+            {
+                "id": 996328,
+                "key": "_shipping_number",
+                "value": ""
+            },
+            {
+                "id": 996329,
+                "key": "_shipping_neighborhood",
+                "value": ""
+            }
+        ],
+        "line_items": [
+            {
+                "id": 18074,
+                "name": "Doce Encanto",
+                "product_id": 2157,
+                "variation_id": 0,
+                "quantity": 1,
+                "tax_class": "",
+                "subtotal": "149.90",
+                "subtotal_tax": "0.00",
+                "total": "149.90",
+                "total_tax": "0.00",
+                "taxes": [],
+                "meta_data": [],
+                "sku": "",
+                "price": 149.9,
+                "image": {
+                    "id": "807",
+                    "src": "https://innovacestas.com.br/wp-content/uploads/2020/05/Doce-Encanto.jpg"
+                },
+                "parent_name": null
+            }
+        ],
+        "tax_lines": [],
+        "shipping_lines": [
+            {
+                "id": 18075,
+                "method_title": "Delivery",
+                "method_id": "flat_rate",
+                "instance_id": "9",
+                "total": "15.00",
+                "total_tax": "0.00",
+                "taxes": [],
+                "meta_data": [
+                    {
+                        "id": 148342,
+                        "key": "Itens",
+                        "value": "Doce Encanto &times; 1",
+                        "display_key": "Itens",
+                        "display_value": "Doce Encanto &times; 1"
+                    }
+                ]
+            }
+        ],
+        "fee_lines": [],
+        "coupon_lines": [],
+        "refunds": [],
+        "payment_url": "https://innovacestas.com.br/finalizar-compra/order-pay/36875/?pay_for_order=true&key=wc_order_CsufiGQ7amiLL",
+        "is_editable": false,
+        "needs_payment": false,
+        "needs_processing": true,
+        "date_created_gmt": "2022-07-02T22:10:21",
+        "date_modified_gmt": "2022-07-03T12:49:19",
+        "date_completed_gmt": "2022-07-03T12:49:19",
+        "date_paid_gmt": "2022-07-03T12:49:19",
+        "schedule": {
+            "date": "03/07/2022",
+            "time": "",
+            "delivery_alert": "",
+            "time_celebration": "Período da Manhã",
+            "space_3": ""
+        },
+        "currency_symbol": "R$",
+        "_links": {
+            "self": [
+                {
+                    "href": "https://innovacestas.com.br/wp-json/wc/v3/orders/36875"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https://innovacestas.com.br/wp-json/wc/v3/orders"
+                }
+            ]
+        }
+    },
+    {
+        "id": 36874,
+        "parent_id": 0,
+        "status": "completed",
+        "currency": "BRL",
+        "version": "6.6.0",
+        "prices_include_tax": true,
+        "date_created": "2022-07-02T17:55:52",
+        "date_modified": "2022-07-03T10:05:31",
+        "discount_total": "0.00",
+        "discount_tax": "0.00",
+        "shipping_total": "20.00",
+        "shipping_tax": "0.00",
+        "cart_tax": "0.00",
+        "total": "309.90",
+        "total_tax": "0.00",
+        "customer_id": 0,
+        "order_key": "wc_order_PYC1jtOGNjsb7",
+        "billing": {
+            "first_name": "Nayara",
+            "last_name": "Gonçalves",
+            "company": "",
+            "address_1": "Rua José Graciliano da Silva",
+            "address_2": "",
+            "city": "São José",
+            "state": "SC",
+            "postcode": "88115-239",
+            "country": "BR",
+            "email": "nayarapg@hotmail.com",
+            "phone": "85996859001",
+            "payment": "",
+            "billing_cpf": "035.916.769-18",
+            "billing_cnpj": "",
+            "billing_company": "",
+            "space": "",
+            "delivery": "",
+            "billing_recipient": "Scheila Pereira",
+            "billing_recipient_phone": "85996859001",
+            "billing_number": "170",
+            "billing_complementary": "Bloco 4 apto 104",
+            "billing_neighborhood": "Serraria",
+            "billing_msg": "Parabéns para a minha amiga irmã que está quarentando ainda mais linda!\r\nTe amo e desejo apenas as melhores coisas desse mundão!!\r\nBeijos\r\nNay",
+            "space_2": "",
+            "number": "170",
+            "neighborhood": "Serraria",
+            "persontype": "F",
+            "cpf": "03591676918",
+            "rg": "",
+            "cnpj": "",
+            "ie": "",
+            "birthdate": "",
+            "sex": "",
+            "cellphone": ""
+        },
+        "shipping": {
+            "first_name": "",
+            "last_name": "",
+            "company": "",
+            "address_1": "",
+            "address_2": "",
+            "city": "",
+            "state": "",
+            "postcode": "",
+            "country": "",
+            "phone": "",
+            "number": "",
+            "neighborhood": ""
+        },
+        "payment_method": "bacs",
+        "payment_method_title": "PIX ou Transferência <img src=\"https://innovacestas.com.br/wp-content/uploads/2021/10/PIX.png\" />",
+        "transaction_id": "",
+        "customer_ip_address": "179.232.120.95",
+        "customer_user_agent": "Mozilla/5.0 (Linux; Android 11; moto g(10)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Mobile Safari/537.36",
+        "created_via": "checkout",
+        "customer_note": "",
+        "date_completed": "2022-07-03T10:05:31",
+        "date_paid": "2022-07-03T10:05:31",
+        "cart_hash": "b24cdbd254b0bc0202d60224586b50bf",
+        "number": "36874",
+        "meta_data": [
+            {
+                "id": 996240,
+                "key": "_billing_persontype",
+                "value": "1"
+            },
+            {
+                "id": 996241,
+                "key": "_billing_cpf",
+                "value": "035.916.769-18"
+            },
+            {
+                "id": 996242,
+                "key": "_billing_cnpj",
+                "value": ""
+            },
+            {
+                "id": 996243,
+                "key": "_billing_recipient",
+                "value": "Scheila Pereira"
+            },
+            {
+                "id": 996244,
+                "key": "_billing_recipient_phone",
+                "value": "48 99830-6708"
+            },
+            {
+                "id": 996245,
+                "key": "_billing_number",
+                "value": "170"
+            },
+            {
+                "id": 996246,
+                "key": "_billing_complementary",
+                "value": "Bloco 4 apto 104"
+            },
+            {
+                "id": 996247,
+                "key": "_billing_neighborhood",
+                "value": "Serraria"
+            },
+            {
+                "id": 996248,
+                "key": "_billing_msg",
+                "value": "Parabéns para a minha amiga irmã que está quarentando ainda mais linda!\nTe amo e desejo apenas as melhores coisas desse mundão!!\nBeijos\nNay"
+            },
+            {
+                "id": 996249,
+                "key": "is_vat_exempt",
+                "value": "no"
+            },
+            {
+                "id": 996250,
+                "key": "_thwcfe_ship_to_billing",
+                "value": "1"
+            },
+            {
+                "id": 996251,
+                "key": "_thwcfe_disabled_fields",
+                "value": "time"
+            },
+            {
+                "id": 996252,
+                "key": "billing_cpf",
+                "value": "035.916.769-18"
+            },
+            {
+                "id": 996253,
+                "key": "billing_recipient",
+                "value": "Scheila Pereira"
+            },
+            {
+                "id": 996254,
+                "key": "billing_recipient_phone",
+                "value": "48 99830-6708"
+            },
+            {
+                "id": 996255,
+                "key": "billing_number",
+                "value": "170"
+            },
+            {
+                "id": 996256,
+                "key": "billing_complementary",
+                "value": "Bloco 4 apto 104"
+            },
+            {
+                "id": 996257,
+                "key": "billing_neighborhood",
+                "value": "Serraria"
+            },
+            {
+                "id": 996258,
+                "key": "billing_msg",
+                "value": "Parabéns para a minha amiga irmã que está quarentando ainda mais linda!\r\nTe amo e desejo apenas as melhores coisas desse mundão!!\r\nBeijos\r\nNay"
+            },
+            {
+                "id": 996259,
+                "key": "date",
+                "value": "03/07/2022"
+            },
+            {
+                "id": 996260,
+                "key": "time_celebration",
+                "value": "Período da Manhã"
+            },
+            {
+                "id": 996261,
+                "key": "_wc_facebook_for_woocommerce_order_placed",
+                "value": "yes"
+            },
+            {
+                "id": 996265,
+                "key": "_new_order_email_sent",
+                "value": "true"
+            },
+            {
+                "id": 996266,
+                "key": "_wc_facebook_for_woocommerce_purchase_tracked",
+                "value": "yes"
+            },
+            {
+                "id": 996324,
+                "key": "_shipping_number",
+                "value": ""
+            },
+            {
+                "id": 996325,
+                "key": "_shipping_neighborhood",
+                "value": ""
+            }
+        ],
+        "line_items": [
+            {
+                "id": 18072,
+                "name": "Baú Rosas Carinho Chandon",
+                "product_id": 2102,
+                "variation_id": 0,
+                "quantity": 1,
+                "tax_class": "",
+                "subtotal": "289.90",
+                "subtotal_tax": "0.00",
+                "total": "289.90",
+                "total_tax": "0.00",
+                "taxes": [],
+                "meta_data": [],
+                "sku": "",
+                "price": 289.9,
+                "image": {
+                    "id": "688",
+                    "src": "https://innovacestas.com.br/wp-content/uploads/2020/05/Baú-Rosas-Carinho-Chandon-1.jpg"
+                },
+                "parent_name": null
+            }
+        ],
+        "tax_lines": [],
+        "shipping_lines": [
+            {
+                "id": 18073,
+                "method_title": "Delivery",
+                "method_id": "flat_rate",
+                "instance_id": "11",
+                "total": "20.00",
+                "total_tax": "0.00",
+                "taxes": [],
+                "meta_data": [
+                    {
+                        "id": 148327,
+                        "key": "Itens",
+                        "value": "Baú Rosas Carinho Chandon &times; 1",
+                        "display_key": "Itens",
+                        "display_value": "Baú Rosas Carinho Chandon &times; 1"
+                    }
+                ]
+            }
+        ],
+        "fee_lines": [],
+        "coupon_lines": [],
+        "refunds": [],
+        "payment_url": "https://innovacestas.com.br/finalizar-compra/order-pay/36874/?pay_for_order=true&key=wc_order_PYC1jtOGNjsb7",
+        "is_editable": false,
+        "needs_payment": false,
+        "needs_processing": true,
+        "date_created_gmt": "2022-07-02T20:55:52",
+        "date_modified_gmt": "2022-07-03T13:05:31",
+        "date_completed_gmt": "2022-07-03T13:05:31",
+        "date_paid_gmt": "2022-07-03T13:05:31",
+        "schedule": {
+            "date": "03/07/2022",
+            "time": "",
+            "delivery_alert": "",
+            "time_celebration": "Período da Manhã",
+            "space_3": ""
+        },
+        "currency_symbol": "R$",
+        "_links": {
+            "self": [
+                {
+                    "href": "https://innovacestas.com.br/wp-json/wc/v3/orders/36874"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https://innovacestas.com.br/wp-json/wc/v3/orders"
+                }
+            ]
+        }
+    },
+    {
+        "id": 36873,
+        "parent_id": 0,
+        "status": "completed",
+        "currency": "BRL",
+        "version": "6.6.0",
+        "prices_include_tax": true,
+        "date_created": "2022-07-02T13:30:57",
+        "date_modified": "2022-07-03T08:48:14",
+        "discount_total": "0.00",
+        "discount_tax": "0.00",
+        "shipping_total": "32.00",
+        "shipping_tax": "0.00",
+        "cart_tax": "0.00",
+        "total": "251.90",
+        "total_tax": "0.00",
+        "customer_id": 0,
+        "order_key": "wc_order_xyhq7G0pGlaSc",
+        "billing": {
+            "first_name": "Elis",
+            "last_name": "Capeletti",
+            "company": "",
+            "address_1": "Rua Dario João de Souza",
+            "address_2": "",
+            "city": "florianopolis",
+            "state": "SC",
+            "postcode": "88053-760",
+            "country": "BR",
+            "email": "eliscapeletti@hotmail.com",
+            "phone": "85996859001",
+            "payment": "",
+            "billing_cpf": "921.232.520-34",
+            "billing_cnpj": "",
+            "billing_company": "",
+            "space": "",
+            "delivery": "",
+            "billing_recipient": "Marcia Capeletti",
+            "billing_recipient_phone": "85996859001",
+            "billing_number": "61",
+            "billing_complementary": "apto. 210B",
+            "billing_neighborhood": "Jurere",
+            "billing_msg": "Mana, tenha um dia muito doce, te amamos! Feliz aniver!\r\nElis e Letícia",
+            "space_2": "",
+            "number": "61",
+            "neighborhood": "Jurere",
+            "persontype": "F",
+            "cpf": "92123252034",
+            "rg": "",
+            "cnpj": "",
+            "ie": "",
+            "birthdate": "",
+            "sex": "",
+            "cellphone": ""
+        },
+        "shipping": {
+            "first_name": "",
+            "last_name": "",
+            "company": "",
+            "address_1": "",
+            "address_2": "",
+            "city": "",
+            "state": "",
+            "postcode": "",
+            "country": "",
+            "phone": "",
+            "number": "",
+            "neighborhood": ""
+        },
+        "payment_method": "bacs",
+        "payment_method_title": "PIX ou Transferência <img src=\"https://innovacestas.com.br/wp-content/uploads/2021/10/PIX.png\" />",
+        "transaction_id": "",
+        "customer_ip_address": "189.6.245.142",
+        "customer_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.66 Safari/537.36 Edg/103.0.1264.44",
+        "created_via": "checkout",
+        "customer_note": "",
+        "date_completed": "2022-07-03T08:48:14",
+        "date_paid": "2022-07-03T08:48:14",
+        "cart_hash": "e472b17fe31d78eaf5191713b4eda912",
+        "number": "36873",
+        "meta_data": [
+            {
+                "id": 996159,
+                "key": "_billing_persontype",
+                "value": "1"
+            },
+            {
+                "id": 996160,
+                "key": "_billing_cpf",
+                "value": "921.232.520-34"
+            },
+            {
+                "id": 996161,
+                "key": "_billing_cnpj",
+                "value": ""
+            },
+            {
+                "id": 996162,
+                "key": "_billing_recipient",
+                "value": "Marcia Capeletti"
+            },
+            {
+                "id": 996163,
+                "key": "_billing_recipient_phone",
+                "value": "48991639003"
+            },
+            {
+                "id": 996164,
+                "key": "_billing_number",
+                "value": "61"
+            },
+            {
+                "id": 996165,
+                "key": "_billing_complementary",
+                "value": "apto. 210B"
+            },
+            {
+                "id": 996166,
+                "key": "_billing_neighborhood",
+                "value": "Jurere"
+            },
+            {
+                "id": 996167,
+                "key": "_billing_msg",
+                "value": "Mana, tenha um dia muito doce, te amamos! Feliz aniver!\nElis e Letícia"
+            },
+            {
+                "id": 996168,
+                "key": "is_vat_exempt",
+                "value": "no"
+            },
+            {
+                "id": 996169,
+                "key": "_thwcfe_ship_to_billing",
+                "value": "1"
+            },
+            {
+                "id": 996170,
+                "key": "_thwcfe_disabled_fields",
+                "value": "time"
+            },
+            {
+                "id": 996171,
+                "key": "billing_cpf",
+                "value": "921.232.520-34"
+            },
+            {
+                "id": 996172,
+                "key": "billing_recipient",
+                "value": "Marcia Capeletti"
+            },
+            {
+                "id": 996173,
+                "key": "billing_recipient_phone",
+                "value": "48991639003"
+            },
+            {
+                "id": 996174,
+                "key": "billing_number",
+                "value": "61"
+            },
+            {
+                "id": 996175,
+                "key": "billing_complementary",
+                "value": "apto. 210B"
+            },
+            {
+                "id": 996176,
+                "key": "billing_neighborhood",
+                "value": "Jurere"
+            },
+            {
+                "id": 996177,
+                "key": "billing_msg",
+                "value": "Mana, tenha um dia muito doce, te amamos! Feliz aniver!\r\nElis e Letícia"
+            },
+            {
+                "id": 996178,
+                "key": "date",
+                "value": "03/07/2022"
+            },
+            {
+                "id": 996179,
+                "key": "time_celebration",
+                "value": "Período da Manhã"
+            },
+            {
+                "id": 996180,
+                "key": "_wc_facebook_for_woocommerce_order_placed",
+                "value": "yes"
+            },
+            {
+                "id": 996184,
+                "key": "_new_order_email_sent",
+                "value": "true"
+            },
+            {
+                "id": 996185,
+                "key": "_wc_facebook_for_woocommerce_purchase_tracked",
+                "value": "yes"
+            },
+            {
+                "id": 996192,
+                "key": "_shipping_number",
+                "value": ""
+            },
+            {
+                "id": 996193,
+                "key": "_shipping_neighborhood",
+                "value": ""
+            }
+        ],
+        "line_items": [
+            {
+                "id": 18070,
+                "name": "Caixa Surpresa de Aniversário",
+                "product_id": 2025,
+                "variation_id": 0,
+                "quantity": 1,
+                "tax_class": "",
+                "subtotal": "219.90",
+                "subtotal_tax": "0.00",
+                "total": "219.90",
+                "total_tax": "0.00",
+                "taxes": [],
+                "meta_data": [],
+                "sku": "",
+                "price": 219.9,
+                "image": {
+                    "id": "23189",
+                    "src": "https://innovacestas.com.br/wp-content/uploads/2020/06/pinnkk.jpg"
+                },
+                "parent_name": null
+            }
+        ],
+        "tax_lines": [],
+        "shipping_lines": [
+            {
+                "id": 18071,
+                "method_title": "Uber Flash",
+                "method_id": "flat_rate",
+                "instance_id": "16",
+                "total": "32.00",
+                "total_tax": "0.00",
+                "taxes": [],
+                "meta_data": [
+                    {
+                        "id": 148312,
+                        "key": "Itens",
+                        "value": "Caixa Surpresa de Aniversário &times; 1",
+                        "display_key": "Itens",
+                        "display_value": "Caixa Surpresa de Aniversário &times; 1"
+                    }
+                ]
+            }
+        ],
+        "fee_lines": [],
+        "coupon_lines": [],
+        "refunds": [],
+        "payment_url": "https://innovacestas.com.br/finalizar-compra/order-pay/36873/?pay_for_order=true&key=wc_order_xyhq7G0pGlaSc",
+        "is_editable": false,
+        "needs_payment": false,
+        "needs_processing": true,
+        "date_created_gmt": "2022-07-02T16:30:57",
+        "date_modified_gmt": "2022-07-03T11:48:14",
+        "date_completed_gmt": "2022-07-03T11:48:14",
+        "date_paid_gmt": "2022-07-03T11:48:14",
+        "schedule": {
+            "date": "03/07/2022",
+            "time": "",
+            "delivery_alert": "",
+            "time_celebration": "Período da Manhã",
+            "space_3": ""
+        },
+        "currency_symbol": "R$",
+        "_links": {
+            "self": [
+                {
+                    "href": "https://innovacestas.com.br/wp-json/wc/v3/orders/36873"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https://innovacestas.com.br/wp-json/wc/v3/orders"
+                }
+            ]
+        }
+    }
+]

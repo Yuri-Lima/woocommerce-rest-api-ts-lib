@@ -1,0 +1,60 @@
+[{
+        "id": 303,
+        "date_created": "2022-04-09T15:29:04",
+        "date_created_gmt": "2022-04-09T18:29:04",
+        "date_modified": "2022-04-09T15:29:04",
+        "date_modified_gmt": "2022-04-09T18:29:04",
+        "email": "abreusfelipe@gmail.com",
+        "first_name": "",
+        "last_name": "",
+        "role": "customer",
+        "username": "abreusfelipe",
+        "billing": {
+            "first_name": "",
+            "last_name": "",
+            "company": "",
+            "address_1": "",
+            "address_2": "",
+            "city": "",
+            "postcode": "",
+            "country": "",
+            "state": "",
+            "email": "",
+            "phone": "",
+            "number": "",
+            "neighborhood": "",
+            "persontype": "F",
+            "cpf": "",
+            "rg": "",
+            "cnpj": "",
+            "ie": "",
+            "birthdate": "",
+            "sex": "",
+            "cellphone": ""
+        },
+        "shipping": {
+            "first_name": "",
+            "last_name": "",
+            "company": "",
+            "address_1": "",
+            "address_2": "",
+            "city": "",
+            "postcode": "",
+            "country": "",
+            "state": "",
+            "phone": "",
+            "number": "",
+            "neighborhood": ""
+        },
+        "is_paying_customer": false,
+        "avatar_url": "https://secure.gravatar.com/avatar/0a3114732ffd608c96a3aed0bc99c391?s=96&d=mm&r=g",
+        "meta_data": [
+            {
+                "id": 10744,
+                "key": "_yoast_wpseo_profile_updated",
+                "value": "1649528944"
+            },
+            { "id": 10747, "key": "wc_last_active", "value": "1649462400" }
+        ],
+        "_links": { "self": [["Object"]], "collection": [["Object"]] }
+    }]
