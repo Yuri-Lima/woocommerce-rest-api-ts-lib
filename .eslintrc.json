@@ -1,34 +1,35 @@
 {
-  "env": {
-    "es6": true
-  },
-  "plugins": [
-    "@typescript-eslint"
-  ],
-  "extends": [
-    "standard",
-    "prettier",
-    "plugin:jest/recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended"
-  ],
-  "globals": {
-    "Atomics": "readonly",
-    "SharedArrayBuffer": "readonly"
-  },
-  "parserOptions": {
-    "ecmaVersion": 2018,
-    "sourceType": "module"
-  },
-  "rules": {
-    "indent": [
-      2,
-      4
+    "env": {
+        "es6": true,
+        "node": true
+    },
+    "plugins": [
+        "@typescript-eslint"
     ],
-    "@typescript-eslint/no-explicit-any": ["off"], // allow any
-    "@typescript-eslint/no-unused-vars": ["warn"], // warn
-    "@typescript-eslint/no-disabled-tests ": ["off"], // warn
-    "no-console": 1 // warn
-  }
+    "extends": [
+        "standard",
+        "prettier",
+        "plugin:jest/recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 2020,
+        "sourceType": "module",
+        "project": "./tsconfig.json"
+    },
+    "rules": {
+        "indent": [
+            "error",
+            4
+        ],
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unused-vars": "warn",
+        "no-console": "warn"
+    }
 }
-// npm i -D eslint eslint-config-prettier eslint-config-standard eslint-plugin-import eslint-plugin-jest eslint-plugin-node eslint-plugin-promise eslint-plugin-standard eslint-plugin-prettier
