@@ -34,8 +34,7 @@
     "build:cjs:esm": "npx tsup ./src/index.ts --format cjs,esm --sourcemap",
     "prepack": "npm run clean && npm run build:cjs:esm && npm run build:types",
     "semantic-release": "semantic-release",
-    "commit": "cz",
-    "postinstall": "tsc --outDir ./build"
+    "commit": "cz"
   },
   "lint-staged": {
     "*.{ts,js,json}": [
@@ -47,10 +46,10 @@
     "axios": "^1.10.0",
     "dynamic.envs": "^1.0.4",
     "oauth-1.0a": "^2.2.6",
-    "typescript": "^5.8.3",
     "url-parse": "^1.5.10"
   },
   "devDependencies": {
+    "typescript": "^5.8.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.3",
     "@types/jest": "^30.0.0",
