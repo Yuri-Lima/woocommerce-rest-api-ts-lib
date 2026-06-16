@@ -98,49 +98,66 @@ const WOODatePlus = async (
  * against the dummy env URL and return fixture payloads + realistic WP REST pagination headers.
  * This is the root cause fix for previous "integration tests require external env" non-determinism.
  */
-const TEST_BASE = "https://example.test";
+const TEST_BASE = "https://example.com"; // Must exactly match setEnvVars.js default (URL=...) for nock interceptors to match client requests. Previous mismatch ("example.test") was root cause of all "Network error: No response..." failures.
 function setupWcNock() {
-  const commonHeaders: Record<string, string | string[] | number> = {
-    "x-wp-total": "5",
-    "x-wp-totalpages": "1",
-    "content-type": "application/json",
-  };
+    const commonHeaders: Record<string, string | string[] | number> = {
+        "x-wp-total": "5",
+        "x-wp-totalpages": "1",
+        "content-type": "application/json",
+    };
 
-  // Persist so multiple describes and sequential calls (get list, get single, delete, create) all work
-  nock(TEST_BASE)
-    .persist()
+    // Dynamic list reply that honors per_page query param (supports the "per page" test assertions).
+    // This makes the hermetic nock behave like the real WC API for the exercised pagination params.
+    // Uses regex on uri (nock may pass path+qs or full url) for max compatibility.
+    const makeListReply = (fixture: any[]) => (uri: string) => {
+        if (typeof uri === "string") {
+            const m = /[?&]per_page=(\d+)/.exec(uri);
+            if (m) {
+                const n = parseInt(m[1], 10);
+                if (!Number.isNaN(n) && n > 0) {
+                    return fixture.slice(0, n);
+                }
+            }
+        }
+        return fixture;
+    };
+
+    // Persist so multiple describes and sequential calls (get list, get single, delete, create) all work
+    nock(TEST_BASE)
+        .persist()
     // singles (with numeric id suffix) must reply object (so Object.keys starts with "id", not "0")
-    .get(/\/wp-json\/wc\/v3\/coupons\/\d+$/)
-    .reply(200, (couponsJson[0] || { id: 1 }), commonHeaders)
-    .get(/\/wp-json\/wc\/v3\/products\/\d+$/)
-    .reply(200, (productsJson[0] || { id: 1 }), commonHeaders)
-    .get(/\/wp-json\/wc\/v3\/orders\/\d+$/)
-    .reply(200, (ordersJson[0] || { id: 1 }), commonHeaders)
-    .get(/\/wp-json\/wc\/v3\/customers\/\d+$/)
-    .reply(200, (constomersJson[0] || { id: 1 }), commonHeaders)
-    // lists
-    .get(/\/wp-json\/wc\/v3\/coupons.*/)
-    .reply(200, couponsJson, commonHeaders)
-    .get(/\/wp-json\/wc\/v3\/products.*/)
-    .reply(200, productsJson, commonHeaders)
-    .get(/\/wp-json\/wc\/v3\/orders.*/)
-    .reply(200, ordersJson, commonHeaders)
-    .get(/\/wp-json\/wc\/v3\/customers.*/)
-    .reply(200, constomersJson, commonHeaders)
-    .get(/\/wp-json\/wc\/v3\/system_status.*/)
-    .reply(200, { environment: { wp_version: "6.0", site_url: TEST_BASE } }, commonHeaders)
+        .get(/\/wp-json\/wc\/v3\/coupons\/\d+$/)
+        .reply(200, (couponsJson[0] || { id: 1 }), commonHeaders)
+        .get(/\/wp-json\/wc\/v3\/products\/\d+$/)
+        .reply(200, (productsJson[0] || { id: 1 }), commonHeaders)
+        .get(/\/wp-json\/wc\/v3\/orders\/\d+$/)
+        .reply(200, (ordersJson[0] || { id: 1 }), commonHeaders)
+        .get(/\/wp-json\/wc\/v3\/customers\/\d+$/)
+        .reply(200, (constomersJson[0] || { id: 1 }), commonHeaders)
+    // lists (now dynamic for per_page to satisfy pagination tests)
+        .get(/\/wp-json\/wc\/v3\/coupons.*/)
+        .reply(200, makeListReply(couponsJson), commonHeaders)
+        .get(/\/wp-json\/wc\/v3\/products.*/)
+        .reply(200, makeListReply(productsJson), commonHeaders)
+        .get(/\/wp-json\/wc\/v3\/orders.*/)
+        .reply(200, makeListReply(ordersJson), commonHeaders)
+        .get(/\/wp-json\/wc\/v3\/customers.*/)
+        .reply(200, makeListReply(constomersJson), commonHeaders)
+        .get(/\/wp-json\/wc\/v3\/system_status.*/)
+        .reply(200, { environment: { wp_version: "6.0", site_url: TEST_BASE } }, commonHeaders)
     // mutations reply with shapes whose key order starts with "id"
-    .post(/\/wp-json\/wc\/v3\/.*/)
-    .reply(201, (_uri, body: any) => (body && typeof body === "object" ? { id: 999, ...(body as object) } : { id: 999 }), commonHeaders)
-    .put(/\/wp-json\/wc\/v3\/.*/)
-    .reply(200, (_uri, body: any) => (body && typeof body === "object" ? { id: 1, ...(body as object) } : { id: 1 }), commonHeaders)
-    .delete(/\/wp-json\/wc\/v3\/.*/)
-    .reply(200, { id: 123, deleted: true }, commonHeaders);
+        .post(/\/wp-json\/wc\/v3\/.*/)
+        .reply(201, (_uri, body: any) => (body && typeof body === "object" ? { id: 999, ...(body as object) } : { id: 999 }), commonHeaders)
+        .put(/\/wp-json\/wc\/v3\/.*/)
+        .reply(200, (_uri, body: any) => (body && typeof body === "object" ? { id: 1, ...(body as object) } : { id: 1 }), commonHeaders)
+        .delete(/\/wp-json\/wc\/v3\/.*/)
+        .reply(200, { id: 123, deleted: true }, commonHeaders);
 }
 
 function teardownWcNock() {
-  nock.cleanAll();
-  nock.restore();
+    // Only clean; never nock.restore() mid-file.
+    // nock.restore() was the root cause of network errors in later describes (deactivates interceptor).
+    nock.cleanAll();
 }
 
 // Activate nock at module load so ALL describes (options, coupons, products, orders, customers...)
@@ -544,13 +561,15 @@ describe("Test Coupons", () => {
     }, 20000); // 20 seconds
 });
 
-describe.only("Test Products", () => {
+describe("Test Products", () => {
     let wooCommerce: WooCommerceRestApi<{
     url: string;
     consumerKey: string;
     consumerSecret: string;
   }>;
     beforeAll(() => {
+        setupWcNock();
+        nock.disableNetConnect();
         wooCommerce = new WooCommerceRestApi({
             url: env.url,
             consumerKey: env.consumerKey,
@@ -558,6 +577,9 @@ describe.only("Test Products", () => {
             version: "wc/v3",
             queryStringAuth: false,
         });
+    });
+    afterAll(() => {
+        teardownWcNock();
     });
     test("should return a list with all products created", async () => {
         const products = await wooCommerce.get("products");
@@ -764,7 +786,7 @@ describe.only("Test Products", () => {
     }, 20000); // 20 seconds
 });
 
-describe.only("Test Orders", () => {
+describe("Test Orders", () => {
     let wooCommerce: WooCommerceRestApi<{
     url: string;
     consumerKey: string;
@@ -772,6 +794,8 @@ describe.only("Test Orders", () => {
   }>;
 
     beforeAll(() => {
+        setupWcNock();
+        nock.disableNetConnect();
         wooCommerce = new WooCommerceRestApi({
             url: env.url,
             consumerKey: env.consumerKey,
@@ -779,6 +803,9 @@ describe.only("Test Orders", () => {
             version: "wc/v3",
             queryStringAuth: false,
         });
+    });
+    afterAll(() => {
+        teardownWcNock();
     });
 
     test("should get all orders", async () => {
@@ -996,6 +1023,8 @@ describe("Test Customers", () => {
   }>;
 
     beforeAll(() => {
+        setupWcNock();
+        nock.disableNetConnect();
         wooCommerce = new WooCommerceRestApi({
             url: env.url,
             consumerKey: env.consumerKey,
@@ -1004,8 +1033,11 @@ describe("Test Customers", () => {
             queryStringAuth: false,
         });
     });
+    afterAll(() => {
+        teardownWcNock();
+    });
 
-    test.only("should get all customers", async () => {
+    test("should get all customers", async () => {
         const customers = await wooCommerce.get("customers");
         // console.log("Customers", customers.data[0]);
 
@@ -1031,7 +1063,7 @@ describe("Test Customers", () => {
         }
     }, 20000); // 20 seconds
 
-    test.only("should get a customer", async () => {
+    test("should get a customer", async () => {
         const getAllCustomers = await wooCommerce.get("customers");
         if (Number((getAllCustomers.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllCustomers).toHaveProperty("data", expect.any(Array));

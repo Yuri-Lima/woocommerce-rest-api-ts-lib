@@ -40,16 +40,29 @@ New TypeScript library for WooCommerce REST API. Supports CommonJS (CJS) and ECM
 - **Modern**: ES2020+ with async/await support
 - **Flexible**: Support for both CommonJS and ES modules
 - **Secure**: Built-in OAuth 1.0a authentication + hardened HTTP client against resource exhaustion (CVE-2026-44488)
-- **Resilient**: Client throttling, timeout enforcement, and automatic retries with rate-limit awareness
+- **Resilient**: Per-client concurrency throttling (pluggable `Throttler`), 429-aware retries (pluggable `RetryStrategy`), timeout enforcement, connection keep-alive by default
+- **Modular internals**: `RequestSanitizer`, `ErrorNormalizer`, `PaginationHelper` + composition-based design with DI hooks (while preserving 100% public + `_` internal BC)
 - **Error Handling**: Custom error classes with detailed error information
 - **Convenience Methods**: Easy-to-use methods for common operations
 - **Lightweight**: Minimal dependencies with tree-shaking support
 
 ## 🔧 Installation
 
+**pnpm (recommended — the project is now pnpm-exclusive):**
+
+```bash
+pnpm add woocommerce-rest-ts-api
+```
+
+**npm / yarn (still supported for consumers):**
+
 ```bash
 npm install --save woocommerce-rest-ts-api
+# or
+yarn add woocommerce-rest-ts-api
 ```
+
+See `PERFORMANCE_SECURITY_AUDIT.md` and `FINAL_REVIEW.md` for the latest production-grade analysis. New reusable helpers (`collectAllPages`, `parsePaginationHeaders`) are exported for pagination use-cases.
 
 ## 📚 Getting Started
 

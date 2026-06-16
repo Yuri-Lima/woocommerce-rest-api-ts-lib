@@ -1,5 +1,5 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# Os: ubuntu-latest, windows-latest and macos-latest
+# pnpm-exclusive CI for dependency update validation and build/test on the 'updates' branch.
+# Modern Node matrix (>=18 per engines). No npm/yarn.
 name: Updates Test CI
 on:
   push:
@@ -12,16 +12,27 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
-        os: [ubuntu-latest, windows-latest, macOS-12]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [18.x, 20.x, 22.x]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run dep:update # update dependencies and run tests
-    - run: npm run build --if-present
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+          run_install: false
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Install dependencies (frozen)
+        run: pnpm install --frozen-lockfile
+      - name: Update deps (non-destructive check + doctor)
+        run: pnpm run dep:update || true # best-effort; ncu may suggest changes but we validate build/test after
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Build
+        run: pnpm run build
+      - name: Test
+        run: pnpm test

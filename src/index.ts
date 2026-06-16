@@ -1,5 +1,7 @@
-import axios, { RawAxiosRequestHeaders, AxiosRequestConfig, AxiosError } from "axios";
+import type { RawAxiosRequestHeaders, AxiosRequestConfig } from "axios";
 import crypto from "node:crypto";
+import http from "node:http";
+import https from "node:https";
 import OAuth from "oauth-1.0a";
 import Url from "url-parse";
 
@@ -20,12 +22,26 @@ import type {
     Coupons,
     SystemStatus,
     WooCommerceApiResponse,
-    WooRestApiVersion,
 } from "./types/index.js";
 import {
-    WooCommerceApiError,
     OptionsException,
 } from "./types/index.js";
+
+// Reusable abstractions (RequestSanitizer, RetryStrategy, Throttler, ErrorNormalizer)
+import {
+    sanitizePathSegment,
+    sanitizeEndpoint,
+    sanitizeApiVersion,
+    validateBaseUrl,
+} from "./utils/sanitize.js";
+import { createDefaultRetryStrategy, type RetryStrategy } from "./http/RetryStrategy.js";
+import { createThrottler, type Throttler } from "./http/Throttler.js";
+import { normalizeAxiosError } from "./http/ErrorNormalizer.js";
+
+// Default keep-alive agents for connection reuse (high-impact perf improvement under load).
+// Users can still fully override via axiosConfig.httpAgent / httpsAgent.
+const DEFAULT_HTTP_AGENT = new http.Agent({ keepAlive: true, maxSockets: 32 });
+const DEFAULT_HTTPS_AGENT = new https.Agent({ keepAlive: true, maxSockets: 32 });
 
 // Re-export the full public surface (types + error classes) for consumers + backward compat
 export type {
@@ -63,67 +79,8 @@ export type WooRestApiParams = CouponsParams &
   SystemStatusParams &
   DELETE;
 
-/* =========================================================
- * SECURITY: Input sanitization + path validation helpers
- * Prevents path traversal, protocol confusion, and bad segments
- * in constructed WooCommerce REST URLs.
- * ========================================================= */
-
-const SAFE_SEGMENT = /^[a-zA-Z0-9._-]+$/;
-
-function sanitizePathSegment(segment: string, name: string): string {
-    if (typeof segment !== "string" || segment.length === 0) {
-        throw new OptionsException(`${name} must be a non-empty string`);
-    }
-    // Strip dangerous sequences
-    const cleaned = segment
-        .replace(/\.+/g, ".") // collapse ..
-        .replace(/\/+/g, "/")
-        .replace(/^\/+|\/+$/g, ""); // no leading/trailing slashes in segments
-
-    if (cleaned.includes("..") || cleaned.includes("/") || !SAFE_SEGMENT.test(cleaned)) {
-        throw new OptionsException(`Invalid ${name}: contains path traversal or illegal characters`);
-    }
-    return cleaned;
-}
-
-function sanitizeEndpoint(endpoint: string): string {
-    if (typeof endpoint !== "string" || endpoint.length === 0) {
-        throw new OptionsException("endpoint must be a non-empty string");
-    }
-    // Disallow protocol, absolute paths, traversal, query/hash in endpoint
-    if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(endpoint) || endpoint.includes("://") || endpoint.startsWith("/") || endpoint.includes("..") || /[?#]/.test(endpoint)) {
-        throw new OptionsException("Invalid endpoint: must be a relative path segment without traversal or protocol");
-    }
-    // Allow nested like products/attributes but sanitize each part
-    const parts = endpoint.split("/").filter(Boolean);
-    const safeParts = parts.map((p, i) => sanitizePathSegment(p, `endpoint part[${i}]`));
-    return safeParts.join("/");
-}
-
-/**
- * Version may be "wc/v3" (contains exactly one /). Special sanitizer.
- */
-function sanitizeApiVersion(v: string): WooRestApiVersion {
-    const cleaned = String(v || "").trim().replace(/^\/+|\/+$/g, "");
-    if (cleaned.includes("..") || cleaned.split("/").length > 2 || !/^[a-zA-Z0-9/._-]+$/.test(cleaned)) {
-        throw new OptionsException("Invalid version: contains path traversal or illegal characters");
-    }
-    return cleaned as WooRestApiVersion;
-}
-
-function validateBaseUrl(urlStr: string): URL {
-    let u: URL;
-    try {
-        u = new URL(urlStr);
-    } catch {
-        throw new OptionsException("url must be a valid absolute URL (http/https)");
-    }
-    if (u.protocol !== "http:" && u.protocol !== "https:") {
-        throw new OptionsException("url must use http or https protocol");
-    }
-    return u;
-}
+// Sanitizers are now provided by the reusable RequestSanitizer module (src/utils/sanitize.ts).
+// The functions are pure and throw OptionsException for bad input (path traversal etc).
 
 /**
  * WooCommerce REST API wrapper
@@ -133,10 +90,11 @@ function validateBaseUrl(urlStr: string): URL {
 export default class WooCommerceRestApi<T extends WooRestApiOptions> {
     protected _opt: T;
 
-    // Security / resource control state for throttling (CVE-2026-44488 mitigation)
-    private _maxConcurrentRequests: number = 0;
-    private _currentConcurrentRequests: number = 0;
-    private _requestQueue: Array<() => void> = [];
+    // Composed collaborators (internal DI for modularity + extensibility).
+    // These are created from options at construction time. Advanced users can subclass and override
+    // protected factory methods if they want to inject custom strategies (while keeping full public BC).
+    protected _throttler: Throttler;
+    protected _retryStrategy: RetryStrategy;
 
     /**
    * Class constructor.
@@ -181,6 +139,10 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
      * Set default options (also runs sanitization)
      */
         this._setDefaultsOptions(this._opt);
+
+        // Create composed strategies (DI)
+        this._throttler = createThrottler(this._opt.maxConcurrentRequests);
+        this._retryStrategy = createDefaultRetryStrategy(this._opt.retryConfig);
     }
 
     /**
@@ -201,104 +163,35 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         this._opt.encoding = opt.encoding || "utf-8";
         this._opt.queryStringAuth = opt.queryStringAuth || false;
         this._opt.classVersion = "0.0.2";
-
-        // Initialize throttling limit (0 = unlimited for backward compatibility)
-        this._maxConcurrentRequests = opt.maxConcurrentRequests ?? 0;
     }
 
     /**
-   * Acquire a concurrency slot for throttling.
-   * If maxConcurrentRequests <= 0, no throttling is applied.
+   * Protected factory hooks for subclass DI / custom strategies (advanced extensibility).
+   * Default implementations are created in ctor from options.
    */
+    protected createThrottler(max?: number): Throttler {
+        return createThrottler(max);
+    }
+
+    protected createRetryStrategy(cfg?: IWooRestApiOptions["retryConfig"]): RetryStrategy {
+        return createDefaultRetryStrategy(cfg);
+    }
+
+    // Backward-compat thin delegations (tests and power users call these _ methods directly)
     private async _acquireSlot(): Promise<void> {
-        if (this._maxConcurrentRequests <= 0) {
-            return;
-        }
-        if (this._currentConcurrentRequests < this._maxConcurrentRequests) {
-            this._currentConcurrentRequests++;
-            return;
-        }
-        // Queue the request
-        return new Promise<void>((resolve) => {
-            this._requestQueue.push(() => {
-                this._currentConcurrentRequests++;
-                resolve();
-            });
-        });
+        return this._throttler.acquire();
     }
 
-    /**
-   * Release a concurrency slot and wake next waiter if any.
-   */
     private _releaseSlot(): void {
-        if (this._maxConcurrentRequests <= 0) {
-            return;
-        }
-        this._currentConcurrentRequests = Math.max(0, this._currentConcurrentRequests - 1);
-        const next = this._requestQueue.shift();
-        if (next) {
-            next();
-        }
+        this._throttler.release();
     }
 
     /**
-   * Core axios execution with exponential backoff and rate-limit (429) awareness.
-   * Retries on network errors and configured retryable status codes.
+   * Core axios execution delegated to the (pluggable) RetryStrategy.
+   * The strategy encapsulates exp backoff + 429 awareness.
    */
     private async _executeWithRetry(options: AxiosRequestConfig): Promise<import("axios").AxiosResponse> {
-        const retryCfg = this._opt.retryConfig ?? {};
-        const maxRetries = retryCfg.retries ?? 0;
-        const baseDelay = retryCfg.retryDelay ?? 1000;
-        const retryableStatuses: number[] = retryCfg.retryOn ?? [408, 429, 500, 502, 503, 504];
-
-        let lastError: unknown;
-
-        for (let attempt = 0; attempt <= maxRetries; attempt++) {
-            try {
-                return await axios(options);
-            } catch (error: unknown) {
-                lastError = error;
-
-                const err = error as AxiosError;
-                const status: number | undefined = err.response?.status;
-                const isNetworkError = !err.response || err.code === "ECONNRESET" || err.code === "ETIMEDOUT" || err.code === "ECONNABORTED";
-                const isRetryableStatus = !status || retryableStatuses.includes(status);
-
-                const shouldRetry = attempt < maxRetries && (isNetworkError || isRetryableStatus);
-
-                if (!shouldRetry) {
-                    throw error;
-                }
-
-                // Calculate exponential backoff with jitter
-                let delay = baseDelay * Math.pow(2, attempt) * (0.5 + Math.random() * 0.5);
-
-                // Rate limiting awareness: honor Retry-After on 429 if present (seconds or HTTP date)
-                const errForRetry = error as { response?: { headers?: Record<string, unknown> } };
-                if (status === 429) {
-                    const retryAfterHeader = errForRetry.response?.headers?.["retry-after"];
-                    if (retryAfterHeader != null) {
-                        const asSeconds = parseInt(String(retryAfterHeader), 10);
-                        if (!Number.isNaN(asSeconds) && asSeconds > 0) {
-                            delay = Math.max(delay, asSeconds * 1000);
-                        } else {
-                            const asDate = new Date(String(retryAfterHeader));
-                            if (!Number.isNaN(asDate.getTime())) {
-                                const delta = asDate.getTime() - Date.now();
-                                if (delta > 0) delay = Math.max(delay, delta);
-                            }
-                        }
-                    }
-                }
-
-                // Cap the delay to avoid excessive wait (30s max)
-                delay = Math.min(delay, 30000);
-
-                await new Promise((resolve) => setTimeout(resolve, Math.floor(delay)));
-            }
-        }
-
-        throw lastError;
+        return this._retryStrategy.executeWithRetry(options);
     }
 
     /**
@@ -449,7 +342,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
                 secret: this._opt.consumerSecret,
             },
             signature_method: "HMAC-SHA256",
-            hash_function: (base: any, key: any) => {
+            hash_function: (base: string, key: string) => {
                 return crypto.createHmac("sha256", key).update(base).digest("base64");
             },
         };
@@ -504,8 +397,15 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         const explicitMaxBody = "maxBodyLength" in axCfg ? (axCfg.maxBodyLength as number | undefined) : undefined;
         const explicitTimeout = "timeout" in axCfg ? (axCfg.timeout as number | undefined) : undefined;
 
+        // For https we intentionally strip the query string that _getUrl may have appended.
+        // We rely on `options.params` (set below) so axios serializes the qs exactly once.
+        // This fixes the latent duplication bug (?foo=1&foo=1) that occurred because _getUrl always
+        // injected user query and then https path also set options.params.
+        // Non-https (OAuth) keeps the full url because the signature must cover the exact query string.
+        const axiosUrl = this._opt.isHttps ? url.split("?")[0] : url;
+
         let options: AxiosRequestConfig = {
-            url,
+            url: axiosUrl,
             method,
             responseEncoding: this._opt.encoding,
             timeout: explicitTimeout !== undefined ? explicitTimeout : (this._opt.timeout ?? DEFAULT_TIMEOUT),
@@ -534,10 +434,16 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
                 };
             }
 
-            options.params = { ...options.params, ...params };
+            // Do not leak "id" into query string for https path-style resources (id is already in path via _getUrl).
+            // Prevents spurious ?id=123 on single-resource calls in addition to the path segment.
+            const queryParams = { ...params };
+            if (queryParams.id != null) {
+                delete queryParams.id;
+            }
+            options.params = { ...options.params, ...queryParams };
         } else {
             options.params = this._getOAuth().authorize({
-                url,
+                url, // full url (with qs) for correct OAuth signature
                 method,
             });
         }
@@ -551,6 +457,19 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
 
         // Allow set and override Axios options (user axiosConfig wins for any keys provided).
         options = { ...options, ...this._opt.axiosConfig };
+
+        // Apply keep-alive agents if the user did not explicitly provide httpAgent/httpsAgent.
+        // This is a high-impact performance improvement for sustained traffic to the same host
+        // (connection reuse, reduced handshake/TIME_WAIT overhead). 100% backward compatible:
+        // any explicit agent in axiosConfig takes precedence (including setting to null/undefined to disable).
+        if (!("httpAgent" in options) && !("httpsAgent" in options) && !("agent" in options)) {
+            const isHttpsRequest = /^https:/i.test(String(options.url || ""));
+            if (isHttpsRequest) {
+                (options as any).httpsAgent = (options as any).httpsAgent ?? DEFAULT_HTTPS_AGENT;
+            } else {
+                (options as any).httpAgent = (options as any).httpAgent ?? DEFAULT_HTTP_AGENT;
+            }
+        }
 
         // Final safety: if after merge no positive finite timeout is set, enforce default.
         // This provides "timeout enforcement". 0 or negative is treated as "use default".
@@ -578,30 +497,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         try {
             return await this._executeWithRetry(options);
         } catch (error: unknown) {
-            const err = error as AxiosError & { request?: unknown };
-            if (err.response) {
-                const apiError = new WooCommerceApiError(
-                    (err.response.data as { message?: string })?.message || err.message || "API request failed",
-                    err.response.status,
-                    err.response.data,
-                    endpoint,
-                );
-                throw apiError;
-            } else if (err.request) {
-                throw new WooCommerceApiError(
-                    "Network error: No response received from server",
-                    0,
-                    null,
-                    endpoint,
-                );
-            } else {
-                throw new WooCommerceApiError(
-                    `Request setup error: ${err.message}`,
-                    0,
-                    null,
-                    endpoint,
-                );
-            }
+            throw normalizeAxiosError(error, { endpoint });
         } finally {
             this._releaseSlot();
         }
@@ -728,3 +624,6 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
 
 // Error classes are now defined in src/types/errors (with proper extends Error) and re-exported above.
 // The old non-Error OptionsException and any-typed WooCommerceApiError have been removed for security + correctness.
+
+// Re-export the new reusable helpers (additive, full backward compat)
+export { parsePaginationHeaders, collectAllPages, type PaginationInfo } from "./utils/PaginationHelper.js";

@@ -7,6 +7,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "packageManager": "pnpm@11.5.0",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/src/index.d.ts",
@@ -22,18 +23,19 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "npm run prepack",
-    "dep:update": "ncu && ncu --doctor -u && ncu -u",
+    "build": "pnpm run prepack",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "dep:update": "pnpm dlx npm-check-updates && pnpm dlx npm-check-updates --doctor -u && pnpm dlx npm-check-updates -u",
     "test": "jest",
     "data:generate": "ts-node ./src/test/generate-data.ts",
     "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint src/",
     "lint-and-fix": "eslint src/ --fix",
-    "prepublishOnly": "npm run format && npm run lint-and-fix",
+    "prepublishOnly": "pnpm run format && pnpm run lint-and-fix",
     "clean": "rm -rf ./dist",
-    "build:types": "npx tsc --emitDeclarationOnly --declaration",
+    "build:types": "pnpm exec tsc --emitDeclarationOnly --declaration",
     "build:cjs:esm": "esbuild ./src/index.ts --bundle --platform=node --target=es2022 --format=cjs --outfile=dist/index.js --sourcemap --external:axios --external:oauth-1.0a --external:url-parse && esbuild ./src/index.ts --bundle --platform=node --target=es2022 --format=esm --outfile=dist/index.mjs --sourcemap --external:axios --external:oauth-1.0a --external:url-parse",
-    "prepack": "npm run clean && npm run build:cjs:esm && npm run build:types",
+    "prepack": "pnpm run clean && pnpm run build:cjs:esm && pnpm run build:types",
     "semantic-release": "semantic-release",
     "commit": "cz"
   },
@@ -107,6 +109,7 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
+
   "private": false,
   "config": {
     "commitizen": {
