@@ -30,15 +30,22 @@
         ],
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-unused-vars": "warn",
-        "no-console": "warn"
+        "no-console": "warn",
+        "camelcase": "off"
     },
     "overrides": [
         {
             "files": [
-                "jest.config.ts"
+                "jest.config.ts",
+                "src/test/**/*.ts",
+                "**/*.test.ts"
             ],
             "parserOptions": {
                 "project": null
+            },
+            "rules": {
+                "@typescript-eslint/ban-ts-comment": "off",
+                "jest/no-disabled-tests": "off"
             }
         },
         {

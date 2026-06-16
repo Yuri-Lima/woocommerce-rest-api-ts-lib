@@ -10,7 +10,7 @@
 
 # WooCommerce REST API - TypeScript Library
 
-A modern, type-safe TypeScript library for the WooCommerce REST API with enhanced error handling, improved type safety, convenient methods for common operations, and security hardening against resource exhaustion vulnerabilities.
+A modern, type-safe TypeScript library for the WooCommerce REST API with enhanced error handling, improved type safety, convenient methods for common operations, and **complete production-grade security hardening** (v8.0.0) plus a full modular architectural overhaul (separated types, DI-friendly client, strictest TS, tree-shakable ESM-first). All high-severity Dependabot alerts (lodash, tar, tmp, rollup, minimatch, glob, esbuild, js-yaml, etc.) have been resolved via upgrades + overrides + code-level input sanitization and resource limits. See SECURITY.md and MIGRATION.md.
 
 ✨ **New Features in v7.1.2+ (Security Release):**
 - 🛡️ **CVE-2026-44488 Full Mitigation** - Axios upgraded to 1.18.0 + request throttling, enforced timeouts, 10MB body limits, and exp-backoff retries with rate limit awareness in the core HTTP client.
