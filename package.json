@@ -114,6 +114,9 @@
       "disableScopeLowerCase": true
     }
   },
+  "overrides": {
+    "handlebars": "^4.7.9"
+  },
   "keywords": [
     "wordpress",
     "woocommerce",
