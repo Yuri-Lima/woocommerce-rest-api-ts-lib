@@ -8,18 +8,35 @@ const config: Config = {
   verbose: true,
   maxWorkers: (os.cpus().length - 1) / 2, // 50% of the available cores
   detectOpenHandles: false, // Detects when a test leaves something behind that it shouldn't
-  testMatch: ["**/wc.test.ts", "**/src/test/wc.test.ts", "src/test/wc.test.ts"],
+  testMatch: ["**/test/test.ts", "**/test/wc.test.ts"],
   testPathIgnorePatterns: ["node_modules", "dist"],
   coveragePathIgnorePatterns: ["node_modules", "dist"],
   collectCoverage: true,
-  collectCoverageFrom: ["src/index.ts"],
+  coverageProvider: "v8", // bypasses fragile test-exclude/istanbul that crashes on our module graph after refactor (ERR_INVALID_ARG_TYPE promisify on Object)
+  collectCoverageFrom: [
+    "src/index.ts",
+    "src/utils/**/*.ts",
+    "!src/types/**",
+    "!src/test/**",
+    "!**/*.d.ts",
+    "!src/typesANDinterfaces.ts",
+  ],
   coverageReporters: ["json", "lcov", "text", "clover"],
   coverageDirectory: "coverage",
   setupFiles: [
     "<rootDir>/setEnvVars.js", // Sets the environment variables
   ],
   transform: {
-    "^.+\\.tsx?$": "ts-jest",
+    "^.+\\.tsx?$": ["ts-jest", {
+      tsconfig: {
+        module: "NodeNext",
+        moduleResolution: "NodeNext",
+      },
+    }],
+  },
+  // Support ESM-style relative .js imports (required by our "module": "NodeNext" tsconfig) inside Jest/ts-jest
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
   },
 };
 

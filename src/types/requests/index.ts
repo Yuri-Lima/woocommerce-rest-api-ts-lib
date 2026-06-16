@@ -1,3 +1,8 @@
+/**
+ * Request / query param types.
+ * These are Partial<model> unions used for list/create/update filters.
+ */
+
 import type {
     Coupons,
     Customers,
@@ -14,7 +19,6 @@ import type {
     ProductsReviews,
     TaxRates,
     TaxClasses,
-    Webhooks,
     Settings,
     SettingsOptions,
     PaymentGateways,
@@ -24,15 +28,10 @@ import type {
     ShippingZonesMethods,
     ShippingMethods,
     SystemStatus,
-} from "../responses/index.js";
+    DELETE,
+} from "../models";
 
-/* DELETE helper for force-delete semantics */
-export interface DELETE {
-  id: number | string;
-  force?: boolean | string;
-}
-
-/* Params = Partial<entity> for query/filter bodies (temporary loose mapping) */
+export type { DELETE }; // re-export shape { id, force? } from models
 
 export type CouponsParams = Partial<Coupons>;
 export type CustomersParams = Partial<Customers>;
@@ -40,11 +39,8 @@ export type CustomersParams = Partial<Customers>;
 export type OrdersParams = Partial<Orders>;
 export type OrdersNotesParams = Partial<OrdersNotes>;
 export type OrdersRefundsParams = Partial<OrdersRefunds>;
-
-/** Union for all order-related query/body shapes */
 export type OrdersMainParams = OrdersParams & OrdersNotesParams & OrdersRefundsParams;
 
-// Products
 type ProductsParams = Partial<Products>;
 type ProductsVariationsParams = Partial<ProductsVariations>;
 type ProductsAttributesParams = Partial<ProductsAttributes>;
@@ -54,7 +50,6 @@ type ProductsShippingClassesParams = Partial<ProductsShippingClasses>;
 type ProductsTagsParams = Partial<ProductsTags>;
 type ProductsReviewsParams = Partial<ProductsReviews>;
 
-/** Union for product-related operations (note: some prior intersections were overly complex) */
 export type ProductsMainParams =
   | (ProductsParams & ProductsVariationsParams & ProductsAttributesParams)
   | ProductsAttributesTermsParams
@@ -63,26 +58,28 @@ export type ProductsMainParams =
   | ProductsTagsParams
   | ProductsReviewsParams;
 
-// Tax
 export type TaxRatesParams = Partial<TaxRates>;
 export type TaxClassesParams = Partial<TaxClasses>;
 
-// Settings
 export type SettingsParams = Partial<Settings>;
 export type SettingsOptionsParams = Partial<SettingsOptions>;
 
-// Payment
 export type PaymentGatewaysParams = Partial<PaymentGateways>;
 export type PaymentGatewaysSettingsParams = Partial<PaymentGatewaysSettings>;
 
-// Shipping
 export type ShippingZonesParams = Partial<ShippingZones>;
 export type ShippingZonesLocationsParams = Partial<ShippingZonesLocations>;
 export type ShippingZonesMethodsParams = Partial<ShippingZonesMethods>;
 export type ShippingMethodsParams = Partial<ShippingMethods>;
 
-// System
 export type SystemStatusParams = Partial<SystemStatus>;
 
-// Webhooks
-export type WebhooksParams = Partial<Webhooks>;
+export type WebhooksParams = Partial<import("../models").Webhooks>;
+
+export type WooRestApiParams =
+  & CouponsParams
+  & CustomersParams
+  & OrdersMainParams
+  & ProductsMainParams
+  & SystemStatusParams
+  & (DELETE extends infer D ? D : never);

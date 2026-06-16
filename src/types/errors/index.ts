@@ -1,11 +1,12 @@
 /**
- * Base error for all WooCommerce REST API failures.
- * Carries status, raw response body, and the endpoint for diagnostics.
+ * Error types for the WooCommerce REST API client.
+ * Proper Error subclasses (no more plain object OptionsException).
  */
+
 export class WooCommerceApiError extends Error {
-    public readonly statusCode?: number;
-    public readonly response?: unknown;
-    public readonly endpoint?: string;
+    public statusCode?: number;
+    public response?: unknown;
+    public endpoint?: string;
 
     constructor(
         message: string,
@@ -18,31 +19,26 @@ export class WooCommerceApiError extends Error {
         this.statusCode = statusCode;
         this.response = response;
         this.endpoint = endpoint;
-        // Maintains proper prototype chain for instanceof in ES5+ targets
-        Object.setPrototypeOf(this, WooCommerceApiError.prototype);
+        // Maintains proper stack trace for where error was thrown (V8 only)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, WooCommerceApiError);
+        }
     }
 }
 
-/**
- * Authentication-specific failure (401/403 patterns or missing creds).
- */
 export class AuthenticationError extends WooCommerceApiError {
     constructor(message = "Authentication failed") {
         super(message, 401);
         this.name = "AuthenticationError";
-        Object.setPrototypeOf(this, AuthenticationError.prototype);
     }
 }
 
-/**
- * Configuration / instantiation error (missing url, key, secret, or invalid values).
- */
 export class OptionsException extends Error {
-    public readonly name = "OptionsException" as const;
-
     constructor(message: string) {
         super(message);
         this.name = "OptionsException";
-        Object.setPrototypeOf(this, OptionsException.prototype);
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, OptionsException);
+        }
     }
 }
