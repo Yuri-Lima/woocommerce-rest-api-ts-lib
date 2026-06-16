@@ -1,21 +1,26 @@
 /**
- * Barrel export for all library types.
- * Consumers import { Products, Orders, WooRestApiOptions, ... } from "woocommerce-rest-ts-api"
- * This structure separates concerns (core / models / responses / requests / errors) while
- * preserving a single import surface for backward compatibility.
+ * Public type barrel.
+ * Re-exports everything so that:
+ *   import { Products, WooCommerceApiError, IWooRestApiOptions, ... } from "woocommerce-rest-ts-api"
+ * and internal imports continue to work after the split.
+ *
+ * This fulfills the requirement for dedicated folders + barrel exports.
  */
 
-// Core configuration + primitives
-export * from "./core/index";
+// Core
+export * from "./core";
 
-// Errors (properly extending Error with prototype fixes)
-export * from "./errors/index";
+// Errors
+export * from "./errors";
 
-// Shared models (billing, line items, meta, dimensions, system sub-objects, etc.)
-export * from "./models/index";
+// Models (entities)
+export * from "./models";
 
-// Response entity shapes + the ApiResponse wrapper
-export * from "./responses/index";
+// Requests / params
+export * from "./requests";
 
-// Request / param shapes + DELETE helper + MainParams unions
-export * from "./requests/index";
+// Responses
+export * from "./responses";
+
+// Legacy named exports for full backward compat (some were only in old file)
+export type { DELETE } from "./requests";

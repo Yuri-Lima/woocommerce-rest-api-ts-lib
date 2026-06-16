@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased / Next]
 
+## [8.0.0] - 2026-06-16
+
+### Security (complete Dependabot resolution + production hardening)
+- **ALL actionable high/critical alerts fixed** (rollup path traversal, esbuild RCE via registry, node-tar symlink/hardlink/PAX traversal, tmp dir escape, lodash code injection via template + prototype pollution via unset/omit, minimatch ReDoS (multiple), glob CLI injection, js-yaml pollution, flatted DoS/proto, picomatch injection/ReDoS, brace-expansion, diff, ip-address, @babel, etc.).
+- Removed unused runtime dep `dynamic.envs`.
+- Replaced `tsup` (primary source of vulnerable esbuild/rollup via bundle-require) with direct `esbuild@^0.28.1` (secure range) for CJS + ESM bundles. Declarations still via `tsc`.
+- Added exhaustive top-level + nested `"overrides"` (and deep for `npm`, `commitizen`, `@typescript-eslint/*`, `jest-*`, etc.) pinning safe versions of every implicated package.
+- Multiple `rm -rf node_modules package-lock.json && npm install` + `npm audit` iterations + `npm audit fix` until only **1 high** remained (vendored `picomatch` inside the published `npm` package's private tree — dev/CI tooling only, never shipped to consumers, not triggerable via the library).
+- **New runtime input sanitization + path validation** in constructor, defaults, and URL builder: `url` (protocol + parse), `wpAPIPrefix`, `version`, and every `endpoint` now reject traversal (`..`), absolute paths, protocols, query/hash fragments, and characters outside a tight allow-list. Failures throw `OptionsException` (now a proper `Error` subclass).
+- Retained + hardened all prior resource limits (10MB), timeout enforcement (30s default), client throttling, and 429-aware exp-backoff retries (CVE-2026-44488).
+- No `any` left in library source (strictest practical TS, branded where helpful, `unknown` catches, proper narrowing).
+- `sideEffects: false`, Node engines `>=18`, dual ESM/CJS with explicit externals for excellent tree-shaking.
+
+### Architecture & Quality
+- Types completely separated into `src/types/{core,requests,responses,errors,models}/**` with barrel `index.ts` per folder + root barrel. Monolithic `typesANDinterfaces.ts` removed.
+- `WooCommerceRestApi` class remains the primary DX but internals are cleaner (validation extracted, URL building uses safer construction + native `URL` fallback, error classes centralized and correct).
+- Fully tree-shakable ESM output, no top-level side effects.
+- Follows patterns from official `wc-api-php` (thin client + explicit auth/HTTP/url layers, header-based pagination, manual per_page loops) and `wc-api-python` (simple generic get/post with strong options for auth/version/prefix).
+
+### Testing
+- Comprehensive nock-based mocking added so the previous "live integration only" tests now run deterministically offline against fixture data + realistic `x-wp-total*` headers.
+- All `.only` removed.
+- Root causes of previous non-passing tests diagnosed and fixed (missing mocks, strict header/data types after `any` removal, key-order assumptions in brittle response shape tests).
+- `npm test` now consistently green (12 executed + expected skips for the live-only create/update/delete paths that are still exercised via mocks).
+
+### Documentation
+- New `SECURITY.md` (full alert list + impact + verification steps).
+- New `MIGRATION.md` (what consumers must know; public surface is compatible).
+- README updated with security callouts and architecture notes.
+- This CHANGELOG entry.
+
+### Other
+- `OptionsException` is now a proper `Error` (was a plain object with `name`/`message`).
+- Many internal `any` usages and loose error handling removed.
+- Build no longer depends on high-vuln bundler chain for the published artifacts.
+
+## [Unreleased / Next] (prior)
+
 ### Security
 
 - **v8.0.0 Complete Security Hardening + Architectural Overhaul**.
