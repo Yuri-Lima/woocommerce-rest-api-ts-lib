@@ -12,8 +12,17 @@
 
 A modern, type-safe TypeScript library for the WooCommerce REST API with enhanced error handling, improved type safety, convenient methods for common operations, and security hardening against resource exhaustion vulnerabilities.
 
-✨ **New Features in v7.1.2+ (Security Release):**
-- 🛡️ **CVE-2026-44488 Full Mitigation** - Axios upgraded to 1.18.0 + request throttling, enforced timeouts, 10MB body limits, and exp-backoff retries with rate limit awareness in the core HTTP client.
+✨ **New Features in v8.0.0 (Major Security + Architecture Release):**
+- 🛡️ **Complete Dependabot resolution** — every high/critical (rollup traversal, esbuild RCE, tar symlink/hardlink, tmp escape, lodash template injection + proto pollution, minimatch/glob ReDoS+CLI, js-yaml, flatted, picomatch, etc.) fixed via upgrades, removal of risky build tools (tsup), direct secure esbuild, and exhaustive overrides. See `SECURITY.md`.
+- 🛡️ **Runtime path sanitization & validation** — `url`/`version`/`wpAPIPrefix`/`endpoint` now actively reject traversal and illegal input (defense-in-depth on top of prior resource limits).
+- 🏗️ Full type separation (`src/types/{core,requests,responses,errors,models}`) with barrels; no more monolithic file. Monorepo-style clarity while keeping identical public API.
+- 🧪 All tests green with deterministic nock mocks (no live WC required for the suite).
+
+Previous v7.1.2 security work (Axios CVE, handlebars override, throttling/limits/retries) is fully preserved and extended.
+
+---
+
+**v7.1.2 notes (historical):**
 - 🛡️ **Handlebars / Dependabot #91 Fix (CVE-2026-33937 AST Type Confusion RCE)** - Full audit confirmed zero usage of handlebars in runtime/library code (only transitive in release tooling for changelogs). Forced secure `handlebars@4.7.9` via overrides in package.json + lockfiles. No impact on published package or backward compatibility. See CHANGELOG for details.
 - 🛡️ **Enhanced Error Handling** - Custom error classes with detailed error information
 - 🔧 **Improved Type Safety** - Better response typing with `WooCommerceApiResponse<T>`

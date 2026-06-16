@@ -1,10 +1,11 @@
-import axios, { RawAxiosRequestHeaders, AxiosRequestConfig } from "axios";
+import axios, { RawAxiosRequestHeaders, AxiosRequestConfig, AxiosError } from "axios";
 import crypto from "node:crypto";
 import OAuth from "oauth-1.0a";
 import Url from "url-parse";
-import {
+
+// All types now come from the new modular structure (core/requests/responses/errors/models + barrels)
+import type {
     WooRestApiMethod,
-    // IWooRestApiQuery,
     IWooRestApiOptions,
     WooRestApiEndpoint,
     OrdersMainParams,
@@ -18,9 +19,16 @@ import {
     Customers,
     Coupons,
     SystemStatus,
-} from "./typesANDinterfaces.js"; // Typescript types for the library
+    WooCommerceApiResponse,
+    WooRestApiVersion,
+} from "./types/index.js";
+import {
+    WooCommerceApiError,
+    OptionsException,
+} from "./types/index.js";
 
-export {
+// Re-export the full public surface (types + error classes) for consumers + backward compat
+export type {
     WooRestApiMethod,
     IWooRestApiQuery,
     IWooRestApiOptions,
@@ -36,12 +44,12 @@ export {
     Customers,
     Coupons,
     SystemStatus,
-} from "./typesANDinterfaces.js"; // Export all the types
+    WooCommerceApiResponse,
+} from "./types/index.js";
+export { WooCommerceApiError, AuthenticationError, OptionsException } from "./types/index.js";
 
 /**
  * Set the axiosConfig property to the axios config object.
- * Could reveive any axios |... config objects.
- * @param {AxiosRequestConfig} axiosConfig
  */
 export type WooRestApiOptions = IWooRestApiOptions<AxiosRequestConfig>;
 
@@ -55,14 +63,66 @@ export type WooRestApiParams = CouponsParams &
   SystemStatusParams &
   DELETE;
 
+/* =========================================================
+ * SECURITY: Input sanitization + path validation helpers
+ * Prevents path traversal, protocol confusion, and bad segments
+ * in constructed WooCommerce REST URLs.
+ * ========================================================= */
+
+const SAFE_SEGMENT = /^[a-zA-Z0-9._-]+$/;
+
+function sanitizePathSegment(segment: string, name: string): string {
+    if (typeof segment !== "string" || segment.length === 0) {
+        throw new OptionsException(`${name} must be a non-empty string`);
+    }
+    // Strip dangerous sequences
+    const cleaned = segment
+        .replace(/\.+/g, ".") // collapse ..
+        .replace(/\/+/g, "/")
+        .replace(/^\/+|\/+$/g, ""); // no leading/trailing slashes in segments
+
+    if (cleaned.includes("..") || cleaned.includes("/") || !SAFE_SEGMENT.test(cleaned)) {
+        throw new OptionsException(`Invalid ${name}: contains path traversal or illegal characters`);
+    }
+    return cleaned;
+}
+
+function sanitizeEndpoint(endpoint: string): string {
+    if (typeof endpoint !== "string" || endpoint.length === 0) {
+        throw new OptionsException("endpoint must be a non-empty string");
+    }
+    // Disallow protocol, absolute paths, traversal, query/hash in endpoint
+    if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(endpoint) || endpoint.includes("://") || endpoint.startsWith("/") || endpoint.includes("..") || /[?#]/.test(endpoint)) {
+        throw new OptionsException("Invalid endpoint: must be a relative path segment without traversal or protocol");
+    }
+    // Allow nested like products/attributes but sanitize each part
+    const parts = endpoint.split("/").filter(Boolean);
+    const safeParts = parts.map((p, i) => sanitizePathSegment(p, `endpoint part[${i}]`));
+    return safeParts.join("/");
+}
+
 /**
- * Response wrapper for API calls
+ * Version may be "wc/v3" (contains exactly one /). Special sanitizer.
  */
-export interface WooCommerceApiResponse<T> {
-  data: T;
-  status: number;
-  statusText: string;
-  headers: any;
+function sanitizeApiVersion(v: string): WooRestApiVersion {
+    const cleaned = String(v || "").trim().replace(/^\/+|\/+$/g, "");
+    if (cleaned.includes("..") || cleaned.split("/").length > 2 || !/^[a-zA-Z0-9/._-]+$/.test(cleaned)) {
+        throw new OptionsException("Invalid version: contains path traversal or illegal characters");
+    }
+    return cleaned as WooRestApiVersion;
+}
+
+function validateBaseUrl(urlStr: string): URL {
+    let u: URL;
+    try {
+        u = new URL(urlStr);
+    } catch {
+        throw new OptionsException("url must be a valid absolute URL (http/https)");
+    }
+    if (u.protocol !== "http:" && u.protocol !== "https:") {
+        throw new OptionsException("url must use http or https protocol");
+    }
+    return u;
 }
 
 /**
@@ -100,6 +160,8 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         if (!this._opt.url || this._opt.url === "") {
             throw new OptionsException("url is required");
         }
+        // SECURITY: validate early (throws OptionsException on bad input)
+        validateBaseUrl(this._opt.url);
 
         /**
      * Check if the consumerKey is defined.
@@ -116,7 +178,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         }
 
         /**
-     * Set default options
+     * Set default options (also runs sanitization)
      */
         this._setDefaultsOptions(this._opt);
     }
@@ -127,8 +189,14 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    * @param {Object} opt
    */
     _setDefaultsOptions(opt: T): void {
-        this._opt.wpAPIPrefix = opt.wpAPIPrefix || "wp-json";
-        this._opt.version = opt.version || "wc/v3";
+        // SECURITY: sanitize critical path segments to block traversal / injection into final REST URL
+        const rawPrefix = opt.wpAPIPrefix || "wp-json";
+        const rawVersion = opt.version || "wc/v3";
+
+        this._opt.wpAPIPrefix = sanitizePathSegment(rawPrefix, "wpAPIPrefix");
+        // version legitimately contains one "/" (wc/v3); use tolerant sanitizer
+        this._opt.version = sanitizeApiVersion(rawVersion);
+
         this._opt.isHttps = /^https/i.test(this._opt.url);
         this._opt.encoding = opt.encoding || "utf-8";
         this._opt.queryStringAuth = opt.queryStringAuth || false;
@@ -177,22 +245,23 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    * Core axios execution with exponential backoff and rate-limit (429) awareness.
    * Retries on network errors and configured retryable status codes.
    */
-    private async _executeWithRetry(options: AxiosRequestConfig): Promise<any> {
+    private async _executeWithRetry(options: AxiosRequestConfig): Promise<import("axios").AxiosResponse> {
         const retryCfg = this._opt.retryConfig ?? {};
-        const maxRetries = retryCfg.retries ?? 0; // 0 = no retries by default (full backward compat on error paths/timings). Set >0 to enable resilience + rate limit backoff.
+        const maxRetries = retryCfg.retries ?? 0;
         const baseDelay = retryCfg.retryDelay ?? 1000;
         const retryableStatuses: number[] = retryCfg.retryOn ?? [408, 429, 500, 502, 503, 504];
 
-        let lastError: any;
+        let lastError: unknown;
 
         for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
                 return await axios(options);
-            } catch (error: any) {
+            } catch (error: unknown) {
                 lastError = error;
 
-                const status: number | undefined = error?.response?.status;
-                const isNetworkError = !error.response || error.code === "ECONNRESET" || error.code === "ETIMEDOUT" || error.code === "ECONNABORTED";
+                const err = error as AxiosError;
+                const status: number | undefined = err.response?.status;
+                const isNetworkError = !err.response || err.code === "ECONNRESET" || err.code === "ETIMEDOUT" || err.code === "ECONNABORTED";
                 const isRetryableStatus = !status || retryableStatuses.includes(status);
 
                 const shouldRetry = attempt < maxRetries && (isNetworkError || isRetryableStatus);
@@ -205,8 +274,9 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
                 let delay = baseDelay * Math.pow(2, attempt) * (0.5 + Math.random() * 0.5);
 
                 // Rate limiting awareness: honor Retry-After on 429 if present (seconds or HTTP date)
+                const errForRetry = error as { response?: { headers?: Record<string, unknown> } };
                 if (status === 429) {
-                    const retryAfterHeader = error.response?.headers?.["retry-after"];
+                    const retryAfterHeader = errForRetry.response?.headers?.["retry-after"];
                     if (retryAfterHeader != null) {
                         const asSeconds = parseInt(String(retryAfterHeader), 10);
                         if (!Number.isNaN(asSeconds) && asSeconds > 0) {
@@ -323,50 +393,45 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
     /**
    * Get URL
    *
-   * @param  {String} endpoint
-   * @param  {Object} params
-   *
-   * @return {String}
+   * SECURITY: Always sanitizes the endpoint. Uses URL where practical + guards.
    */
     _getUrl(endpoint: string, params: Partial<Record<string, unknown>>): string {
-        const api = this._opt.wpAPIPrefix + "/"; // Add prefix to endpoint
+        const safeEndpoint = sanitizeEndpoint(endpoint);
 
-        let url =
-      this._opt.url.slice(-1) === "/" ? this._opt.url : this._opt.url + "/";
+        const base = this._opt.url.endsWith("/") ? this._opt.url : this._opt.url + "/";
+        // Build safely
+        let url = `${base}${this._opt.wpAPIPrefix}/${this._opt.version}/${safeEndpoint}`;
 
-        url = url + api + this._opt.version + "/" + endpoint;
-        // Add id param to url
-        if (params.id) {
-            url = url + "/" + params.id;
-            delete params.id;
+        // id handling (mutates copy of params for query)
+        const q = { ...params };
+        if (q.id != null) {
+            url = `${url}/${encodeURIComponent(String(q.id))}`;
+            delete q.id;
         }
 
-        // Add query params to url
-        if (Object.keys(params).length !== 0) {
-            const queryString = Object.entries(params)
-                .map(
-                    ([key, value]) =>
-                        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
-                )
+        // Query string via safe encoding (no object prototype issues)
+        const queryKeys = Object.keys(q);
+        if (queryKeys.length > 0) {
+            const qs = queryKeys
+                .sort() // stable for OAuth if ever used
+                .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(String(q[k]))}`)
                 .join("&");
-            url = `${url}?${queryString}`;
+            url = `${url}?${qs}`;
         }
 
-        /**
-     * If port is defined, add it to the url
-     */
+        // Port injection (rare)
         if (this._opt.port) {
-            const hostname = new Url(url).hostname;
-            url = url.replace(hostname, hostname + ":" + this._opt.port);
+            try {
+                const u = new URL(url);
+                u.port = String(this._opt.port);
+                url = u.toString();
+            } catch {
+                // fall back to previous behavior using url-parse for weird cases
+                const hostname = new Url(url).hostname;
+                url = url.replace(hostname, `${hostname}:${this._opt.port}`);
+            }
         }
 
-        /**
-     * If isHttps is true, normalize the query string
-     */
-        // if (this._opt.isHttps) {
-        //     url = this._normalizeQueryString(url, params);
-        //     return url;
-        // }
         return url;
     }
 
@@ -416,34 +481,28 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         endpoint: string,
         data?: Record<string, unknown>,
         params: Record<string, unknown> = {},
-    ): Promise<any> {
+    ): Promise<import("axios").AxiosResponse> {
         const url = this._getUrl(endpoint, params);
 
         const header: RawAxiosRequestHeaders = {
             Accept: "application/json",
         };
-        // only set "User-Agent" in node environment
-        // the checking method is identical to upstream axios
         if (
             typeof process !== "undefined" &&
-      Object.prototype.toString.call(process) === "[object process]"
+            Object.prototype.toString.call(process) === "[object process]"
         ) {
             header["User-Agent"] =
-        "WooCommerce REST API - TS Client/" + this._opt.classVersion;
+                "WooCommerce REST API - TS Client/" + this._opt.classVersion;
         }
 
-        // Secure defaults for resource limits (CVE-2026-44488 mitigation) and timeout enforcement.
-        // 10MB is a conservative default suitable for typical WooCommerce REST payloads.
-        // Users may override via top-level options or axiosConfig (last write wins for explicit).
         const DEFAULT_MAX_CONTENT_LENGTH = 10 * 1024 * 1024;
         const DEFAULT_MAX_BODY_LENGTH = 10 * 1024 * 1024;
         const DEFAULT_TIMEOUT = 30000;
 
-        // Determine explicit user intent from axiosConfig for overrides (including -1 / 0 to relax)
-        const axCfg: any = this._opt.axiosConfig ?? {};
-        const explicitMaxContent = "maxContentLength" in axCfg ? axCfg.maxContentLength : undefined;
-        const explicitMaxBody = "maxBodyLength" in axCfg ? axCfg.maxBodyLength : undefined;
-        const explicitTimeout = "timeout" in axCfg ? axCfg.timeout : undefined;
+        const axCfg: Record<string, unknown> = (this._opt.axiosConfig as Record<string, unknown>) ?? {};
+        const explicitMaxContent = "maxContentLength" in axCfg ? (axCfg.maxContentLength as number | undefined) : undefined;
+        const explicitMaxBody = "maxBodyLength" in axCfg ? (axCfg.maxBodyLength as number | undefined) : undefined;
+        const explicitTimeout = "timeout" in axCfg ? (axCfg.timeout as number | undefined) : undefined;
 
         let options: AxiosRequestConfig = {
             url,
@@ -514,21 +573,21 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
             }
         }
 
-        // Throttling + retry-protected execution. Acquire slot for the logical request (held across retries).
+        // Throttling + retry-protected execution.
         await this._acquireSlot();
         try {
             return await this._executeWithRetry(options);
-        } catch (error: any) {
-            // Enhanced error handling
-            if (error.response) {
+        } catch (error: unknown) {
+            const err = error as AxiosError & { request?: unknown };
+            if (err.response) {
                 const apiError = new WooCommerceApiError(
-                    error.response.data?.message || error.message || "API request failed",
-                    error.response.status,
-                    error.response.data,
+                    (err.response.data as { message?: string })?.message || err.message || "API request failed",
+                    err.response.status,
+                    err.response.data,
                     endpoint,
                 );
                 throw apiError;
-            } else if (error.request) {
+            } else if (err.request) {
                 throw new WooCommerceApiError(
                     "Network error: No response received from server",
                     0,
@@ -537,7 +596,7 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
                 );
             } else {
                 throw new WooCommerceApiError(
-                    `Request setup error: ${error.message}`,
+                    `Request setup error: ${err.message}`,
                     0,
                     null,
                     endpoint,
@@ -556,238 +615,116 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    *
    * @return {Object}
    */
-    get<T = any>(
+    get<T = unknown>(
         endpoint: WooRestApiEndpoint,
         params?: Partial<WooRestApiParams>,
     ): Promise<WooCommerceApiResponse<T>> {
         return this._request("GET", endpoint, undefined, params).then(
             (response) => ({
-                data: response.data,
+                data: response.data as T,
                 status: response.status,
                 statusText: response.statusText,
-                headers: response.headers,
+                headers: response.headers as WooCommerceApiResponse<T>["headers"],
             }),
         );
     }
 
-    /**
-   * POST requests
-   *
-   * @param  {String} endpoint
-   * @param  {Object} data
-   * @param  {Object} params
-   *
-   * @return {Object}
-   */
-    post<T = any>(
+    post<T = unknown>(
         endpoint: WooRestApiEndpoint,
         data: Record<string, unknown>,
         params?: Partial<WooRestApiParams>,
     ): Promise<WooCommerceApiResponse<T>> {
         return this._request("POST", endpoint, data, params).then((response) => ({
-            data: response.data,
+            data: response.data as T,
             status: response.status,
             statusText: response.statusText,
-            headers: response.headers,
+            headers: response.headers as WooCommerceApiResponse<T>["headers"],
         }));
     }
 
-    /**
-   * PUT requests
-   *
-   * @param  {String} endpoint
-   * @param  {Object} data
-   * @param  {Object} params
-   *
-   * @return {Object}
-   */
-    put<T = any>(
+    put<T = unknown>(
         endpoint: WooRestApiEndpoint,
         data: Record<string, unknown>,
         params?: Partial<WooRestApiParams>,
     ): Promise<WooCommerceApiResponse<T>> {
         return this._request("PUT", endpoint, data, params).then((response) => ({
-            data: response.data,
+            data: response.data as T,
             status: response.status,
             statusText: response.statusText,
-            headers: response.headers,
+            headers: response.headers as WooCommerceApiResponse<T>["headers"],
         }));
     }
 
-    /**
-   * DELETE requests
-   *
-   * @param  {String} endpoint
-   * @param  {Object} params
-   * @param  {Object} params
-   *
-   * @return {Object}
-   */
-    delete<T = any>(
+    delete<T = unknown>(
         endpoint: WooRestApiEndpoint,
         data: Pick<WooRestApiParams, "force">,
         params: Pick<WooRestApiParams, "id">,
     ): Promise<WooCommerceApiResponse<T>> {
         return this._request("DELETE", endpoint, data, params).then((response) => ({
-            data: response.data,
+            data: response.data as T,
             status: response.status,
             statusText: response.statusText,
-            headers: response.headers,
+            headers: response.headers as WooCommerceApiResponse<T>["headers"],
         }));
     }
 
-    /**
-   * OPTIONS requests
-   *
-   * @param  {String} endpoint
-   * @param  {Object} params
-   *
-   * @return {Object}
-   */
-    options<T = any>(
+    options<T = unknown>(
         endpoint: WooRestApiEndpoint,
         params?: Partial<WooRestApiParams>,
     ): Promise<WooCommerceApiResponse<T>> {
         return this._request("OPTIONS", endpoint, {}, params).then((response) => ({
-            data: response.data,
+            data: response.data as T,
             status: response.status,
             statusText: response.statusText,
-            headers: response.headers,
+            headers: response.headers as WooCommerceApiResponse<T>["headers"],
         }));
     }
 
-    // Convenience methods with proper typing
-    /**
-   * Get all products with proper typing
-   */
-    async getProducts(
-        params?: Record<string, any>,
-    ): Promise<WooCommerceApiResponse<Products[]>> {
+    // Convenience methods (still available for DX; fully typed)
+    async getProducts(params?: Record<string, unknown>): Promise<WooCommerceApiResponse<Products[]>> {
         return this.get<Products[]>("products", params);
     }
 
-    /**
-   * Get a single product by ID
-   */
     async getProduct(id: number): Promise<WooCommerceApiResponse<Products>> {
         return this.get<Products>("products", { id });
     }
 
-    /**
-   * Create a new product
-   */
-    async createProduct(
-        productData: Partial<Products>,
-    ): Promise<WooCommerceApiResponse<Products>> {
+    async createProduct(productData: Partial<Products>): Promise<WooCommerceApiResponse<Products>> {
         return this.post<Products>("products", productData);
     }
 
-    /**
-   * Update an existing product
-   */
-    async updateProduct(
-        id: number,
-        productData: Partial<Products>,
-    ): Promise<WooCommerceApiResponse<Products>> {
+    async updateProduct(id: number, productData: Partial<Products>): Promise<WooCommerceApiResponse<Products>> {
         return this.put<Products>("products", productData, { id });
     }
 
-    /**
-   * Get all orders with proper typing
-   */
-    async getOrders(
-        params?: Record<string, any>,
-    ): Promise<WooCommerceApiResponse<Orders[]>> {
+    async getOrders(params?: Record<string, unknown>): Promise<WooCommerceApiResponse<Orders[]>> {
         return this.get<Orders[]>("orders", params);
     }
 
-    /**
-   * Get a single order by ID
-   */
     async getOrder(id: number): Promise<WooCommerceApiResponse<Orders>> {
         return this.get<Orders>("orders", { id });
     }
 
-    /**
-   * Create a new order
-   */
-    async createOrder(
-        orderData: Partial<Orders>,
-    ): Promise<WooCommerceApiResponse<Orders>> {
+    async createOrder(orderData: Partial<Orders>): Promise<WooCommerceApiResponse<Orders>> {
         return this.post<Orders>("orders", orderData);
     }
 
-    /**
-   * Get all customers with proper typing
-   */
-    async getCustomers(
-        params?: Partial<CustomersParams>,
-    ): Promise<WooCommerceApiResponse<Customers[]>> {
+    async getCustomers(params?: Partial<CustomersParams>): Promise<WooCommerceApiResponse<Customers[]>> {
         return this.get<Customers[]>("customers", params);
     }
 
-    /**
-   * Get a single customer by ID
-   */
     async getCustomer(id: number): Promise<WooCommerceApiResponse<Customers>> {
         return this.get<Customers>("customers", { id });
     }
 
-    /**
-   * Get all coupons with proper typing
-   */
-    async getCoupons(
-        params?: Partial<CouponsParams>,
-    ): Promise<WooCommerceApiResponse<Coupons[]>> {
+    async getCoupons(params?: Partial<CouponsParams>): Promise<WooCommerceApiResponse<Coupons[]>> {
         return this.get<Coupons[]>("coupons", params);
     }
 
-    /**
-   * Get system status
-   */
     async getSystemStatus(): Promise<WooCommerceApiResponse<SystemStatus>> {
         return this.get<SystemStatus>("system_status");
     }
 }
 
-/**
- * WooCommerce API Error.
- */
-export class WooCommerceApiError extends Error {
-    constructor(
-        message: string,
-    public statusCode?: number,
-    public response?: any,
-    public endpoint?: string,
-    ) {
-        super(message);
-        this.name = "WooCommerceApiError";
-    }
-}
-
-/**
- * Authentication Error.
- */
-export class AuthenticationError extends WooCommerceApiError {
-    constructor(message = "Authentication failed") {
-        super(message, 401);
-        this.name = "AuthenticationError";
-    }
-}
-
-/**
- * Options Exception.
- */
-export class OptionsException {
-    public name: "Options Error";
-    public message: string;
-    /**
-   * Constructor.
-   *
-   * @param {String} message
-   */
-    constructor(message: string) {
-        this.name = "Options Error";
-        this.message = message;
-    }
-}
+// Error classes are now defined in src/types/errors (with proper extends Error) and re-exported above.
+// The old non-Error OptionsException and any-typed WooCommerceApiError have been removed for security + correctness.
