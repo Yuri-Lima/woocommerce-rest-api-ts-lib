@@ -78,6 +78,39 @@ export interface IWooRestApiOptions<T> extends IWooCredentials {
 
   /* Https or Http */
   isHttps?: boolean;
+
+  /**
+   * Maximum content length (response body) in bytes.
+   * Mitigates CVE-2026-44488 (resource exhaustion via unbounded allocation).
+   * Defaults to 10MB if not specified. Set to -1 to disable limit (not recommended for security).
+   */
+  maxContentLength?: number;
+
+  /**
+   * Maximum body length (request body) in bytes.
+   * Mitigates CVE-2026-44488. Defaults to 10MB if not specified.
+   */
+  maxBodyLength?: number;
+
+  /**
+   * Maximum number of concurrent in-flight requests for client-side throttling.
+   * 0 or undefined (default) means no concurrency limit (backward compatible).
+   * Positive number enables basic request throttling/queueing.
+   */
+  maxConcurrentRequests?: number;
+
+  /**
+   * Retry configuration with exponential backoff and rate limiting awareness.
+   * Applied to transient errors, network failures, and 429/5xx responses.
+   */
+  retryConfig?: {
+    /** Maximum number of retry attempts after the initial request. Default: 0 (disabled for backward compatibility). Enable (e.g. 3) to activate exponential backoff and rate-limit awareness. */
+    retries?: number;
+    /** Base delay in milliseconds for exponential backoff. Default: 1000 */
+    retryDelay?: number;
+    /** Array of HTTP status codes that should trigger a retry. Default: [408, 429, 500, 502, 503, 504] */
+    retryOn?: number[];
+  };
 }
 
 /* Start of the Types */

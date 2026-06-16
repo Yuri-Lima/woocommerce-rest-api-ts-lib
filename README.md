@@ -10,16 +10,17 @@
 
 # WooCommerce REST API - TypeScript Library
 
-A modern, type-safe TypeScript library for the WooCommerce REST API with enhanced error handling, improved type safety, and convenient methods for common operations.
+A modern, type-safe TypeScript library for the WooCommerce REST API with enhanced error handling, improved type safety, convenient methods for common operations, and security hardening against resource exhaustion vulnerabilities.
 
-✨ **New Features in v7.1.0:**
+✨ **New Features in v7.1.2+ (Security Release):**
+- 🛡️ **CVE-2026-44488 Full Mitigation** - Axios upgraded to 1.18.0 + request throttling, enforced timeouts, 10MB body limits, and exp-backoff retries with rate limit awareness in the core HTTP client.
 - 🛡️ **Enhanced Error Handling** - Custom error classes with detailed error information
 - 🔧 **Improved Type Safety** - Better response typing with `WooCommerceApiResponse<T>`
 - 🚀 **Convenience Methods** - Easy-to-use methods for common operations
 - 📦 **Modern Module Support** - Full ESM and CJS compatibility
 - 🎯 **Better Developer Experience** - Comprehensive TypeScript support
 - 🔧 **Fixed Configuration Issues** - Resolved TypeScript and ESLint compatibility problems
-- 📝 **Updated Dependencies** - Latest TypeScript 5.8.3 and modern tooling
+- 📝 **Updated Dependencies** - Latest TypeScript 5.8.3 and modern tooling (plus secure Axios)
 
 New TypeScript library for WooCommerce REST API. Supports CommonJS (CJS) and ECMAScript (ESM)
 
@@ -28,7 +29,8 @@ New TypeScript library for WooCommerce REST API. Supports CommonJS (CJS) and ECM
 - **Type-Safe**: Full TypeScript support with comprehensive type definitions
 - **Modern**: ES2020+ with async/await support
 - **Flexible**: Support for both CommonJS and ES modules
-- **Secure**: Built-in OAuth 1.0a authentication
+- **Secure**: Built-in OAuth 1.0a authentication + hardened HTTP client against resource exhaustion (CVE-2026-44488)
+- **Resilient**: Client throttling, timeout enforcement, and automatic retries with rate-limit awareness
 - **Error Handling**: Custom error classes with detailed error information
 - **Convenience Methods**: Easy-to-use methods for common operations
 - **Lightweight**: Minimal dependencies with tree-shaking support
@@ -88,9 +90,13 @@ const api = new WooCommerceRestApi({
 | `version`         | `String`  | no       | API version, default is `wc/v3`                                                                                     |
 | `encoding`        | `String`  | no       | Encoding, default is 'utf-8'                                                                                        |
 | `queryStringAuth` | `Bool`    | no       | When `true` and using under HTTPS force Basic Authentication as query string, default is `false`                    |
-| `port`            | `string`  | no       | Provide support for URLs with ports, eg: `8080`                                                                     |
-| `timeout`         | `Integer` | no       | Define the request timeout                                                                                          |
-| `axiosConfig`     | `Object`  | no       | Define the custom [Axios config](https://github.com/axios/axios#request-config), also override this library options |
+| `port`                  | `string`  | no       | Provide support for URLs with ports, eg: `8080`                                                                     |
+| `timeout`               | `Integer` | no       | Define the request timeout (enforced default: 30000ms if unset)                                                     |
+| `axiosConfig`           | `Object`  | no       | Define the custom [Axios config](https://github.com/axios/axios#request-config), also override this library options |
+| `maxContentLength`      | `Integer` | no       | Max response body size (bytes). Default 10MB. Mitigates resource exhaustion (CVE-2026-44488). `-1` disables.        |
+| `maxBodyLength`         | `Integer` | no       | Max request body size (bytes). Default 10MB.                                                                        |
+| `maxConcurrentRequests` | `Integer` | no       | Max in-flight requests for client throttling (0=unlimited, default for compat). Enables internal queue.             |
+| `retryConfig`           | `Object`  | no       | `{retries?: number, retryDelay?: number, retryOn?: number[]}` for exp backoff + 429/RateLimit awareness. Default: 0 (disabled). Recommended: retries:3+ for production resilience against rate limits/transients. |
 
 ## 🎯 Enhanced Response Type
 
@@ -125,6 +131,44 @@ try {
     }
 }
 ```
+
+## 🛡️ Security Hardening (CVE-2026-44488)
+
+This library fully addresses the high-severity **Axios CVE-2026-44488** ("Allocation of Resources Without Limits or Throttling").
+
+### What was done
+- Axios upgraded to **1.18.0** (the secure version that properly enforces body limits under the fetch adapter as well as the http adapter).
+- **Resource limits** (`maxContentLength` / `maxBodyLength`) default to 10 MiB in the core `_request` implementation. These are always applied and respected even when users supply `axiosConfig`.
+- **Timeout enforcement**: 30 second default timeout is applied when none is configured.
+- **Throttling**: `maxConcurrentRequests` option + internal semaphore/queue in the HTTP client.
+- **Resilience**: Automatic retries (default 3) using exponential backoff + jitter. 429 responses intelligently respect `Retry-After` headers for rate-limit awareness.
+
+### Configuration example with security options
+```typescript
+const api = new WooCommerceRestApi({
+  url: "https://your-store.com",
+  consumerKey: "...",
+  consumerSecret: "...",
+  // Security / resilience options (all optional; safe defaults applied)
+  timeout: 45000,
+  maxContentLength: 5 * 1024 * 1024,   // 5MB responses
+  maxBodyLength: 2 * 1024 * 1024,      // 2MB uploads
+  maxConcurrentRequests: 4,            // Throttle to 4 parallel requests
+  retryConfig: {
+    retries: 3,  // Enable for resilience (default 0 for strict backward compat)
+    retryDelay: 800,
+    retryOn: [429, 500, 502, 503, 504]
+  },
+  // You can still pass raw axios options (they take precedence for provided keys)
+  axiosConfig: {
+    // headers, adapter, etc.
+  }
+});
+```
+
+**Recommendation**: Leave the size limits at their defaults (or lower them) unless you have a legitimate need for very large payloads. Never set to `-1` in untrusted environments.
+
+The implementation lives in the `_request` method and honors values passed through `axiosConfig` while providing safe library-level guardrails.
 
 ## 📖 API Methods
 
@@ -360,6 +404,11 @@ The library includes comprehensive TypeScript definitions for all WooCommerce en
 
 If you're upgrading from an earlier version, note these changes:
 
+### From v7.1.x to v7.1.2+ (Security Release)
+- **No Breaking Changes**: Fully backward compatible. New security/resilience options (`max*Length`, `maxConcurrentRequests`, `retryConfig`) are optional.
+- **Axios Upgrade**: `axios` is now ^1.18.0. All prior `axiosConfig` usage continues to work.
+- **Improved Resilience (opt-in controls)**: Timeouts, body limits, throttling and retries are now active with safe defaults. Existing behavior for explicitly supplied `timeout` etc. is preserved.
+
 ### From v7.0.x to v7.1.0
 - **No Breaking Changes**: v7.1.0 is fully backward compatible
 - **Improved Stability**: Better build process and dependency management
@@ -373,7 +422,13 @@ If you're upgrading from an earlier version, note these changes:
 
 ## 📊 Changelog
 
-### v7.1.0 (Latest)
+### v7.1.2 (Security)
+- 🛡️ **CVE-2026-44488**: Axios upgraded to 1.18.0. Full implementation of request throttling, enforced timeouts (default 30s), 10MB body size limits, and exponential backoff retry logic (opt-in via retryConfig, default 0 for compat) inside `_request` + `axiosConfig`.
+- All existing authentication, convenience methods, and error handling remain 100% backward compatible.
+- Added `maxContentLength`, `maxBodyLength`, `maxConcurrentRequests`, `retryConfig` options + comprehensive docs + CHANGELOG.
+- Verified: clean build, type-check, lint, and tests.
+
+### v7.1.0 (Previous)
 - ✨ Added enhanced error handling with custom error classes
 - 🔧 Improved type safety with `WooCommerceApiResponse<T>`
 - 🚀 Added convenience methods for common operations
