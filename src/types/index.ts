@@ -7,8 +7,11 @@
  * This fulfills the requirement for dedicated folders + barrel exports.
  */
 
-// Core
+// Core (includes re-exports of options types for backward compat)
 export * from "./core";
+
+// Dedicated options folder (architecture requirement)
+export * from "./options";
 
 // Errors
 export * from "./errors";
@@ -19,7 +22,7 @@ export * from "./models";
 // Requests / params
 export * from "./requests";
 
-// Responses
+// Responses (re-exports from core/options)
 export * from "./responses";
 
 // Legacy named exports for full backward compat (some were only in old file)

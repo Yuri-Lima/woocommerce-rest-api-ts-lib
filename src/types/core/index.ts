@@ -1,11 +1,17 @@
 /**
  * Core types for the WooCommerce REST API client.
  * Separated for strict concerns, tree-shaking, and clarity.
+ * Options-related types live in ../options (per architecture requirements) and are re-exported here for compatibility.
  */
 
-export type WooRestApiVersion = "wc/v3";
-
-export type WooRestApiEncoding = "utf-8" | "ascii";
+export type {
+    WooRestApiVersion,
+    WooRestApiEncoding,
+    IWooCredentials,
+    IWooRestApiOptions,
+    WooRestApiOptions,
+    WooCommerceApiResponse,
+} from "../options/index.js";
 
 export type WooRestApiMethod =
   | "GET"
@@ -35,38 +41,3 @@ export type WooRestApiEndpoint =
   | string; // allow extension for notes etc.
 
 export type IWooRestApiQuery = Record<string, unknown>;
-
-export type IWooCredentials = {
-  consumerKey: string;
-  consumerSecret: string;
-};
-
-export interface IWooRestApiOptions<T = unknown> extends IWooCredentials {
-  url: string;
-  wpAPIPrefix?: string;
-  version?: WooRestApiVersion;
-  encoding?: WooRestApiEncoding;
-  queryStringAuth?: boolean;
-  port?: number;
-  timeout?: number;
-  axiosConfig?: T;
-  classVersion?: string;
-  isHttps?: boolean;
-  maxContentLength?: number;
-  maxBodyLength?: number;
-  maxConcurrentRequests?: number;
-  retryConfig?: {
-    retries?: number;
-    retryDelay?: number;
-    retryOn?: number[];
-  };
-}
-
-export type WooRestApiOptions = IWooRestApiOptions;
-
-export interface WooCommerceApiResponse<T> {
-  data: T;
-  status: number;
-  statusText: string;
-  headers: Record<string, string | string[] | number | undefined>;
-}

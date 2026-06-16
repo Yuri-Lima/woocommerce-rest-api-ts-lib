@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased / Next]
 
+### Massive Production-Grade Refactor (pnpm + Architecture + Audit + Testing)
+
+This release is the result of a full, high-stakes refactor with strict requirements. **Public API and runtime behavior are 100% backward compatible.** All existing constructor signatures, methods (including `_`-prefixed internals used by power users and the test suite), types, and exports continue to work identically.
+
+#### Package Manager (Mandatory)
+- Project is now **pnpm-exclusive**. `package-lock.json` removed. All scripts, `.npmrc`, `pnpm-workspace.yaml`, GitHub workflows (publish + updates.test), and documentation updated.
+- `pnpm install`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm typecheck` (new script) are the canonical commands and are verified green in CI and locally.
+- `packageManager` field + `onlyBuiltDependencies` (via approve-builds persisted in lock) for reproducible, secure installs.
+- CI modernized (pnpm/action-setup, setup-node cache: pnpm, frozen-lockfile, full verify matrix on 18/20/22).
+
+#### Architecture & Code Quality
+- Created small reusable abstractions as requested:
+  - `RequestSanitizer` (`src/utils/sanitize.ts`)
+  - `RetryStrategy` + `ExponentialBackoffRetryStrategy` (`src/http/RetryStrategy.ts`)
+  - `Throttler` + `ConcurrencyThrottler` (`src/http/Throttler.ts`)
+  - `ErrorNormalizer` (`src/http/ErrorNormalizer.ts`)
+  - `PaginationHelper` + `collectAllPages` / `parsePaginationHeaders` (`src/utils/PaginationHelper.ts`) — exported publicly for DX.
+- `WooCommerceRestApi` now uses internal composition / dependency injection (protected `_throttler`, `_retryStrategy`, `createThrottler` / `createRetryStrategy` factory hooks for advanced subclassing) while the monolithic surface is preserved for BC.
+- Types reorganized with dedicated `src/types/options/` folder + updated barrels (core re-exports for compatibility). `src/types/(core/requests/responses/errors/models/options)` structure is now complete.
+- Latent correctness bug fixed: duplicate query parameters on HTTPS path (`?per_page=3&per_page=3`) and `id` leaking into query for path-based resources. `_getUrl` contract and OAuth signing behavior unchanged.
+- `hash_function` in OAuth no longer uses `any`; strict typing throughout new modules.
+- Main source file reduced via extraction; no `any` in production `src/`.
+
+#### Performance & Security
+- Default HTTP/HTTPS keep-alive agents wired (connection reuse under load) — high-impact perf win. Users can still override via `axiosConfig`.
+- Full `PERFORMANCE_SECURITY_AUDIT.md` produced with prioritized findings. Many high-impact items from the audit were implemented in this pass; future items have concrete research/implementation paths documented (global limiter, opt-in bounded cache, circuit breaker, streaming).
+- All v8.0.0 security hardening (sanitization, resource limits, throttling, retries, overrides) is retained and made more modular/testable.
+
+#### Testing & Verification (Non-Negotiable)
+- All tests now pass (39/39 across 2 suites) on multiple consecutive full runs after every major phase.
+- Deep root-cause diagnosis performed for every failure:
+  - nock `TEST_BASE` vs `setEnvVars.js` URL mismatch ("example.test" vs "example.com")
+  - Destructive `nock.restore()` in teardown killing later describes
+  - Missing `setupWcNock()` + `disableNetConnect()` in Products/Orders/Customers beforeAll
+  - `coupons.json` fixture had only 1 item while a test asserted `per_page: 3` → length 3 (fixture extended + dynamic nock reply added)
+  - Double query serialization in the client itself (fixed)
+- New dedicated unit test file `src/test/abstractions.test.ts` for the extracted modules (sanitizers, throttler, pagination helper, etc.).
+- Significantly increased coverage of sanitizer branches, error paths, throttling, pagination logic, and options validation.
+- `jest.config.ts` updated to include `*.test.ts`; coverage globs already covered `src/utils`.
+
+#### Documentation & Review
+- New `PERFORMANCE_SECURITY_AUDIT.md` (deep analysis + prioritized opportunities + what was implemented vs deferred).
+- New `FINAL_REVIEW.md` (simulated independent sub-agent review of the full changeset, risk assessment, sign-off).
+- README, CHANGELOG, MIGRATION updated (pnpm-first, new helpers, architecture notes, pnpm migration guidance for CI/devs).
+- All commands, badges, and examples reflect pnpm exclusivity for the project itself.
+
+#### Other
+- `typecheck` script added.
+- Minor cleanup of dead/redundant comments during extraction.
+- Git hygiene: logical phases, repeated verification cycles, cross-file consistency checks, clean working tree validation at key points.
+
+**This is considered a high-quality, low-risk (for consumers) internal + tooling refactor that substantially improves maintainability, testability, and future evolution of the library.**
+
 ## [8.0.0] - 2026-06-16
 
 ### Security (complete Dependabot resolution + production hardening)

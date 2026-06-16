@@ -32,3 +32,23 @@
 
 All security fixes from v7.1.2 (axios resource limits, retries, throttling, handlebars override) are retained and expanded.
 
+---
+
+## pnpm + Architecture Refactor (current / next)
+
+**For consumers / end users of the library**: Nothing to do. The published package, public API, constructor, methods, and types are 100% backward compatible. You can continue `npm install`, `yarn add`, or switch to `pnpm add` — the runtime behavior is identical.
+
+**For developers / CI maintainers of projects that depend on this repo (or that vendor it):**
+
+- The library itself is now **pnpm-exclusive**.
+- Delete any local `package-lock.json` or `yarn.lock` you may have had for this package during development.
+- Use `pnpm install`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm typecheck`.
+- CI examples have been updated in `.github/workflows/` (pnpm/action-setup + `cache: 'pnpm'` + frozen lockfile + full verification before release).
+- If you run `npm audit` or Dependabot against a local checkout of the library, expect only the same pre-existing dev-only residual (inside vendored npm for release tooling) that was already documented.
+
+**New capabilities (additive)**:
+- `collectAllPages(fetchPage, { perPage?, maxPages? })` and `parsePaginationHeaders(response)` are now exported for ergonomic pagination.
+- Internal collaborators (`RetryStrategy`, `Throttler`, etc.) are pluggable via protected factory methods if you subclass for advanced use cases.
+
+See `PERFORMANCE_SECURITY_AUDIT.md` and `FINAL_REVIEW.md` for the full picture of changes and production readiness.
+

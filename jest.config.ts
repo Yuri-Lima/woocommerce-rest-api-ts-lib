@@ -8,7 +8,7 @@ const config: Config = {
   verbose: true,
   maxWorkers: (os.cpus().length - 1) / 2, // 50% of the available cores
   detectOpenHandles: false, // Detects when a test leaves something behind that it shouldn't
-  testMatch: ["**/test/test.ts", "**/test/wc.test.ts"],
+  testMatch: ["**/test/test.ts", "**/test/wc.test.ts", "**/test/*.test.ts"],
   testPathIgnorePatterns: ["node_modules", "dist"],
   coveragePathIgnorePatterns: ["node_modules", "dist"],
   collectCoverage: true,

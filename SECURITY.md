@@ -36,9 +36,9 @@ Runtime attack surface is minimal by design (following patterns from official `w
 ## Verifying a Release
 
 ```bash
-npm audit --audit-level=high
-npm run build
-npm test
+pnpm audit --audit-level=high   # or npm/yarn equivalent for consumer projects
+pnpm run build
+pnpm test
 ```
 
 The published package contains only `dist/` (no dev deps, no node_modules).
