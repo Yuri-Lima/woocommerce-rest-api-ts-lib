@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- **Addressed Dependabot #91 / CVE-2026-33937 (Handlebars.js JavaScript Injection via AST Type Confusion)**.
+  - Performed full codebase audit (including src/, test/, configs/, package*.json, lockfiles, and transitive/indirect dependencies in node_modules via `npm ls` + greps). Confirmed: **zero usage of `handlebars`** (or its APIs like `compile`, `SafeString`, etc.) anywhere in the library's production code, tests, error handling, logging, responses, or dynamic content generation.
+  - `handlebars` appears *only* as a transitive devDependency of `conventional-changelog-writer@8.x` (pulled by `semantic-release` / `@semantic-release/commit-analyzer` + also observed under some pnpm contexts). It is used solely at release/CI time by the changelog generator to render conventional commit messages into Markdown release notes. All inputs are trusted (local git history); no user-controlled data, no runtime execution of templates in the published library.
+  - Upgraded the resolved version from vulnerable `4.7.8` (and declared range `^4.7.7`) to the secure **4.7.9** (released March 2026; contains the AST type guards and compiler fixes for CVE-2026-33937, GHSA-2w6w-674q-4c4q and related AST/dynamic-partial injection variants).
+  - Added root-level `"overrides": { "handlebars": "^4.7.9" }` in [package.json](/package.json) (honored by both npm and pnpm package managers) to force the secure resolution. This is the recommended, minimal, non-breaking way to pin transitive security fixes without adding `handlebars` as a direct dependency or polluting direct devDependencies. (Note: pnpm nested `"pnpm"."overrides"` form is deprecated in recent pnpm versions; top-level `overrides` is the cross-manager approach used here.)
+  - Updated [package-lock.json](/package-lock.json) (npm install applied the override; now resolves + installs 4.7.9) and verified pnpm-lock.yaml was already on 4.7.9 in its tree.
+  - **No code changes** to src/ or tests. No templating engine migration needed (and none performed) because there is no handlebars usage to make "safe" or replace. Safe practices (noProto, sanitization of user input to templates, runtime-only builds, etc.) are N/A here.
+  - All changes are **fully backward compatible** (dev tooling only; no impact on published package consumers, no behavior change to library, no new production dependencies).
+  - Re-ran full verification after update: `npm run lint`, `npx tsc --noEmit`, `npm test` (unit tests + options validation passed; integration tests against live WC require external env and were already non-passing in this setup), `npm run build` (clean + tsup + declarations succeeded).
 - **HIGH: Mitigated CVE-2026-44488 (Allocation of Resources Without Limits or Throttling in Axios)**.
   - Upgraded `axios` dependency from `^1.10.0` (vulnerable) to `^1.18.0` (latest secure as of 2026-06; fixes the fetch adapter size-limit bypass present in 1.7.0–1.15.x).
   - Axios >=1.16.0 properly enforces `maxContentLength` / `maxBodyLength` for both http and fetch adapters.

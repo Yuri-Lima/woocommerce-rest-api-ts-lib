@@ -14,6 +14,7 @@ A modern, type-safe TypeScript library for the WooCommerce REST API with enhance
 
 ✨ **New Features in v7.1.2+ (Security Release):**
 - 🛡️ **CVE-2026-44488 Full Mitigation** - Axios upgraded to 1.18.0 + request throttling, enforced timeouts, 10MB body limits, and exp-backoff retries with rate limit awareness in the core HTTP client.
+- 🛡️ **Handlebars / Dependabot #91 Fix (CVE-2026-33937 AST Type Confusion RCE)** - Full audit confirmed zero usage of handlebars in runtime/library code (only transitive in release tooling for changelogs). Forced secure `handlebars@4.7.9` via overrides in package.json + lockfiles. No impact on published package or backward compatibility. See CHANGELOG for details.
 - 🛡️ **Enhanced Error Handling** - Custom error classes with detailed error information
 - 🔧 **Improved Type Safety** - Better response typing with `WooCommerceApiResponse<T>`
 - 🚀 **Convenience Methods** - Easy-to-use methods for common operations
@@ -169,6 +170,15 @@ const api = new WooCommerceRestApi({
 **Recommendation**: Leave the size limits at their defaults (or lower them) unless you have a legitimate need for very large payloads. Never set to `-1` in untrusted environments.
 
 The implementation lives in the `_request` method and honors values passed through `axiosConfig` while providing safe library-level guardrails.
+
+### Dev / Release Tooling Security
+The project performed a complete audit for [Dependabot #91](https://github.com/advisories/GHSA-2w6w-674q-4c4q) (Handlebars.js "JavaScript Injection via AST Type Confusion", CVE-2026-33937). `handlebars` is **not used** by this library for any templating, error messages, logs, or dynamic content (runtime or tests). It exists only as an indirect devDependency of `conventional-changelog-writer` (used by semantic-release to produce changelog entries from commit messages at release time, using only trusted inputs). 
+
+To resolve the vulnerability in the tooling chain:
+- Added top-level `"overrides": { "handlebars": "^4.7.9" }` in `package.json` (supported by both npm and pnpm).
+- This pins the secure version (4.7.9+) that includes the necessary AST type validation fixes.
+- Updated lockfiles accordingly. No production impact, no code changes required, full backward compatibility preserved.
+See the Security section of [CHANGELOG.md](/CHANGELOG.md) for the exhaustive audit details and verification steps performed.
 
 ## 📖 API Methods
 
