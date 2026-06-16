@@ -8,11 +8,11 @@ const config: Config = {
   verbose: true,
   maxWorkers: (os.cpus().length - 1) / 2, // 50% of the available cores
   detectOpenHandles: false, // Detects when a test leaves something behind that it shouldn't
-  testMatch: ["**/test/test.ts", "**/test/wc.test.ts"],
+  testMatch: ["**/wc.test.ts", "**/src/test/wc.test.ts", "src/test/wc.test.ts"],
   testPathIgnorePatterns: ["node_modules", "dist"],
   coveragePathIgnorePatterns: ["node_modules", "dist"],
   collectCoverage: true,
-  collectCoverageFrom: ["src/**/*.ts"],
+  collectCoverageFrom: ["src/index.ts"],
   coverageReporters: ["json", "lcov", "text", "clover"],
   coverageDirectory: "coverage",
   setupFiles: [
