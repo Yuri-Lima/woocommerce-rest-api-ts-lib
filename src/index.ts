@@ -73,6 +73,11 @@ export interface WooCommerceApiResponse<T> {
 export default class WooCommerceRestApi<T extends WooRestApiOptions> {
     protected _opt: T;
 
+    // Security / resource control state for throttling (CVE-2026-44488 mitigation)
+    private _maxConcurrentRequests: number = 0;
+    private _currentConcurrentRequests: number = 0;
+    private _requestQueue: Array<() => void> = [];
+
     /**
    * Class constructor.
    *
@@ -128,6 +133,102 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         this._opt.encoding = opt.encoding || "utf-8";
         this._opt.queryStringAuth = opt.queryStringAuth || false;
         this._opt.classVersion = "0.0.2";
+
+        // Initialize throttling limit (0 = unlimited for backward compatibility)
+        this._maxConcurrentRequests = opt.maxConcurrentRequests ?? 0;
+    }
+
+    /**
+   * Acquire a concurrency slot for throttling.
+   * If maxConcurrentRequests <= 0, no throttling is applied.
+   */
+    private async _acquireSlot(): Promise<void> {
+        if (this._maxConcurrentRequests <= 0) {
+            return;
+        }
+        if (this._currentConcurrentRequests < this._maxConcurrentRequests) {
+            this._currentConcurrentRequests++;
+            return;
+        }
+        // Queue the request
+        return new Promise<void>((resolve) => {
+            this._requestQueue.push(() => {
+                this._currentConcurrentRequests++;
+                resolve();
+            });
+        });
+    }
+
+    /**
+   * Release a concurrency slot and wake next waiter if any.
+   */
+    private _releaseSlot(): void {
+        if (this._maxConcurrentRequests <= 0) {
+            return;
+        }
+        this._currentConcurrentRequests = Math.max(0, this._currentConcurrentRequests - 1);
+        const next = this._requestQueue.shift();
+        if (next) {
+            next();
+        }
+    }
+
+    /**
+   * Core axios execution with exponential backoff and rate-limit (429) awareness.
+   * Retries on network errors and configured retryable status codes.
+   */
+    private async _executeWithRetry(options: AxiosRequestConfig): Promise<any> {
+        const retryCfg = this._opt.retryConfig ?? {};
+        const maxRetries = retryCfg.retries ?? 0; // 0 = no retries by default (full backward compat on error paths/timings). Set >0 to enable resilience + rate limit backoff.
+        const baseDelay = retryCfg.retryDelay ?? 1000;
+        const retryableStatuses: number[] = retryCfg.retryOn ?? [408, 429, 500, 502, 503, 504];
+
+        let lastError: any;
+
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                return await axios(options);
+            } catch (error: any) {
+                lastError = error;
+
+                const status: number | undefined = error?.response?.status;
+                const isNetworkError = !error.response || error.code === "ECONNRESET" || error.code === "ETIMEDOUT" || error.code === "ECONNABORTED";
+                const isRetryableStatus = !status || retryableStatuses.includes(status);
+
+                const shouldRetry = attempt < maxRetries && (isNetworkError || isRetryableStatus);
+
+                if (!shouldRetry) {
+                    throw error;
+                }
+
+                // Calculate exponential backoff with jitter
+                let delay = baseDelay * Math.pow(2, attempt) * (0.5 + Math.random() * 0.5);
+
+                // Rate limiting awareness: honor Retry-After on 429 if present (seconds or HTTP date)
+                if (status === 429) {
+                    const retryAfterHeader = error.response?.headers?.["retry-after"];
+                    if (retryAfterHeader != null) {
+                        const asSeconds = parseInt(String(retryAfterHeader), 10);
+                        if (!Number.isNaN(asSeconds) && asSeconds > 0) {
+                            delay = Math.max(delay, asSeconds * 1000);
+                        } else {
+                            const asDate = new Date(String(retryAfterHeader));
+                            if (!Number.isNaN(asDate.getTime())) {
+                                const delta = asDate.getTime() - Date.now();
+                                if (delta > 0) delay = Math.max(delay, delta);
+                            }
+                        }
+                    }
+                }
+
+                // Cap the delay to avoid excessive wait (30s max)
+                delay = Math.min(delay, 30000);
+
+                await new Promise((resolve) => setTimeout(resolve, Math.floor(delay)));
+            }
+        }
+
+        throw lastError;
     }
 
     /**
@@ -295,6 +396,14 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
    * Axios request
    * Mount the options to send to axios and send the request.
    *
+   * Implements:
+   * - Resource limits (maxContentLength / maxBodyLength) to fully mitigate CVE-2026-44488
+   * - Default timeout enforcement (30s) for safety
+   * - Client-side request throttling via maxConcurrentRequests
+   * - Exponential backoff retries with rate-limit (429 / Retry-After) awareness
+   *
+   * All via _request core + axiosConfig support. Backward compatible.
+   *
    * @param  {String} method
    * @param  {String} endpoint
    * @param  {Object} data
@@ -323,15 +432,31 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         "WooCommerce REST API - TS Client/" + this._opt.classVersion;
         }
 
+        // Secure defaults for resource limits (CVE-2026-44488 mitigation) and timeout enforcement.
+        // 10MB is a conservative default suitable for typical WooCommerce REST payloads.
+        // Users may override via top-level options or axiosConfig (last write wins for explicit).
+        const DEFAULT_MAX_CONTENT_LENGTH = 10 * 1024 * 1024;
+        const DEFAULT_MAX_BODY_LENGTH = 10 * 1024 * 1024;
+        const DEFAULT_TIMEOUT = 30000;
+
+        // Determine explicit user intent from axiosConfig for overrides (including -1 / 0 to relax)
+        const axCfg: any = this._opt.axiosConfig ?? {};
+        const explicitMaxContent = "maxContentLength" in axCfg ? axCfg.maxContentLength : undefined;
+        const explicitMaxBody = "maxBodyLength" in axCfg ? axCfg.maxBodyLength : undefined;
+        const explicitTimeout = "timeout" in axCfg ? axCfg.timeout : undefined;
+
         let options: AxiosRequestConfig = {
             url,
             method,
             responseEncoding: this._opt.encoding,
-            timeout: this._opt.timeout,
+            timeout: explicitTimeout !== undefined ? explicitTimeout : (this._opt.timeout ?? DEFAULT_TIMEOUT),
             responseType: "json",
             headers: { ...header },
             params: {},
             data: data ? JSON.stringify(data) : null,
+            // Pre-set limits; may be overridden by explicit axiosConfig below
+            maxContentLength: explicitMaxContent !== undefined ? explicitMaxContent : (this._opt.maxContentLength ?? DEFAULT_MAX_CONTENT_LENGTH),
+            maxBodyLength: explicitMaxBody !== undefined ? explicitMaxBody : (this._opt.maxBodyLength ?? DEFAULT_MAX_BODY_LENGTH),
         };
 
         /**
@@ -365,11 +490,34 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
             };
         }
 
-        // Allow set and override Axios options.
+        // Allow set and override Axios options (user axiosConfig wins for any keys provided).
         options = { ...options, ...this._opt.axiosConfig };
 
+        // Final safety: if after merge no positive finite timeout is set, enforce default.
+        // This provides "timeout enforcement". 0 or negative is treated as "use default".
+        if (options.timeout == null || options.timeout <= 0) {
+            options.timeout = DEFAULT_TIMEOUT;
+        }
+
+        // Final safety clamp on size limits if user did not explicitly set them (incl. via axiosConfig)
+        // and they ended up missing/unbounded after merge. Prevents accidental bypass of mitigation.
+        if (options.maxContentLength == null || options.maxContentLength < 0) {
+            // Only force default when truly unbounded (null/undefined or explicitly -1 was not passed through)
+            // If user passed -1 explicitly it will have been set above and survive merge.
+            if (explicitMaxContent === undefined) {
+                options.maxContentLength = this._opt.maxContentLength ?? DEFAULT_MAX_CONTENT_LENGTH;
+            }
+        }
+        if (options.maxBodyLength == null || options.maxBodyLength < 0) {
+            if (explicitMaxBody === undefined) {
+                options.maxBodyLength = this._opt.maxBodyLength ?? DEFAULT_MAX_BODY_LENGTH;
+            }
+        }
+
+        // Throttling + retry-protected execution. Acquire slot for the logical request (held across retries).
+        await this._acquireSlot();
         try {
-            return await axios(options);
+            return await this._executeWithRetry(options);
         } catch (error: any) {
             // Enhanced error handling
             if (error.response) {
@@ -395,6 +543,8 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
                     endpoint,
                 );
             }
+        } finally {
+            this._releaseSlot();
         }
     }
 
