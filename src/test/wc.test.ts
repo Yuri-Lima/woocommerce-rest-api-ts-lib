@@ -11,9 +11,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable-next-line jest/no-conditional-expect */
 
-// @ts-nocheck
-// Test file intentionally loose: exercises the strict library types via real usage patterns + nock.
-// Production src/ has zero `any` and full strictness. This mirrors patterns in official WC clients' test suites.
+// Type-checked test suite: exercises the library via real usage patterns + nock.
 
 "use strict";
 // import { randomUUID } from 'crypto'
@@ -34,6 +32,23 @@ import randomstring from "randomstring";
 import constomersJsonResponse from "./customersJson-response.json";
 import { DateTime } from "luxon";
 import nock from "nock";
+
+/** Minimal entity shape used by hermetic nock fixtures + list/get assertions. */
+type WcEntity = {
+    id: number;
+    code?: string;
+    deleted?: boolean;
+    [key: string]: unknown;
+};
+type WcEntityList = WcEntity[];
+
+function asList(data: unknown): WcEntityList {
+    return Array.isArray(data) ? (data as WcEntityList) : [];
+}
+function asEntity(data: unknown): WcEntity {
+    if (Array.isArray(data)) return (data[0] as WcEntity) ?? { id: 0 };
+    return (data as WcEntity) ?? { id: 0 };
+}
 
 /*
  * @param {Json} data
@@ -100,7 +115,8 @@ const WOODatePlus = async (
  */
 const TEST_BASE = "https://example.com"; // Must exactly match setEnvVars.js default (URL=...) for nock interceptors to match client requests. Previous mismatch ("example.test") was root cause of all "Network error: No response..." failures.
 function setupWcNock() {
-    const commonHeaders: Record<string, string | string[] | number> = {
+    // nock ReplyHeaders: plain string map (no explicit Record union that breaks overloads)
+    const commonHeaders = {
         "x-wp-total": "5",
         "x-wp-totalpages": "1",
         "content-type": "application/json",
@@ -109,7 +125,7 @@ function setupWcNock() {
     // Dynamic list reply that honors per_page query param (supports the "per page" test assertions).
     // This makes the hermetic nock behave like the real WC API for the exercised pagination params.
     // Uses regex on uri (nock may pass path+qs or full url) for max compatibility.
-    const makeListReply = (fixture: any[]) => (uri: string) => {
+    const makeListReply = (fixture: unknown[]) => (uri: string) => {
         if (typeof uri === "string") {
             const m = /[?&]per_page=(\d+)/.exec(uri);
             if (m) {
@@ -127,13 +143,13 @@ function setupWcNock() {
         .persist()
     // singles (with numeric id suffix) must reply object (so Object.keys starts with "id", not "0")
         .get(/\/wp-json\/wc\/v3\/coupons\/\d+$/)
-        .reply(200, (couponsJson[0] || { id: 1 }), commonHeaders)
+        .reply(200, couponsJson[0] ?? { id: 1 }, commonHeaders)
         .get(/\/wp-json\/wc\/v3\/products\/\d+$/)
-        .reply(200, (productsJson[0] || { id: 1 }), commonHeaders)
+        .reply(200, productsJson[0] ?? { id: 1 }, commonHeaders)
         .get(/\/wp-json\/wc\/v3\/orders\/\d+$/)
-        .reply(200, (ordersJson[0] || { id: 1 }), commonHeaders)
+        .reply(200, ordersJson[0] ?? { id: 1 }, commonHeaders)
         .get(/\/wp-json\/wc\/v3\/customers\/\d+$/)
-        .reply(200, (constomersJson[0] || { id: 1 }), commonHeaders)
+        .reply(200, constomersJson[0] ?? { id: 1 }, commonHeaders)
     // lists (now dynamic for per_page to satisfy pagination tests)
         .get(/\/wp-json\/wc\/v3\/coupons.*/)
         .reply(200, makeListReply(couponsJson), commonHeaders)
@@ -147,9 +163,9 @@ function setupWcNock() {
         .reply(200, { environment: { wp_version: "6.0", site_url: TEST_BASE } }, commonHeaders)
     // mutations reply with shapes whose key order starts with "id"
         .post(/\/wp-json\/wc\/v3\/.*/)
-        .reply(201, (_uri, body: any) => (body && typeof body === "object" ? { id: 999, ...(body as object) } : { id: 999 }), commonHeaders)
+        .reply(201, (_uri: string, body: unknown) => (body && typeof body === "object" ? { id: 999, ...(body as object) } : { id: 999 }), commonHeaders)
         .put(/\/wp-json\/wc\/v3\/.*/)
-        .reply(200, (_uri, body: any) => (body && typeof body === "object" ? { id: 1, ...(body as object) } : { id: 1 }), commonHeaders)
+        .reply(200, (_uri: string, body: unknown) => (body && typeof body === "object" ? { id: 1, ...(body as object) } : { id: 1 }), commonHeaders)
         .delete(/\/wp-json\/wc\/v3\/.*/)
         .reply(200, { id: 123, deleted: true }, commonHeaders);
 }
@@ -326,7 +342,7 @@ describe("Test Coupons", () => {
     });
 
     test("should return a list with all coupons created", async () => {
-        const coupons = await wooCommerce.get("coupons");
+        const coupons = await wooCommerce.get<WcEntityList>("coupons");
 
         expect(coupons).toBeInstanceOf(Object);
 
@@ -334,9 +350,9 @@ describe("Test Coupons", () => {
             expect(coupons).toHaveProperty("data", expect.any(Array));
         }
 
-        if ((coupons.data as any[]).length > 0) {
+        if (asList(coupons.data).length > 0) {
             const expectedKeys = Object.keys(couponsJson[0]); // Array of the keys of the couponsJson object
-            const keys = Object.keys( coupons.data[0]); // Array of the keys of the first coupon in the coupons.data array
+            const keys = Object.keys(asList(coupons.data)[0] ?? {}); // Array of the keys of the first coupon in the coupons.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -353,7 +369,7 @@ describe("Test Coupons", () => {
 
     // Get Per page
     test("should return a list with all coupons created per page", async () => {
-        const coupons = await wooCommerce.get("coupons", { per_page: 3 });
+        const coupons = await wooCommerce.get<WcEntityList>("coupons", { per_page: 3 });
         expect(coupons).toBeInstanceOf(Object);
 
         // coupons.data has to be an array with a length of 3
@@ -363,9 +379,9 @@ describe("Test Coupons", () => {
             expect(coupons).toHaveProperty("data", expect.any(Array));
         }
 
-        if ((coupons.data as any[]).length > 0) {
+        if (asList(coupons.data).length > 0) {
             const expectedKeys = Object.keys(couponsJson[0]); // Array of the keys of the couponsJson object
-            const keys = Object.keys( coupons.data[0]); // Array of the keys of the first coupon in the coupons.data array
+            const keys = Object.keys(asList(coupons.data)[0] ?? {}); // Array of the keys of the first coupon in the coupons.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -419,22 +435,22 @@ describe("Test Coupons", () => {
             description: "Campanha de CashBack para clientes Test",
             date_expires: (await WOODatePlus({ days: -3 })) as string,
         };
-        const coupons = await wooCommerce.post("coupons", coupom_data);
+        const coupons = await wooCommerce.post<WcEntity>("coupons", coupom_data);
 
         expect(coupons).toBeInstanceOf(Object);
 
         if (Number((coupons.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(coupons).toHaveProperty("data", expect.any(Array));
         }
-        if ((coupons.data as any[]).length > 0) {
+        if (asList(coupons.data).length > 0) {
             const expectedKeys = Object.keys(couponsJson[0]); // Array of the keys of the couponsJson object
-            const keys = Object.keys( coupons.data); // Array of the keys of the first coupon in the coupons.data array
+            const keys = Object.keys(asEntity(coupons.data)); // Array of the keys of the first coupon in the coupons.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
                     Expected: keys.length,
                     diff: expectedKeys.length - keys.length,
-                    couponID: coupons.data.id,
+                    couponID: asEntity(coupons.data).id,
                 },
             ]);
 
@@ -447,15 +463,15 @@ describe("Test Coupons", () => {
     }, 20000); // 20 seconds
 
     test("should retrive a Coupon", async () => {
-        const getAllCoupons = await wooCommerce.get("coupons");
+        const getAllCoupons = await wooCommerce.get<WcEntityList>("coupons");
 
         if (Number((getAllCoupons.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllCoupons).toHaveProperty("data", expect.any(Array));
         }
-        const coupons = await wooCommerce.get("coupons", {
-            code: getAllCoupons.data[0].id,
+        const coupons = await wooCommerce.get<WcEntityList>("coupons", {
+            code: String(getAllCoupons.data[0].id),
         });
-        console.log(coupons.data.code);
+        console.log(asEntity(coupons.data).code);
 
         expect(coupons).toBeInstanceOf(Object);
 
@@ -463,9 +479,9 @@ describe("Test Coupons", () => {
             expect(coupons).toHaveProperty("data", expect.any(Array));
         }
 
-        if ((coupons.data as any[]).length > 0) {
+        if (asList(coupons.data).length > 0) {
             const expectedKeys = Object.keys(couponsJson[0]); // Array of the keys of the couponsJson object
-            const keys = Object.keys( coupons.data[0]); // Array of the keys of the first coupon in the coupons.data array
+            const keys = Object.keys(asList(coupons.data)[0] ?? {}); // Array of the keys of the first coupon in the coupons.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -481,12 +497,12 @@ describe("Test Coupons", () => {
     }, 20000); // 20 seconds
 
     test("should update a Coupon", async () => {
-        const getAllCoupons = await wooCommerce.get("coupons");
+        const getAllCoupons = await wooCommerce.get<WcEntityList>("coupons");
 
         if (Number((getAllCoupons.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllCoupons).toHaveProperty("data", expect.any(Array));
         }
-        const coupons = await wooCommerce.put(
+        const coupons = await wooCommerce.put<WcEntity>(
             "coupons",
             {
                 description:
@@ -508,9 +524,9 @@ describe("Test Coupons", () => {
             expect(coupons).toHaveProperty("data", expect.any(Array));
         }
 
-        if ((coupons.data as any[]).length > 0) {
+        if (asList(coupons.data).length > 0) {
             const expectedKeys = Object.keys(couponsJson[0]); // Array of the keys of the couponsJson object
-            const keys = Object.keys( coupons.data[0]); // Array of the keys of the first coupon in the coupons.data array
+            const keys = Object.keys(asList(coupons.data)[0] ?? {}); // Array of the keys of the first coupon in the coupons.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -526,12 +542,12 @@ describe("Test Coupons", () => {
     }, 20000); // 20 seconds
 
     test("should delete a Coupon", async () => {
-        const getAllCoupons = await wooCommerce.get("coupons");
+        const getAllCoupons = await wooCommerce.get<WcEntityList>("coupons");
 
         if (Number((getAllCoupons.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllCoupons).toHaveProperty("data", expect.any(Array));
         }
-        const coupons = await wooCommerce.delete(
+        const coupons = await wooCommerce.delete<WcEntity>(
             "coupons",
             { force: true },
             { id: getAllCoupons.data[0].id },
@@ -543,9 +559,9 @@ describe("Test Coupons", () => {
             expect(coupons).toHaveProperty("data", expect.any(Array));
         }
 
-        if ((coupons.data as any[]).length > 0) {
+        if (asList(coupons.data).length > 0) {
             const expectedKeys = Object.keys(couponsJson[0]); // Array of the keys of the couponsJson object
-            const keys = Object.keys( coupons.data[0]); // Array of the keys of the first coupon in the coupons.data array
+            const keys = Object.keys(asList(coupons.data)[0] ?? {}); // Array of the keys of the first coupon in the coupons.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -582,16 +598,16 @@ describe("Test Products", () => {
         teardownWcNock();
     });
     test("should return a list with all products created", async () => {
-        const products = await wooCommerce.get("products");
+        const products = await wooCommerce.get<WcEntityList>("products");
         // console.log(products.data);
         expect(products).toBeInstanceOf(Object);
         if (Number((products.headers as any)["x-wp-totalpages"] || 0) > 1) {
             // eslint-disable-next-line jest/no-conditional-expect
             expect(products).toHaveProperty("data", expect.any(Array));
         }
-        if (products.data.length > 0) {
+        if (asList(products.data).length > 0) {
             const expectedKeys = Object.keys(productsJson[0]); // Array of the keys of the productsJson object
-            const keys = Object.keys( products.data[0]); // Array of the keys of the first product in the products.data array
+            const keys = Object.keys(asList(products.data)[0] ?? {}); // Array of the keys of the first product in the products.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -633,14 +649,14 @@ describe("Test Products", () => {
                 },
             ],
         };
-        const products = await wooCommerce.post("products", data);
+        const products = await wooCommerce.post<WcEntity>("products", data);
         expect(products).toBeInstanceOf(Object);
         if (Number((products.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(products).toHaveProperty("data", expect.any(Array));
         }
         if (products.data) {
             const expectedKeys = Object.keys(productsJsonResponse[0]); // Array of the keys of the productsJson object
-            const keys = Object.keys( products.data); // Array of the keys of the first product in the products.data array
+            const keys = Object.keys(asEntity(products.data)); // Array of the keys of the first product in the products.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -657,13 +673,12 @@ describe("Test Products", () => {
     }, 20000); // 20 seconds
 
     test("should retrive a product", async () => {
-        const getAllProducts = await wooCommerce.get("products");
+        const getAllProducts = await wooCommerce.get<WcEntityList>("products");
 
         if (Number((getAllProducts.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllProducts).toHaveProperty("data", expect.any(Array));
         }
-        const products = await wooCommerce.get("products", {
-            id: getAllProducts.data[0].id,
+        const products = await wooCommerce.get<WcEntity>("products", { id: getAllProducts.data[0].id,
         });
         // console.log(products.data);
 
@@ -673,9 +688,9 @@ describe("Test Products", () => {
             expect(products).toHaveProperty("data", expect.any(Array));
         }
 
-        if (products.data.length > 0) {
+        if (asList(products.data).length > 0) {
             const expectedKeys = Object.keys(productsJson[0]); // Array of the keys of the productsJson object
-            const keys = Object.keys( products.data[0]); // Array of the keys of the first product in the products.data array
+            const keys = Object.keys(asList(products.data)[0] ?? {}); // Array of the keys of the first product in the products.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -692,7 +707,7 @@ describe("Test Products", () => {
     }, 20000); // 20 seconds
 
     test("should update/edit a product", async () => {
-        const getAllProducts = await wooCommerce.get("products");
+        const getAllProducts = await wooCommerce.get<WcEntityList>("products");
         if (Number((getAllProducts.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllProducts).toHaveProperty("data", expect.any(Array));
         }
@@ -728,7 +743,7 @@ describe("Test Products", () => {
                 },
             ],
         };
-        const products = await wooCommerce.put("products", data, {
+        const products = await wooCommerce.put<WcEntity>("products", data, {
             id: getAllProducts.data[0].id,
         });
         expect(products).toBeInstanceOf(Object);
@@ -737,7 +752,7 @@ describe("Test Products", () => {
         }
         if (products.data) {
             const expectedKeys = Object.keys(productsJsonResponse[0]); // Array of the keys of the productsJson object
-            const keys = Object.keys( products.data); // Array of the keys of the first product in the products.data array
+            const keys = Object.keys(asEntity(products.data)); // Array of the keys of the first product in the products.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -754,11 +769,11 @@ describe("Test Products", () => {
     }, 20000); // 20 seconds
 
     test("should delete a product", async () => {
-        const getAllProducts = await wooCommerce.get("products");
+        const getAllProducts = await wooCommerce.get<WcEntityList>("products");
         if (Number((getAllProducts.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllProducts).toHaveProperty("data", expect.any(Array));
         }
-        const products = await wooCommerce.delete(
+        const products = await wooCommerce.delete<WcEntity>(
             "products",
             { force: true },
             { id: getAllProducts.data[0].id },
@@ -769,7 +784,7 @@ describe("Test Products", () => {
         }
         if (products.data) {
             const expectedKeys = Object.keys(productsJsonResponse[0]); // Array of the keys of the productsJson object
-            const keys = Object.keys( products.data); // Array of the keys of the first product in the products.data array
+            const keys = Object.keys(asEntity(products.data)); // Array of the keys of the first product in the products.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -809,14 +824,14 @@ describe("Test Orders", () => {
     });
 
     test("should get all orders", async () => {
-        const orders = await wooCommerce.get("orders");
+        const orders = await wooCommerce.get<WcEntityList>("orders");
         expect(orders).toBeInstanceOf(Object);
         if (Number((orders.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(orders).toHaveProperty("data", expect.any(Array));
         }
-        if (orders.data.length > 0) {
+        if (asList(orders.data).length > 0) {
             const expectedKeys = Object.keys(ordersJson[0]); // Array of the keys of the productsJson object
-            const keys = Object.keys( orders.data[0]); // Array of the keys of the first product in the products.data array
+            const keys = Object.keys(asList(orders.data)[0] ?? {}); // Array of the keys of the first product in the products.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -833,13 +848,12 @@ describe("Test Orders", () => {
     }, 20000); // 20 seconds
 
     test("should get an order", async () => {
-        const getAllOrders = await wooCommerce.get("orders");
+        const getAllOrders = await wooCommerce.get<WcEntityList>("orders");
         if (Number((getAllOrders.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllOrders).toHaveProperty("data", expect.any(Array));
         }
         // console.log("ID: ", getAllOrders.data[0].id);
-        const orders = await wooCommerce.get("orders", {
-            id: getAllOrders.data[0].id,
+        const orders = await wooCommerce.get<WcEntity>("orders", { id: getAllOrders.data[0].id,
         });
         // console.log("Order", orders.data);
         expect(orders).toBeInstanceOf(Object);
@@ -914,15 +928,15 @@ describe("Test Orders", () => {
                 },
             ],
         };
-        const order = await wooCommerce.post("orders", data);
+        const order = await wooCommerce.post<WcEntity>("orders", data);
         // console.log("Order", order.data);
         expect(order).toBeInstanceOf(Object);
-        if (order.headers["x-wp-totalpages"] > 1) {
+        if (Number(order.headers["x-wp-totalpages"] ?? 0) > 1) {
             expect(order).toHaveProperty("data", expect.any(Array));
         }
         if (order.data) {
             const expectedKeys = Object.keys(ordersJson[0]); // Array of the keys of the productsJson object
-            const keys = Object.keys( order.data); // Array of the keys of the first product in the products.data array
+            const keys = Object.keys(asEntity(order.data)); // Array of the keys of the first product in the products.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -939,7 +953,7 @@ describe("Test Orders", () => {
     }, 20000); // 20 seconds
 
     test("should update an order", async () => {
-        const getAllCoupons = await wooCommerce.get("orders");
+        const getAllCoupons = await wooCommerce.get<WcEntityList>("orders");
         if (Number((getAllCoupons.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllCoupons).toHaveProperty("data", expect.any(Array));
         }
@@ -955,17 +969,17 @@ describe("Test Orders", () => {
                 city: "San Francisco",
             },
         };
-        const order = await wooCommerce.put("orders", data, {
+        const order = await wooCommerce.put<WcEntity>("orders", data, {
             id: getAllCoupons.data[0].id,
         });
         // console.log("Order", order.data);
         expect(order).toBeInstanceOf(Object);
-        if (order.headers["x-wp-totalpages"] > 1) {
+        if (Number(order.headers["x-wp-totalpages"] ?? 0) > 1) {
             expect(order).toHaveProperty("data", expect.any(Array));
         }
         if (order.data) {
             const expectedKeys = Object.keys(ordersJson[0]); // Array of the keys of the productsJson object
-            const keys = Object.keys( order.data); // Array of the keys of the first product in the products.data array
+            const keys = Object.keys(asEntity(order.data)); // Array of the keys of the first product in the products.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -982,23 +996,23 @@ describe("Test Orders", () => {
     }, 20000); // 20 seconds
 
     test("should delete an order", async () => {
-        const getAllCoupons = await wooCommerce.get("orders");
+        const getAllCoupons = await wooCommerce.get<WcEntityList>("orders");
         if (Number((getAllCoupons.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllCoupons).toHaveProperty("data", expect.any(Array));
         }
-        const order = await wooCommerce.delete(
+        const order = await wooCommerce.delete<WcEntity>(
             "orders",
             { force: true },
             { id: getAllCoupons.data[0].id },
         );
         console.log("Order", order.data);
         expect(order).toBeInstanceOf(Object);
-        if (order.headers["x-wp-totalpages"] > 1) {
+        if (Number(order.headers["x-wp-totalpages"] ?? 0) > 1) {
             expect(order).toHaveProperty("data", expect.any(Array));
         }
         if (order.data) {
             const expectedKeys = Object.keys(ordersJson[0]); // Array of the keys of the productsJson object
-            const keys = Object.keys( order.data); // Array of the keys of the first product in the products.data array
+            const keys = Object.keys(asEntity(order.data)); // Array of the keys of the first product in the products.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -1038,16 +1052,16 @@ describe("Test Customers", () => {
     });
 
     test("should get all customers", async () => {
-        const customers = await wooCommerce.get("customers");
+        const customers = await wooCommerce.get<WcEntityList>("customers");
         // console.log("Customers", customers.data[0]);
 
         expect(customers).toBeInstanceOf(Object);
-        if (customers.headers["x-wp-totalpages"] > 1) {
+        if (Number(customers.headers["x-wp-totalpages"] ?? 0) > 1) {
             expect(customers).toHaveProperty("data", expect.any(Array));
         }
         if (customers.data) {
             const expectedKeys = Object.keys(constomersJson[0]); // Array of the keys of the productsJson object
-            const keys = Object.keys( customers.data[0]); // Array of the keys of the first product in the products.data array
+            const keys = Object.keys(asList(customers.data)[0] ?? {}); // Array of the keys of the first product in the products.data array
             console.table([
                 {
                     Keys: expectedKeys.length,
@@ -1064,12 +1078,11 @@ describe("Test Customers", () => {
     }, 20000); // 20 seconds
 
     test("should get a customer", async () => {
-        const getAllCustomers = await wooCommerce.get("customers");
+        const getAllCustomers = await wooCommerce.get<WcEntityList>("customers");
         if (Number((getAllCustomers.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllCustomers).toHaveProperty("data", expect.any(Array));
         }
-        const customer = await wooCommerce.get("customers", {
-            id: ((getAllCustomers.data as any[]) || [])[0]?.id ?? 123,
+        const customer = await wooCommerce.get<WcEntity>("customers", { id: ((getAllCustomers.data as any[]) || [])[0]?.id ?? 123,
         });
         console.log("Customer", customer.data);
         expect(customer).toBeInstanceOf(Object);
@@ -1131,7 +1144,7 @@ describe("Test Customers", () => {
                 neighborhood: "123",
             },
         };
-        const customer = await wooCommerce.post("customers", data);
+        const customer = await wooCommerce.post<WcEntity>("customers", data);
         console.log("Customer", customer.data);
         expect(customer).toBeInstanceOf(Object);
         if (Number((customer.headers as any)["x-wp-totalpages"] || 0) > 1) {
@@ -1157,7 +1170,7 @@ describe("Test Customers", () => {
 
     // Probably this test is failling because of permissions #TODO
     test("should update a customer", async () => {
-        const getAllCustomers = await wooCommerce.get("customers");
+        const getAllCustomers = await wooCommerce.get<WcEntityList>("customers");
         if (Number((getAllCustomers.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllCustomers).toHaveProperty("data", expect.any(Array));
         }
@@ -1189,7 +1202,7 @@ describe("Test Customers", () => {
                 country: "US",
             },
         };
-        const customer = await wooCommerce.put("customers", {
+        const customer = await wooCommerce.put<WcEntity>("customers", {
             id: ((getAllCustomers.data as any[]) || [])[0]?.id ?? 123,
             data,
         });
@@ -1217,11 +1230,11 @@ describe("Test Customers", () => {
     }, 20000); // 20 seconds
 
     test("should delete a customer", async () => {
-        const getAllCustomers = await wooCommerce.get("customers");
+        const getAllCustomers = await wooCommerce.get<WcEntityList>("customers");
         if (Number((getAllCustomers.headers as any)["x-wp-totalpages"] || 0) > 1) {
             expect(getAllCustomers).toHaveProperty("data", expect.any(Array));
         }
-        const customer = await wooCommerce.delete(
+        const customer = await wooCommerce.delete<WcEntity>(
             "customers",
             { force: true },
             { id: ((getAllCustomers.data as any[]) || [])[0]?.id ?? 123 },
