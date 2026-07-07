@@ -196,29 +196,9 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
     }
 
     /**
-   * Parse params to object.
-   *
-   * @param {Object} params
-   * @param {Object} query
-   * @return {Object} IWooRestApiQuery
-   */
-    // _parseParamsObject<T>(params: Record<string, T>, query: Record<string, any>): IWooRestApiQuery {
-    //     for (const key in params) {
-    //         if (typeof params[key] === "object") {
-    //             // If the value is an object, loop through it and add it to the query object
-    //             for (const subKey in params[key]) {
-    //                 query[key + "[" + subKey + "]"] = params[key][subKey];
-    //             }
-    //         } else {
-    //             query[key] = params[key]; // If the value is not an object, add it to the query object
-    //         }
-    //     }
-    //     return query; // Return the query object
-    // }
-
-    /**
-   * Normalize query string for oAuth 1.0a
-   * Depends on the _parseParamsObject method
+   * Normalize query string for oAuth 1.0a.
+   * Nested param flattening lives in callers / URL builders; the legacy
+   * commented-out `_parseParamsObject` was dead code and has been removed.
    *
    * @param  {String} url
    * @param  {Object} params
@@ -237,15 +217,9 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         }
         const query = new Url(url, true).query; // Parse the query string returned by the url
 
-        // console.log("params:", params);
         const values = [];
 
         let queryString = "";
-
-        // Include params object into URL.searchParams.
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        // const a = this._parseParamsObject(params, query);
-        // console.log("A:", a);
 
         /**
      * Loop through the params object and push the key and value into the values array
