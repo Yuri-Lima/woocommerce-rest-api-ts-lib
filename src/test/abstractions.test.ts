@@ -4,7 +4,6 @@
  * that are harder to hit through the main client + nock.
  */
 
-import { describe, test, expect } from "@jest/globals";
 import {
     sanitizePathSegment,
     sanitizeEndpoint,
