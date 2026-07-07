@@ -1,0 +1,234 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit free-tier PR reviews for this public monorepo.
+# One-time install (repo owner): https://app.coderabbit.ai/login
+# Docs: https://docs.coderabbit.ai/getting-started/quickstart
+# Config reference: https://docs.coderabbit.ai/reference/configuration
+
+language: en-US
+enable_free_tier: true
+tone_instructions: >
+  Be constructive and concise. Prefer actionable fixes over style nits.
+  Call out security, auth, and breaking API changes first.
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_instructions: >
+    Summarize user-facing impact for both packages when relevant:
+    woocommerce-rest-ts-api (library) and woo-mcp-server (MCP package).
+    Call out breaking changes, security, and publish/release risk.
+  review_status: true
+  commit_status: true
+  collapse_walkthrough: true
+  changed_files_summary: true
+  sequence_diagrams: false
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  auto_apply_labels: false
+  suggested_reviewers: true
+  auto_assign_reviewers: false
+  poem: false
+  in_progress_fortune: false
+  enable_prompt_for_ai_agents: true
+  abort_on_close: true
+
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/coverage/**"
+    - "!**/*.min.js"
+    - "!**/*.map"
+    - "!pnpm-lock.yaml"
+    - "!package-lock.json"
+    - "!**/.DS_Store"
+    - "!ui/preview.gif"
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.jpeg"
+    - "!**/*.webp"
+
+  path_instructions:
+    - path: "src/**"
+      instructions: |
+        TypeScript WooCommerce REST client library (published as woocommerce-rest-ts-api).
+        Focus on:
+        - Auth (OAuth 1.0a / basic), request signing, and credential handling — never log secrets
+        - HTTP client correctness, retries, throttling, error mapping
+        - Public API surface stability and TypeScript types exported to consumers
+        - Breaking changes vs CHANGELOG / MIGRATION notes
+        Prefer precise, minimal suggestions that preserve compatibility.
+
+    - path: "packages/mcp-server/**"
+      instructions: |
+        Model Context Protocol server (published as woo-mcp-server).
+        Focus on:
+        - Tool/resource/prompt contracts and input validation
+        - Safe handling of store URL and consumer keys/secrets (env only, no hardcoding)
+        - Dependency on woocommerce-rest-ts-api and monorepo/workspace publish coupling
+        - Stdio MCP server behavior and error messages useful to AI agents
+        Flag any path that could leak credentials into tool results or logs.
+
+    - path: "**/*.{test,spec}.{ts,tsx,js,cjs,mjs}"
+      instructions: |
+        Prefer meaningful assertions over brittle implementation details.
+        For nock/HTTP mocks, watch interceptor isolation and order across files.
+        Integration/live-store tests should skip cleanly without credentials.
+
+    - path: "packages/mcp-server/tests/**"
+      instructions: |
+        MCP package tests. Ensure tools are covered for happy path and validation failures.
+        Live-store tests must not require secrets in CI by default.
+
+    - path: "ui/**"
+      instructions: |
+        Demo UI and presentation assets. Flag XSS from unsanitized HTML, broken relative paths,
+        and accidental credential fields posted to third parties. Skip pure visual polish nits.
+
+    - path: ".github/workflows/**"
+      instructions: |
+        GitHub Actions. Check for secret leakage, overly broad permissions, unpinned actions
+        where risk is high, and publish/release steps that could publish wrong packages or
+        versions. Dual-publish order: library first, then woo-mcp-server.
+
+    - path: "scripts/**"
+      instructions: |
+        Release and local tooling scripts. Verify npm publish safety, token usage via env/secrets
+        only, and that workspace versions are rewritten correctly for the registry.
+
+    - path: "docs/**"
+      instructions: |
+        Documentation accuracy for install, publish, and MCP setup. Flag outdated package names
+        or version instructions.
+
+  labeling_instructions:
+    - label: library
+      instructions: Apply when changes touch src/ or root package.json for woocommerce-rest-ts-api.
+    - label: mcp
+      instructions: Apply when changes touch packages/mcp-server/**.
+    - label: ci
+      instructions: Apply when changes touch .github/workflows/** or Dependabot/Renovate config.
+    - label: docs
+      instructions: Apply when changes are primarily markdown under docs/ or README.
+    - label: security
+      instructions: Apply when changes affect auth, tokens, secrets handling, or dependency CVEs.
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 5
+    drafts: false
+    base_branches:
+      - main
+      - master
+      - "release/.*"
+      - "docs/.*"
+      - "fix/.*"
+      - "feat/.*"
+      - "chore/.*"
+    ignore_title_keywords:
+      - WIP
+      - "DO NOT MERGE"
+      - "[skip review]"
+      - "[skip cr]"
+    ignore_usernames:
+      - dependabot[bot]
+      - dependabot
+      - renovate[bot]
+      - renovate-bot
+      - github-actions[bot]
+
+  finishing_touches:
+    docstrings:
+      enabled: true
+    unit_tests:
+      enabled: true
+    simplify:
+      enabled: false
+
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+    title:
+      mode: warning
+      requirements: >
+        Prefer conventional-style titles (feat|fix|docs|chore|ci|refactor|test|security)
+        with a short scope when useful, e.g. "feat(mcp): add order tools".
+    description:
+      mode: warning
+    issue_assessment:
+      mode: "off"
+
+  # Static analysis tools that feed extra context into free-tier reviews.
+  tools:
+    eslint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    gitleaks:
+      enabled: true
+    markdownlint:
+      enabled: true
+    github-checks:
+      enabled: true
+      timeout_ms: 300000
+    actionlint:
+      enabled: true
+    yamllint:
+      enabled: true
+    hadolint:
+      enabled: true
+    checkov:
+      enabled: true
+    checkmake:
+      enabled: true
+    dotenvLint:
+      enabled: true
+    semgrep:
+      enabled: true
+    ast-grep:
+      essential_rules: true
+    # Not used in this monorepo — keep off to reduce noise.
+    biome:
+      enabled: false
+    ruff:
+      enabled: false
+    languagetool:
+      enabled: false
+    shopifyThemeCheck:
+      enabled: false
+    circleci:
+      enabled: false
+
+chat:
+  auto_reply: true
+  art: false
+
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  pull_requests:
+    scope: auto
+  jira:
+    usage: auto
+  linear:
+    usage: auto
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "**/.cursorrules"
+      - "**/.cursor/rules/**"
+      - "**/AGENTS.md"
+      - "**/CLAUDE.md"
+      - "**/SECURITY.md"
+      - "**/docs/CODERABBIT.md"
+      - "**/docs/PUBLISHING.md"
