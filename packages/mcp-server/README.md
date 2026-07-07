@@ -1,61 +1,107 @@
 # woo-mcp-server
 
-**Model Context Protocol (MCP) server for WooCommerce** — lets Claude, GPT, and other AI agents manage products, orders, customers, coupons, reports, and more through typed tools with Zod validation.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
+[![MCP](https://img.shields.io/badge/MCP-STDIO-5b9dff)](https://modelcontextprotocol.io/)
+[![WooCommerce](https://img.shields.io/badge/WooCommerce-REST%20v3-96588a)](https://woocommerce.github.io/woocommerce-rest-api-docs/)
 
-Built on top of [`woocommerce-rest-ts-api`](https://www.npmjs.com/package/woocommerce-rest-ts-api) v8 (OAuth 1.0a / HTTPS Basic Auth). This package is a thin orchestration layer — it does **not** reimplement the HTTP stack.
+**Model Context Protocol (MCP) server for WooCommerce** — so Claude Desktop, GPT-based agents, and any MCP client can manage products, orders, customers, coupons, reports, and more through **typed tools** with **Zod validation**.
+
+Built on [`woocommerce-rest-ts-api`](https://www.npmjs.com/package/woocommerce-rest-ts-api) (OAuth 1.0a / HTTPS Basic Auth). This package is a thin orchestration layer — it does **not** reimplement the HTTP stack.
+
+---
+
+## Docs & interactive UI
+
+| Resource | How to open | What you get |
+|----------|-------------|----------------|
+| **Developer presentation** (step-by-step + use cases) | `make ui-presentation` | Full slide deck: setup, tools, 6 use-case scenarios, live evidence, repo map |
+| **Tool explorer dashboard** | `make ui` | Searchable catalog, mock tester, architecture, Claude config generator |
+| **This README** | — | Install, env, tool reference, development |
+
+```bash
+# From the monorepo root
+make ui-presentation   # http://127.0.0.1:8765/presentation.html
+make ui                # http://127.0.0.1:8765/  (tool explorer)
+```
+
+Or open the static files directly:
+
+- [`ui/presentation.html`](../../ui/presentation.html) — slide deck (keyboard: `←` `→`, `O` overview, `F` fullscreen)
+- [`ui/index.html`](../../ui/index.html) — interactive tool explorer
+
+---
+
+## Why this exists
+
+| Without MCP | With `woo-mcp-server` |
+|-------------|------------------------|
+| Agents invent raw `/wp-json/wc/v3/…` paths | Purpose-built tools: `woo_products_list`, … |
+| OAuth 1.0a easy to get wrong | Library owns signing, retries, limits |
+| One-off scripts per automation | One STDIO binary for any MCP host |
+| Secrets leak into notebooks / prompts | Env-only credentials, fail-fast at startup |
+
+---
 
 ## Features
 
-- **60+ purpose-built tools** following `woo_{resource}_{action}` naming
+- **60+ purpose-built tools** — `woo_{resource}_{action}` naming (no catch-all HTTP free-for-all)
 - **Zod input + output validation** on every tool
 - **Pagination metadata** (`total`, `totalPages`, `currentPage`) on list tools
 - **Search tools** for products and customers; rich order filters
-- **Batch tools** for products and orders
+- **Batch tools** for products and orders (ERP-style sync)
 - **Resources**: `woo://store/info`, `woo://api/schema`
 - **Prompts**: `store-audit`, `order-report`, `inventory-check`
-- **STDIO transport** (Claude Desktop compatible)
-- **Rate limiting** via `WC_RATE_LIMIT_PER_SECOND` (default 5)
-- **Fail-fast config** — missing `WC_URL` / `WC_KEY` / `WC_SECRET` aborts startup
+- **STDIO transport** — Claude Desktop compatible
+- **Rate limiting** via `WC_RATE_LIMIT_PER_SECOND` (default `5`)
+- **Fail-fast config** — missing `WC_URL` / `WC_KEY` / `WC_SECRET` aborts with a clear message
+- **Live-tested** against WooCommerce **10.9.3** (Docker) — see [Live testing](#live-testing)
 
-## Install
+---
+
+## Quick start
+
+### 1. Install & build (monorepo)
 
 ```bash
-# From this monorepo
+git clone https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib.git
+cd woocommerce-rest-api-ts-lib
 pnpm install
-pnpm --filter woo-mcp-server build
-
-# Or globally (when published)
-npm install -g woo-mcp-server
+pnpm run build
 ```
 
-## Environment variables
+### 2. Configure credentials
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `WC_URL` | **yes** | — | Store base URL, e.g. `https://mystore.com` |
-| `WC_KEY` | **yes** | — | REST API consumer key (`ck_...`) |
-| `WC_SECRET` | **yes** | — | REST API consumer secret (`cs_...`) |
-| `WC_VERSION` | no | `wc/v3` | API version prefix |
-| `WC_RATE_LIMIT_PER_SECOND` | no | `5` | Max outgoing requests per second |
-| `WC_QUERY_STRING_AUTH` | no | `false` | `true` to pass credentials as query params |
-
-Create keys under **WooCommerce → Settings → Advanced → REST API** (Read/Write).
-
-## Run
+Create a **Read/Write** key under **WooCommerce → Settings → Advanced → REST API**.
 
 ```bash
 export WC_URL=https://mystore.com
 export WC_KEY=ck_xxxxxxxx
 export WC_SECRET=cs_xxxxxxxx
+# Local HTTP Docker stores: leave query-string auth OFF (use OAuth)
+export WC_QUERY_STRING_AUTH=false
+```
 
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `WC_URL` | **yes** | — | Store base URL |
+| `WC_KEY` | **yes** | — | Consumer key (`ck_…`) |
+| `WC_SECRET` | **yes** | — | Consumer secret (`cs_…`) |
+| `WC_VERSION` | no | `wc/v3` | API version prefix |
+| `WC_RATE_LIMIT_PER_SECOND` | no | `5` | Outbound throttle |
+| `WC_QUERY_STRING_AUTH` | no | `false` | `true` on some HTTPS hosts only |
+
+### 3. Run the server
+
+```bash
 npx woo-mcp-server
-# or
+# or from monorepo
 pnpm --filter woo-mcp-server start
 ```
 
-## Claude Desktop config
+### 4. Wire Claude Desktop
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or the equivalent path on your OS:
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 
 ```json
 {
@@ -74,7 +120,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 }
 ```
 
-From a local monorepo checkout:
+**Local monorepo (dev):**
 
 ```json
 {
@@ -92,31 +138,54 @@ From a local monorepo checkout:
 }
 ```
 
+---
+
 ## Architecture
 
 ```
-AI client (Claude / GPT / …)
-        │  MCP (STDIO)
+AI client (Claude Desktop / custom MCP agent)
+        │  MCP over STDIO
         ▼
-┌───────────────────────────┐
-│  woo-mcp-server          │
-│  • Zod input validation   │
-│  • Tool handlers          │
-│  • Rate limiter           │
-│  • Error normalization    │
-│  • Zod output validation  │
-└─────────────┬─────────────┘
-              │  woocommerce-rest-ts-api
-              ▼
-      WooCommerce REST API (OAuth / HTTPS)
+┌─────────────────────────────────┐
+│  woo-mcp-server                │
+│  • Zod input validation         │
+│  • Domain tool handlers         │
+│  • Rate limiter                 │
+│  • Error normalization          │
+│  • Zod output validation        │
+└───────────────┬─────────────────┘
+                │  woocommerce-rest-ts-api
+                ▼
+      WooCommerce REST API (OAuth 1.0a / HTTPS)
 ```
+
+The parent library remains the source of truth for HTTP, auth, retries, and types. MCP never rewrites `src/` of the library.
+
+---
+
+## Use-case scenarios
+
+Walk through these end-to-end in the [developer presentation](../../ui/presentation.html) (`make ui-presentation`).
+
+| # | Scenario | Primary tools / prompts |
+|---|----------|-------------------------|
+| 1 | **Support copilot** — “Where is my order?” | `woo_customers_search` → `woo_orders_list` / `get` → `woo_orders_notes_create` |
+| 2 | **Inventory ops** — weekly low-stock list | prompt `inventory-check` + `woo_products_list` / variations |
+| 3 | **Sales report agent** — monthly narrative | prompt `order-report` + `woo_reports_*` |
+| 4 | **Catalog SEO audit** | prompt `store-audit` (read-only until human approves updates) |
+| 5 | **Bulk import / price sync** | `woo_products_batch` / `woo_orders_batch` |
+| 6 | **Custom agent runtime** | MCP SDK client over STDIO (see presentation slide) |
+
+---
 
 ## Tool reference
 
+Naming: `woo_{resource}_{action}`. Every tool description is multi-sentence (what + when/why).
+
 ### Products
 
-| Tool | Description | Required params |
-|------|-------------|-----------------|
+| Tool | Description | Required |
+|------|-------------|---------|
 | `woo_products_list` | List products with filters & pagination | — |
 | `woo_products_get` | Get product by ID | `id` |
 | `woo_products_create` | Create product | `name` |
@@ -127,8 +196,8 @@ AI client (Claude / GPT / …)
 
 ### Orders
 
-| Tool | Description | Required params |
-|------|-------------|-----------------|
+| Tool | Description | Required |
+|------|-------------|---------|
 | `woo_orders_list` | List orders (status, dates, customer) | — |
 | `woo_orders_get` | Get order by ID | `id` |
 | `woo_orders_create` | Create order | — |
@@ -140,8 +209,8 @@ AI client (Claude / GPT / …)
 
 ### Customers
 
-| Tool | Description | Required params |
-|------|-------------|-----------------|
+| Tool | Description | Required |
+|------|-------------|---------|
 | `woo_customers_list` | List customers | — |
 | `woo_customers_get` | Get customer | `id` |
 | `woo_customers_create` | Create customer | `email` |
@@ -151,8 +220,8 @@ AI client (Claude / GPT / …)
 
 ### Coupons
 
-| Tool | Description | Required params |
-|------|-------------|-----------------|
+| Tool | Description | Required |
+|------|-------------|---------|
 | `woo_coupons_list` | List coupons | — |
 | `woo_coupons_get` | Get coupon | `id` |
 | `woo_coupons_create` | Create coupon | `code` |
@@ -161,23 +230,15 @@ AI client (Claude / GPT / …)
 
 ### Categories & tags
 
-| Tool | Description | Required params |
-|------|-------------|-----------------|
-| `woo_categories_list` | List product categories | — |
-| `woo_categories_get` | Get category | `id` |
-| `woo_categories_create` | Create category | `name` |
-| `woo_categories_update` | Update category | `id`, `data` |
-| `woo_categories_delete` | Delete category | `id` |
-| `woo_tags_list` | List product tags | — |
-| `woo_tags_get` | Get tag | `id` |
-| `woo_tags_create` | Create tag | `name` |
-| `woo_tags_update` | Update tag | `id`, `data` |
-| `woo_tags_delete` | Delete tag | `id` |
+| Tool | Description | Required |
+|------|-------------|---------|
+| `woo_categories_list` / `get` / `create` / `update` / `delete` | Product categories CRUD | varies |
+| `woo_tags_list` / `get` / `create` / `update` / `delete` | Product tags CRUD | varies |
 
 ### Variations
 
-| Tool | Description | Required params |
-|------|-------------|-----------------|
+| Tool | Description | Required |
+|------|-------------|---------|
 | `woo_variations_list` | List variations | `product_id` |
 | `woo_variations_get` | Get variation | `product_id`, `id` |
 | `woo_variations_create` | Create variation | `product_id`, `data` |
@@ -186,27 +247,25 @@ AI client (Claude / GPT / …)
 
 ### Shipping
 
-| Tool | Description | Required params |
-|------|-------------|-----------------|
-| `woo_shipping_zones_list` | List shipping zones | — |
-| `woo_shipping_zones_get` | Get zone | `id` |
-| `woo_shipping_zone_methods_list` | List methods in zone | `zone_id` |
-| `woo_shipping_methods_list` | List method types | — |
-| `woo_shipping_classes_list` | List shipping classes | — |
-| `woo_shipping_classes_get` | Get shipping class | `id` |
+| Tool | Description | Required |
+|------|-------------|---------|
+| `woo_shipping_zones_list` / `get` | Shipping zones | — / `id` |
+| `woo_shipping_zone_methods_list` | Methods in a zone | `zone_id` |
+| `woo_shipping_methods_list` | Method types | — |
+| `woo_shipping_classes_list` / `get` | Shipping classes | — / `id` |
 
 ### Payments
 
-| Tool | Description | Required params |
-|------|-------------|-----------------|
+| Tool | Description | Required |
+|------|-------------|---------|
 | `woo_payments_list` | List payment gateways | — |
 | `woo_payments_get` | Get gateway | `id` |
 | `woo_payments_update` | Update gateway settings | `id`, `data` |
 
 ### Reports
 
-| Tool | Description | Required params |
-|------|-------------|-----------------|
+| Tool | Description | Required |
+|------|-------------|---------|
 | `woo_reports_sales` | Sales report | — |
 | `woo_reports_top_sellers` | Top sellers | — |
 | `woo_reports_orders_totals` | Orders by status | — |
@@ -215,44 +274,16 @@ AI client (Claude / GPT / …)
 | `woo_reports_coupons_totals` | Coupon totals | — |
 | `woo_reports_reviews_totals` | Review totals | — |
 
-### Settings
+### Settings · system status · webhooks · tax
 
-| Tool | Description | Required params |
-|------|-------------|-----------------|
-| `woo_settings_groups_list` | List settings groups | — |
-| `woo_settings_list` | List options in group | `group` |
-| `woo_settings_get` | Get one option | `group`, `id` |
-| `woo_settings_update` | Update option value | `group`, `id`, `value` |
+| Domain | Tools |
+|--------|--------|
+| Settings | `woo_settings_groups_list`, `woo_settings_list`, `woo_settings_get`, `woo_settings_update` |
+| System status | `woo_system_status_get`, `woo_system_status_tools_list`, `woo_system_status_tools_run` |
+| Webhooks | `woo_webhooks_list` / `get` / `create` / `update` / `delete` |
+| Tax | `woo_tax_rates_*`, `woo_tax_classes_list` / `get` |
 
-### System status
-
-| Tool | Description | Required params |
-|------|-------------|-----------------|
-| `woo_system_status_get` | Full system status | — |
-| `woo_system_status_tools_list` | List maintenance tools | — |
-| `woo_system_status_tools_run` | Run maintenance tool | `id` |
-
-### Webhooks
-
-| Tool | Description | Required params |
-|------|-------------|-----------------|
-| `woo_webhooks_list` | List webhooks | — |
-| `woo_webhooks_get` | Get webhook | `id` |
-| `woo_webhooks_create` | Create webhook | `topic`, `delivery_url` |
-| `woo_webhooks_update` | Update webhook | `id`, `data` |
-| `woo_webhooks_delete` | Delete webhook | `id` |
-
-### Tax
-
-| Tool | Description | Required params |
-|------|-------------|-----------------|
-| `woo_tax_rates_list` | List tax rates | — |
-| `woo_tax_rates_get` | Get tax rate | `id` |
-| `woo_tax_rates_create` | Create tax rate | `rate` |
-| `woo_tax_rates_update` | Update tax rate | `id`, `data` |
-| `woo_tax_rates_delete` | Delete tax rate | `id` |
-| `woo_tax_classes_list` | List tax classes | — |
-| `woo_tax_classes_get` | Get tax class by slug | `slug` |
+---
 
 ## Resources
 
@@ -269,13 +300,16 @@ AI client (Claude / GPT / …)
 | `order-report` | Sales summary by status/revenue/top products for a date range |
 | `inventory-check` | Find low-stock products, group by category, suggest reorder qty |
 
+---
+
 ## Development
 
 ```bash
 # From repo root
 pnpm install
 pnpm run build                          # library + mcp-server
-pnpm --filter woo-mcp-server test       # unit + integration (≥80% coverage)
+pnpm --filter woo-mcp-server test       # unit + integration (nock; ≥80% coverage)
+pnpm --filter woo-mcp-server typecheck
 ```
 
 ### Package layout
@@ -284,9 +318,9 @@ pnpm --filter woo-mcp-server test       # unit + integration (≥80% coverage)
 packages/mcp-server/
   src/
     server.ts          # MCP bootstrap (STDIO)
-    cli.ts             # bin entry
+    cli.ts             # bin entry (woo-mcp-server)
     config.ts          # env validation
-    client.ts          # rate-limited WooCommerce client
+    client.ts          # rate-limited WooCommerce client + cleanParams
     types.ts           # shared Zod schemas
     errors.ts          # MCP error normalization
     registry.ts        # registers all tools/resources/prompts
@@ -295,10 +329,49 @@ packages/mcp-server/
     prompts/
   tests/
     tools/
-    integration/
+    integration/       # e2e (in-memory MCP) + live-store (opt-in)
     fixtures/
 ```
 
+### Live testing
+
+There is no public shared WooCommerce sandbox with write keys. Use the free local Docker stack:
+
+```bash
+cd scripts/live-wc
+docker compose up -d
+./bootstrap.sh
+export $(grep -v '^#' .env.live | xargs)
+export WC_QUERY_STRING_AUTH=false
+export LIVE_WC=1
+
+pnpm --filter woo-mcp-server test -- tests/integration/live-store.test.ts
+```
+
+See [`scripts/live-wc/README.md`](../../scripts/live-wc/README.md). Proven against **WordPress 7 + WooCommerce 10.9.3** over OAuth on `http://127.0.0.1:8088`.
+
+---
+
+## Library vs MCP — when to use which
+
+| Need | Use the library directly | Use `woo-mcp-server` |
+|------|--------------------------|----------------------|
+| Backend service / worker | Yes — typed TS imports | Optional |
+| AI agent / Claude / GPT tools | — | **Yes — designed for this** |
+| Fine-grained control of every request | Yes | — |
+| Shared tool schemas across models | — | Yes (Zod → MCP) |
+
+---
+
+## Security notes
+
+- **Never** commit real `ck_` / `cs_` keys.
+- Prefer OAuth over HTTP local stores (`WC_QUERY_STRING_AUTH=false`).
+- Batch `delete` with `force: true` is permanent — dry-run on staging/Docker first.
+- The server only exposes the fixed tool surface; models cannot invent arbitrary endpoints.
+
+---
+
 ## License
 
-MIT — same as the parent library.
+MIT — same as the parent library [`woocommerce-rest-ts-api`](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib).
