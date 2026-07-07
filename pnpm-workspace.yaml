@@ -5,3 +5,7 @@ packages:
 allowBuilds:
   esbuild: true
   unrs-resolver: true
+
+# Force patched transitive deps (Snyk SNYK-JS-FASTURI-17675102)
+overrides:
+  fast-uri: ^3.1.3
