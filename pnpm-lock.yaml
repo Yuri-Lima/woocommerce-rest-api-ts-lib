@@ -121,7 +121,7 @@ importers:
         specifier: ^1.12.1
         version: 1.29.0(zod@3.25.76)
       woocommerce-rest-ts-api:
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../..
       zod:
         specifier: ^3.24.2

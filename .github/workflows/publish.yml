@@ -38,9 +38,24 @@ jobs:
         run: pnpm run lint
       - name: Test
         run: pnpm test
-      - name: Release (main branch only)
+      # Dual-package release on main:
+      # 1) semantic-release bumps/publishes the root library from conventional commits
+      # 2) publish-packages publishes any versions not yet on npm (library + woo-mcp-server)
+      - name: Release library (semantic-release, main only)
         if: github.ref == 'refs/heads/main'
         run: pnpm run semantic-release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish monorepo packages (library + MCP if not already on npm)
+        if: github.ref == 'refs/heads/main'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # quality gates already ran above
+          SKIP_BUILD: "1"
+          SKIP_TESTS: "1"
+        run: |
+          chmod +x scripts/publish-packages.sh
+          bash scripts/publish-packages.sh

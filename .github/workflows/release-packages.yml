@@ -1,0 +1,99 @@
+# Dual-package npm release for the monorepo:
+#   1. woocommerce-rest-ts-api (root)
+#   2. woo-mcp-server (packages/mcp-server)
+#
+# Manual: Actions → "Release npm packages" → Run workflow
+# Optional dry-run without publishing.
+name: Release npm packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Pack only (do not publish)"
+        type: boolean
+        default: false
+      skip_library:
+        description: "Skip publishing woocommerce-rest-ts-api"
+        type: boolean
+        default: false
+      skip_mcp:
+        description: "Skip publishing woo-mcp-server"
+        type: boolean
+        default: false
+      skip_tests:
+        description: "Skip typecheck/lint/test (not recommended)"
+        type: boolean
+        default: false
+      create_tags:
+        description: "Create git tags after successful publish"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.0
+          run_install: false
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies (frozen)
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+          SKIP_LIBRARY: ${{ inputs.skip_library && '1' || '0' }}
+          SKIP_MCP: ${{ inputs.skip_mcp && '1' || '0' }}
+          SKIP_TESTS: ${{ inputs.skip_tests && '1' || '0' }}
+          # build runs inside the script unless SKIP_BUILD
+          SKIP_BUILD: "0"
+        run: |
+          chmod +x scripts/publish-packages.sh
+          bash scripts/publish-packages.sh
+
+      - name: Create release tags
+        if: ${{ success() && inputs.create_tags && !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          LIB_VER=$(node -p "require('./package.json').version")
+          MCP_VER=$(node -p "require('./packages/mcp-server/package.json').version")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          tag_if_missing() {
+            local tag="$1"
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              echo "Tag $tag already exists — skip"
+            else
+              git tag -a "$tag" -m "Release $tag"
+              git push origin "$tag"
+              echo "Created tag $tag"
+            fi
+          }
+
+          tag_if_missing "v${LIB_VER}"
+          tag_if_missing "woo-mcp-server@${MCP_VER}"
