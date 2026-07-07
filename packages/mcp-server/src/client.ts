@@ -186,19 +186,45 @@ export function createWooClient(config: McpConfig): WooClient {
     maxConcurrentRequests: config.WC_RATE_LIMIT_PER_SECOND,
   }) as WooApi;
 
+  /**
+   * WooCommerce REST rejects empty/undefined enum query params with HTTP 400
+   * ("order is not one of asc and desc", etc.). Strip nullish values before send.
+   */
+  const cleanParams = (
+    params?: Record<string, unknown>,
+  ): Record<string, unknown> | undefined => {
+    if (!params) return undefined;
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(params)) {
+      if (v === undefined || v === null || v === "") continue;
+      out[k] = v;
+    }
+    return Object.keys(out).length ? out : undefined;
+  };
+
   const client: WooClient = {
     api: apiInstance,
     rateLimiter,
     config,
     get: (endpoint, params) =>
-      rateLimiter.schedule(() => apiInstance.get(endpoint, params)),
+      rateLimiter.schedule(() => apiInstance.get(endpoint, cleanParams(params))),
     post: (endpoint, data, params) =>
-      rateLimiter.schedule(() => apiInstance.post(endpoint, data, params)),
+      rateLimiter.schedule(() =>
+        apiInstance.post(endpoint, data, cleanParams(params)),
+      ),
     put: (endpoint, data, params) =>
-      rateLimiter.schedule(() => apiInstance.put(endpoint, data, params)),
+      rateLimiter.schedule(() =>
+        apiInstance.put(endpoint, data, cleanParams(params)),
+      ),
     delete: (endpoint, data, params) =>
       rateLimiter.schedule(() =>
-        apiInstance.delete(endpoint, data ?? { force: true }, params ?? {}),
+        apiInstance.delete(
+          endpoint,
+          data ?? { force: true },
+          cleanParams(params as Record<string, unknown>) as
+            | { id?: number }
+            | undefined,
+        ),
       ),
     pagination(response, page, perPage) {
       const info = parsePaginationHeaders(response);
