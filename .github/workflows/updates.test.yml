@@ -3,9 +3,9 @@
 name: Updates Test CI
 on:
   push:
-    branches: [ "updates" ]
+    branches: [ "updates", "main", "master" ]
   pull_request:
-    branches: [ "updates" ]
+    branches: [ "updates", "main", "master" ]
   workflow_dispatch:
 jobs:
   test:
