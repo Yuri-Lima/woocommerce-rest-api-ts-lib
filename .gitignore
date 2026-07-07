@@ -3,8 +3,8 @@ coverage
 run.*
 index.js
 dist
+build
 .env
 .src/test
 .reminder
 ./reminder/
-setEnvVars.js
