@@ -11,13 +11,13 @@ import {
 const BASE = "https://retry.example";
 
 describe("RetryStrategy", () => {
-    afterEach(() => {
+    beforeEach(() => {
         nock.cleanAll();
-        nock.enableNetConnect();
+        nock.disableNetConnect();
     });
 
-    beforeEach(() => {
-        nock.disableNetConnect();
+    afterEach(() => {
+        nock.cleanAll();
     });
 
     test("createDefaultRetryStrategy returns ExponentialBackoffRetryStrategy", () => {
@@ -77,7 +77,6 @@ describe("RetryStrategy", () => {
         const started = Date.now();
         const res = await strategy.executeWithRetry({ method: "GET", url: `${BASE}/rate` });
         expect(res.status).toBe(200);
-        // Should complete quickly because retry-after is 0 and base delay is tiny
         expect(Date.now() - started).toBeLessThan(5000);
     });
 
