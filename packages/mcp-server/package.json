@@ -1,10 +1,11 @@
 {
   "name": "woo-mcp-server",
   "version": "1.0.0",
-  "description": "Model Context Protocol (MCP) server for WooCommerce REST API — tools, resources, and prompts for AI agents",
+  "description": "Model Context Protocol (MCP) server for WooCommerce — 60+ tools, resources, and prompts for AI agents",
   "author": "Yuri Lima",
   "license": "MIT",
   "type": "module",
+  "private": false,
   "engines": {
     "node": ">=18.0.0"
   },
@@ -23,7 +24,32 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib.git",
+    "directory": "packages/mcp-server"
+  },
+  "homepage": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/tree/main/packages/mcp-server#readme",
+  "bugs": {
+    "url": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/issues"
+  },
+  "keywords": [
+    "woocommerce",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "ai-agent",
+    "gpt",
+    "rest-api",
+    "typescript",
+    "stdio"
   ],
   "scripts": {
     "build": "tsup",
@@ -31,11 +57,13 @@
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.cjs --coverage",
     "test:unit": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.cjs --testPathPattern=tests/tools",
     "start": "node dist/cli.js",
-    "clean": "rm -rf dist coverage"
+    "clean": "rm -rf dist coverage",
+    "prepublishOnly": "pnpm run build",
+    "prepack": "pnpm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
-    "woocommerce-rest-ts-api": "workspace:*",
+    "woocommerce-rest-ts-api": "workspace:^",
     "zod": "^3.24.2"
   },
   "devDependencies": {

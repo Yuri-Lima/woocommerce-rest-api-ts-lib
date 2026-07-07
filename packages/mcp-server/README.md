@@ -61,7 +61,19 @@ Or open the static files directly:
 
 ## Quick start
 
-### 1. Install & build (monorepo)
+### 1. Install
+
+**From npm (recommended for agents / Claude Desktop):**
+
+```bash
+npm install -g woo-mcp-server
+# or one-shot without a global install
+npx -y woo-mcp-server
+```
+
+This pulls [`woocommerce-rest-ts-api`](https://www.npmjs.com/package/woocommerce-rest-ts-api) `^8` automatically.
+
+**From this monorepo (development):**
 
 ```bash
 git clone https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib.git
