@@ -2,49 +2,103 @@
 ![npm](https://img.shields.io/npm/v/woocommerce-rest-ts-api)
 ![npm](https://img.shields.io/npm/dt/woocommerce-rest-ts-api)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![MCP](https://img.shields.io/badge/MCP-woo--mcp--server-5b9dff)](./packages/mcp-server/README.md)
 [![Known Vulnerabilities](https://snyk.io/test/github/Yuri-Lima/woocommerce-rest-api-ts-lib/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Yuri-Lima/woocommerce-rest-api-ts-lib?targetFile=package.json)
 
 <div align="center" width="100%">
     <img src="./images/woocommerce-wordpress-logo.png" width="128" alt="woocommerce_integration_api" />
 </div>
 
-# WooCommerce REST API - TypeScript Library
+# WooCommerce REST API — TypeScript Library
 
-A modern, type-safe TypeScript library for the WooCommerce REST API with enhanced error handling, improved type safety, convenient methods for common operations, and **complete production-grade security hardening** (v8.0.0) plus a full modular architectural overhaul (separated types, DI-friendly client, strictest TS, tree-shakable ESM-first). All high-severity Dependabot alerts (lodash, tar, tmp, rollup, minimatch, glob, esbuild, js-yaml, etc.) have been resolved via upgrades + overrides + code-level input sanitization and resource limits. See SECURITY.md and MIGRATION.md.
+A modern, type-safe TypeScript client for the [WooCommerce REST API](https://woocommerce.github.io/woocommerce-rest-api-docs/), plus an optional **Model Context Protocol (MCP) server** so AI agents can operate a store through validated tools.
 
-✨ **New Features in v8.0.0 (Major Security + Architecture Release):**
-- 🛡️ **Complete Dependabot resolution** — every high/critical (rollup traversal, esbuild RCE, tar symlink/hardlink, tmp escape, lodash template injection + proto pollution, minimatch/glob ReDoS+CLI, js-yaml, flatted, picomatch, etc.) fixed via upgrades, removal of risky build tools (tsup), direct secure esbuild, and exhaustive overrides. See `SECURITY.md`.
-- 🛡️ **Runtime path sanitization & validation** — `url`/`version`/`wpAPIPrefix`/`endpoint` now actively reject traversal and illegal input (defense-in-depth on top of prior resource limits).
-- 🏗️ Full type separation (`src/types/{core,requests,responses,errors,models}`) with barrels; no more monolithic file. Monorepo-style clarity while keeping identical public API.
-- 🧪 All tests green with deterministic nock mocks (no live WC required for the suite).
-
-Previous v7.1.2 security work (Axios CVE, handlebars override, throttling/limits/retries) is fully preserved and extended.
+| Package | Role |
+|---------|------|
+| [`woocommerce-rest-ts-api`](https://www.npmjs.com/package/woocommerce-rest-ts-api) | Typed HTTP client (OAuth 1.0a, retries, throttling, ESM + CJS) |
+| [`woo-mcp-server`](./packages/mcp-server/README.md) | MCP STDIO server — 60+ tools, resources, prompts for Claude / agents |
 
 ---
 
-**v7.1.2 notes (historical):**
-- 🛡️ **Handlebars / Dependabot #91 Fix (CVE-2026-33937 AST Type Confusion RCE)** - Full audit confirmed zero usage of handlebars in runtime/library code (only transitive in release tooling for changelogs). Forced secure `handlebars@4.7.9` via overrides in package.json + lockfiles. No impact on published package or backward compatibility. See CHANGELOG for details.
-- 🛡️ **Enhanced Error Handling** - Custom error classes with detailed error information
-- 🔧 **Improved Type Safety** - Better response typing with `WooCommerceApiResponse<T>`
-- 🚀 **Convenience Methods** - Easy-to-use methods for common operations
-- 📦 **Modern Module Support** - Full ESM and CJS compatibility
-- 🎯 **Better Developer Experience** - Comprehensive TypeScript support
-- 🔧 **Fixed Configuration Issues** - Resolved TypeScript and ESLint compatibility problems
-- 📝 **Updated Dependencies** - Latest TypeScript 5.8.3 and modern tooling (plus secure Axios)
+## Interactive docs (open locally)
 
-New TypeScript library for WooCommerce REST API. Supports CommonJS (CJS) and ECMAScript (ESM)
+| | Command | URL |
+|--|---------|-----|
+| **Developer presentation** — setup, features, 6 use-case scenarios | `make ui-presentation` | http://127.0.0.1:8765/presentation.html |
+| **Tool explorer** — catalog, mock tester, Claude config generator | `make ui` | http://127.0.0.1:8765/ |
 
-## 🚀 Key Features
+```bash
+make ui-presentation   # slide deck (← → · O overview · F fullscreen)
+make ui                # interactive MCP tool dashboard
+```
 
-- **Type-Safe**: Full TypeScript support with comprehensive type definitions
-- **Modern**: ES2020+ with async/await support
-- **Flexible**: Support for both CommonJS and ES modules
-- **Secure**: Built-in OAuth 1.0a authentication + hardened HTTP client against resource exhaustion (CVE-2026-44488)
-- **Resilient**: Per-client concurrency throttling (pluggable `Throttler`), 429-aware retries (pluggable `RetryStrategy`), timeout enforcement, connection keep-alive by default
-- **Modular internals**: `RequestSanitizer`, `ErrorNormalizer`, `PaginationHelper` + composition-based design with DI hooks (while preserving 100% public + `_` internal BC)
-- **Error Handling**: Custom error classes with detailed error information
-- **Convenience Methods**: Easy-to-use methods for common operations
-- **Lightweight**: Minimal dependencies with tree-shaking support
+Source files: [`ui/presentation.html`](./ui/presentation.html) · [`ui/index.html`](./ui/index.html)
+
+---
+
+## MCP server for AI agents (`woo-mcp-server`)
+
+Talk to any WooCommerce store from **Claude Desktop**, custom agents, or any MCP client — without giving models a raw HTTP free-for-all.
+
+```bash
+# monorepo
+pnpm install && pnpm run build
+export WC_URL=https://mystore.com WC_KEY=ck_… WC_SECRET=cs_…
+npx woo-mcp-server
+```
+
+**Highlights**
+
+- 60+ purpose-built tools (`woo_products_list`, `woo_orders_get`, …) with Zod I/O validation  
+- Resources: `woo://store/info`, `woo://api/schema`  
+- Prompts: `store-audit`, `order-report`, `inventory-check`  
+- Rate limiting, fail-fast env config, structured errors  
+- Live-tested on WooCommerce **10.9.3** (Docker stack under `scripts/live-wc/`)
+
+**Full package docs:** [packages/mcp-server/README.md](./packages/mcp-server/README.md)
+
+<details>
+<summary><strong>Claude Desktop snippet</strong></summary>
+
+```json
+{
+  "mcpServers": {
+    "woocommerce": {
+      "command": "npx",
+      "args": ["woo-mcp-server"],
+      "env": {
+        "WC_URL": "https://mystore.com",
+        "WC_KEY": "ck_xxxxxxxx",
+        "WC_SECRET": "cs_xxxxxxxx"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+---
+
+## Library overview (v8)
+
+Production-grade TypeScript client with security hardening, modular types, DI-friendly internals, and tree-shakable ESM-first builds. High-severity Dependabot issues addressed via upgrades, overrides, and runtime sanitization — see [SECURITY.md](./SECURITY.md) and [MIGRATION.md](./MIGRATION.md).
+
+### Key features
+
+- **Type-safe** — comprehensive TypeScript definitions and `WooCommerceApiResponse<T>`
+- **Modern** — ES2020+, async/await, full **ESM + CommonJS** dual build
+- **Secure** — OAuth 1.0a + path sanitization, resource limits, hardened HTTP stack
+- **Resilient** — pluggable throttling & 429-aware retries, timeouts, keep-alive
+- **Modular** — separated types, `RequestSanitizer`, `ErrorNormalizer`, `PaginationHelper`
+- **DX** — convenience methods for common product/order flows
+
+### v8.0.0 (security + architecture)
+
+- Complete Dependabot resolution for high/critical transitive issues (see `SECURITY.md`)
+- Runtime validation for `url` / `version` / `wpAPIPrefix` / `endpoint`
+- Type layout under `src/types/{core,requests,responses,errors,models}`
+- Deterministic nock-based test suite (live WC not required for CI)
 
 ## 🔧 Installation
 
@@ -480,9 +534,22 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🗺️ Repository map
+
+```
+woocommerce-rest-api-ts-lib/
+├── src/                         # TypeScript REST client library
+├── packages/mcp-server/         # woo-mcp-server (MCP tools, resources, prompts)
+├── scripts/live-wc/             # Free Docker WooCommerce for live MCP tests
+└── ui/
+    ├── presentation.html        # Developer slide deck (make ui-presentation)
+    └── index.html               # MCP tool explorer (make ui)
+```
+
 ## 🙏 Thanks / Credits
 
 - [WooCommerce REST API Documentation](https://woocommerce.github.io/woocommerce-rest-api-docs/)
+- [Model Context Protocol](https://modelcontextprotocol.io/)
 - [Axios HTTP Client](https://github.com/axios/axios)
 - [TypeScript](https://www.typescriptlang.org/)
 - [OAuth 1.0a](https://www.npmjs.com/package/oauth-1.0a)
