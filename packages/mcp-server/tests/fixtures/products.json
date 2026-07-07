@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "Blue T-Shirt",
+    "slug": "blue-t-shirt",
+    "type": "simple",
+    "status": "publish",
+    "description": "A comfortable blue t-shirt",
+    "short_description": "Blue tee",
+    "sku": "BTS-001",
+    "price": "29.99",
+    "regular_price": "29.99",
+    "stock_quantity": 50,
+    "stock_status": "instock",
+    "manage_stock": true,
+    "categories": [{ "id": 15, "name": "Apparel", "slug": "apparel" }],
+    "tags": [],
+    "images": [{ "src": "https://example.com/blue.jpg" }]
+  },
+  {
+    "id": 2,
+    "name": "Red Hat",
+    "slug": "red-hat",
+    "type": "simple",
+    "status": "publish",
+    "description": "",
+    "short_description": "",
+    "sku": "RH-002",
+    "price": "19.99",
+    "regular_price": "19.99",
+    "stock_quantity": 2,
+    "stock_status": "instock",
+    "manage_stock": true,
+    "categories": [],
+    "tags": [],
+    "images": []
+  }
+]
