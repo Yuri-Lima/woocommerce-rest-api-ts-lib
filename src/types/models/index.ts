@@ -632,7 +632,12 @@ export interface ShippingZones { id?: number; name: string; order?: number; }
 export interface ShippingZonesLocations { code: string; type: "postcode" | "state" | "country" | "continent"; }
 export type ShippingZonesMethodsSettings = PaymentGatewaysSettings;
 export interface ShippingZonesMethods {
+  /**
+   * @deprecated Typo retained for backward compatibility. Prefer `instance_id`.
+   */
   instace_id?: number;
+  /** Shipping zone method instance id (correct spelling). */
+  instance_id?: number;
   title: string;
   order?: number;
   enabled?: boolean;
