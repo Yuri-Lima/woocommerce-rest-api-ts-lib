@@ -32,12 +32,14 @@
     "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint src/",
     "lint-and-fix": "eslint src/ --fix",
-    "prepublishOnly": "pnpm run format && pnpm run lint-and-fix",
+    "prepublishOnly": "pnpm run prepack",
     "clean": "rm -rf ./dist",
     "build:types": "pnpm exec tsc --emitDeclarationOnly --declaration",
     "build:cjs:esm": "esbuild ./src/index.ts --bundle --platform=node --target=es2022 --format=cjs --outfile=dist/index.js --sourcemap --external:axios --external:oauth-1.0a --external:url-parse && esbuild ./src/index.ts --bundle --platform=node --target=es2022 --format=esm --outfile=dist/index.mjs --sourcemap --external:axios --external:oauth-1.0a --external:url-parse",
     "prepack": "pnpm run clean && pnpm run build:cjs:esm && pnpm run build:types",
     "semantic-release": "semantic-release",
+    "publish:packages": "bash ./scripts/publish-packages.sh",
+    "publish:packages:dry": "DRY_RUN=1 bash ./scripts/publish-packages.sh",
     "commit": "cz"
   },
   "lint-staged": {
