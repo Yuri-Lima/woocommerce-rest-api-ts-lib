@@ -1,5 +1,6 @@
 # pnpm-exclusive CI for build/test on main and updates branches.
 # pnpm@11.5 requires Node >= 22.13 (node:sqlite).
+# Build before typecheck so workspace package types (dist/) resolve for woo-mcp-server.
 name: Updates Test CI
 on:
   push:
@@ -28,9 +29,9 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies (frozen)
         run: pnpm install --frozen-lockfile
+      - name: Build (library + mcp-server)
+        run: pnpm run build
       - name: Typecheck
         run: pnpm run typecheck
-      - name: Build
-        run: pnpm run build
       - name: Test
         run: pnpm test

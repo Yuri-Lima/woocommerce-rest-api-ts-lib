@@ -18,6 +18,12 @@ export interface NormalizedError {
   details?: unknown;
 }
 
+function messageOf(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === "string" && err) return err;
+  return fallback;
+}
+
 /**
  * Normalize any thrown value into a structured error object.
  */
@@ -25,9 +31,10 @@ export function normalizeError(err: unknown): NormalizedError {
   if (err instanceof AuthenticationError) {
     return {
       code: "authentication_error",
-      message:
-        err.message ||
+      message: messageOf(
+        err,
         "WooCommerce authentication failed. Check WC_KEY and WC_SECRET.",
+      ),
       status: 401,
     };
   }
@@ -38,15 +45,14 @@ export function normalizeError(err: unknown): NormalizedError {
       statusCode?: number;
       code?: string;
     };
+    const maybeStatus = (err as { status?: unknown }).status;
     const status =
       anyErr.statusCode ??
       anyErr.response?.status ??
-      (typeof (err as { status?: number }).status === "number"
-        ? (err as { status: number }).status
-        : undefined);
+      (typeof maybeStatus === "number" ? maybeStatus : undefined);
     return {
       code: anyErr.code || "woocommerce_api_error",
-      message: err.message || "WooCommerce API request failed",
+      message: messageOf(err, "WooCommerce API request failed"),
       status,
       details: anyErr.response?.data,
     };
@@ -55,7 +61,7 @@ export function normalizeError(err: unknown): NormalizedError {
   if (err instanceof OptionsException) {
     return {
       code: "options_error",
-      message: err.message || "Invalid WooCommerce client options",
+      message: messageOf(err, "Invalid WooCommerce client options"),
     };
   }
 
@@ -72,15 +78,14 @@ export function normalizeError(err: unknown): NormalizedError {
         code: data?.code || axiosLike.code || "http_error",
         message:
           data?.message ||
-          err.message ||
-          `HTTP ${axiosLike.response.status} error from WooCommerce`,
+          messageOf(err, `HTTP ${axiosLike.response.status} error from WooCommerce`),
         status: axiosLike.response.status,
         details: data,
       };
     }
     return {
       code: axiosLike.code || "internal_error",
-      message: err.message,
+      message: messageOf(err, "Internal error"),
       status: axiosLike.status,
     };
   }

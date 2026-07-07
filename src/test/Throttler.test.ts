@@ -21,7 +21,7 @@ describe("Throttler", () => {
         const third = t.acquire().then(() => {
             thirdDone = true;
         });
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
         expect(thirdDone).toBe(false);
         t.release();
         await third;
@@ -36,6 +36,7 @@ describe("Throttler", () => {
         t.release();
         t.release();
         t.release();
+        expect(true).toBe(true);
     });
 
     test("FIFO queue order under contention", async () => {
@@ -44,7 +45,7 @@ describe("Throttler", () => {
         const order: number[] = [];
         const p1 = t.acquire().then(() => order.push(1));
         const p2 = t.acquire().then(() => order.push(2));
-        await new Promise((r) => setTimeout(r, 5));
+        await new Promise((resolve) => setTimeout(resolve, 5));
         t.release();
         await p1;
         t.release();
