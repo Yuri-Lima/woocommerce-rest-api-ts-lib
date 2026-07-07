@@ -539,7 +539,11 @@ If you're upgrading from an earlier version, note these changes:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions via pull requests.
+
+- **AI PR reviews (free):** open a non-draft PR and [CodeRabbit](https://coderabbit.ai) reviews it automatically on the free public-repo tier. Setup and commands: [docs/CODERABBIT.md](docs/CODERABBIT.md). Config: [`.coderabbit.yaml`](.coderabbit.yaml).
+- **Publishing:** [docs/PUBLISHING.md](docs/PUBLISHING.md)
+- **Security:** [SECURITY.md](SECURITY.md)
 
 ## 📄 License
 
