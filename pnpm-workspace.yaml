@@ -1,8 +1,7 @@
 # pnpm workspace configuration
-# Even for a single-package repo this file is required for pnpm to treat the root as a workspace
-# and enables features like shared lockfile, filtering, and consistent script execution.
 packages:
   - '.'
+  - 'packages/*'
 allowBuilds:
   esbuild: true
   unrs-resolver: true

@@ -3,112 +3,189 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>woocommerce-rest-ts-api — Coverage & Bug Dashboard</title>
+  <title>woo-mcp-server — MCP Tool Explorer</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
+
   <header class="site-header" role="banner">
     <div class="brand">
-      <span class="logo" aria-hidden="true">WC</span>
+      <span class="logo" aria-hidden="true">MCP</span>
       <div>
-        <h1>woocommerce-rest-ts-api v8.0.0</h1>
-        <p class="tagline">Bug-fix & coverage dashboard · 7 fixes · 92%+ line coverage</p>
+        <h1>woo-mcp-server</h1>
+        <p class="tagline">WooCommerce MCP tool explorer · STDIO · Zod · OAuth 1.0a</p>
       </div>
     </div>
     <nav aria-label="Primary">
       <ul class="nav-list">
+        <li><a href="#catalog">Tool catalog</a></li>
+        <li><a href="#tester">Live tester</a></li>
+        <li><a href="#architecture">Architecture</a></li>
         <li><a href="#coverage">Coverage</a></li>
-        <li><a href="#bugs">Bugs</a></li>
-        <li><a href="#timeline">Type timeline</a></li>
-        <li><a href="#diff">Diff viewer</a></li>
+        <li><a href="#config-gen">Claude config</a></li>
       </ul>
     </nav>
   </header>
 
   <main id="main" tabindex="-1">
     <section class="hero" aria-labelledby="hero-title">
-      <h2 id="hero-title">OAuth was not the problem</h2>
+      <h2 id="hero-title">Talk to any WooCommerce store from an AI agent</h2>
       <p>
-        Claim: <em>“The OAuth implementation is broken — that's why the tests fail.”</em>
-        <strong>False.</strong> Jest never reached OAuth. Evidence:
+        <strong>woo-mcp-server</strong> exposes 60+ purpose-built MCP tools so Claude, GPT, and other models can list products,
+        create orders, manage customers, and read reports — with schema validation, rate limiting, and structured errors.
       </p>
-      <pre class="error-evidence" role="region" aria-label="Jest validation error" tabindex="0">Error: ● Validation Error:
-
-  Module &lt;rootDir&gt;/setEnvVars.js in the setupFiles option was not found.
-         &lt;rootDir&gt; is: …/woocommerce-rest-api-ts-lib
-
-  Configuration Documentation:
-  https://jestjs.io/docs/configuration</pre>
-      <p class="muted">Root cause: missing <code>setEnvVars.js</code> referenced by <code>jest.config.ts</code> (and gitignored). After restoring it, the hermetic nock suite passed without OAuth changes.</p>
+      <div class="stat-row" role="group" aria-label="Key metrics">
+        <div class="stat"><span class="stat-value" id="stat-tools">—</span><span class="stat-label">Tools</span></div>
+        <div class="stat"><span class="stat-value" id="stat-domains">—</span><span class="stat-label">Domains</span></div>
+        <div class="stat"><span class="stat-value">2</span><span class="stat-label">Resources</span></div>
+        <div class="stat"><span class="stat-value">3</span><span class="stat-label">Prompts</span></div>
+        <div class="stat"><span class="stat-value">≥80%</span><span class="stat-label">Coverage</span></div>
+      </div>
     </section>
 
-    <section id="coverage" class="panel" aria-labelledby="coverage-title">
-      <h2 id="coverage-title">Coverage by module (before vs after)</h2>
-      <p class="muted">Before: modules untracked by Jest collectCoverageFrom or untested (0%). After: dedicated nock/unit suites.</p>
-      <div class="chart-wrap">
-        <canvas id="coverageChart" role="img" aria-label="Bar chart of coverage percent per module before and after"></canvas>
+    <!-- Tool catalog -->
+    <section id="catalog" class="panel" aria-labelledby="catalog-title">
+      <h2 id="catalog-title">Interactive tool catalog</h2>
+      <p class="muted">Search and filter every MCP tool. Keyboard: focus the search box with <kbd>/</kbd>.</p>
+      <div class="filters">
+        <label class="sr-only" for="tool-search">Search tools</label>
+        <input id="tool-search" type="search" placeholder="Search by name, domain, or description…" autocomplete="off" />
+        <label class="sr-only" for="domain-filter">Filter by domain</label>
+        <select id="domain-filter" aria-label="Filter by domain">
+          <option value="">All domains</option>
+        </select>
       </div>
-      <table class="data-table" aria-describedby="coverage-title">
-        <caption class="sr-only">Numeric coverage percentages</caption>
+      <div class="table-scroll" tabindex="0">
+        <table class="data-table" id="tools-table">
+          <caption class="sr-only">MCP tools</caption>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Domain</th>
+              <th scope="col">Description</th>
+              <th scope="col">Required</th>
+              <th scope="col">Optional</th>
+            </tr>
+          </thead>
+          <tbody id="tools-tbody"></tbody>
+        </table>
+      </div>
+      <p class="muted" id="tools-count" aria-live="polite"></p>
+    </section>
+
+    <!-- Live tester -->
+    <section id="tester" class="panel" aria-labelledby="tester-title">
+      <h2 id="tester-title">Live tool tester (mock fixtures)</h2>
+      <p class="muted">Build a tool-call JSON from the input schema and preview a mock response from test fixtures. No live store required.</p>
+      <div class="tester-grid">
+        <div>
+          <label for="tester-tool">Tool</label>
+          <select id="tester-tool"></select>
+          <div id="tester-fields" class="tester-fields"></div>
+          <button type="button" id="tester-run" class="btn primary">Build call &amp; mock response</button>
+        </div>
+        <div>
+          <h3>Tool call JSON</h3>
+          <pre id="tester-call" class="code-block" tabindex="0" role="region" aria-label="Tool call JSON"></pre>
+          <h3>Mock response</h3>
+          <pre id="tester-response" class="code-block" tabindex="0" role="region" aria-label="Mock response JSON"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Architecture -->
+    <section id="architecture" class="panel" aria-labelledby="arch-title">
+      <h2 id="arch-title">Architecture</h2>
+      <p class="muted">Flow from AI client through the MCP server to WooCommerce.</p>
+      <div class="arch-flow" role="img" aria-label="Architecture diagram: AI to MCP Server to WooCommerce API">
+        <div class="arch-node ai">
+          <strong>AI client</strong>
+          <span>Claude · GPT · others</span>
+        </div>
+        <div class="arch-arrow" aria-hidden="true">→</div>
+        <div class="arch-node mcp">
+          <strong>MCP server (STDIO)</strong>
+          <ul>
+            <li>Tool layer (<code>woo_*</code>)</li>
+            <li>Zod input validation</li>
+            <li>Rate limiter (Throttler)</li>
+            <li>Error normalization</li>
+            <li>Zod output validation</li>
+          </ul>
+        </div>
+        <div class="arch-arrow" aria-hidden="true">→</div>
+        <div class="arch-node lib">
+          <strong>woocommerce-rest-ts-api</strong>
+          <span>OAuth 1.0a · axios · retry</span>
+        </div>
+        <div class="arch-arrow" aria-hidden="true">→</div>
+        <div class="arch-node wc">
+          <strong>WooCommerce REST</strong>
+          <span>/wp-json/wc/v3/*</span>
+        </div>
+      </div>
+      <div class="arch-layers">
+        <article>
+          <h3>Resources</h3>
+          <p><code>woo://store/info</code> · <code>woo://api/schema</code></p>
+        </article>
+        <article>
+          <h3>Prompts</h3>
+          <p><code>store-audit</code> · <code>order-report</code> · <code>inventory-check</code></p>
+        </article>
+        <article>
+          <h3>Constraints</h3>
+          <p>No raw catch-all tools · fail-fast env config · STDIO only</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Coverage -->
+    <section id="coverage" class="panel" aria-labelledby="coverage-title">
+      <h2 id="coverage-title">Test coverage by domain</h2>
+      <p class="muted">Statement coverage from the mcp-server Jest suite (v8 provider).</p>
+      <div class="chart-wrap">
+        <canvas id="coverageChart" role="img" aria-label="Bar chart of coverage percent per tool domain"></canvas>
+      </div>
+      <table class="data-table">
+        <caption class="sr-only">Coverage percentages</caption>
         <thead>
-          <tr><th scope="col">Module</th><th scope="col">Before</th><th scope="col">After</th></tr>
+          <tr><th scope="col">Domain</th><th scope="col">Coverage %</th></tr>
         </thead>
         <tbody id="coverage-tbody"></tbody>
       </table>
     </section>
 
-    <section id="bugs" class="panel" aria-labelledby="bugs-title">
-      <h2 id="bugs-title">Bug tracker (7 fixes)</h2>
-      <div class="table-scroll" tabindex="0">
-        <table class="data-table bugs-table">
-          <thead>
-            <tr>
-              <th scope="col">ID</th>
-              <th scope="col">Root cause</th>
-              <th scope="col">Fix</th>
-              <th scope="col">Commit</th>
-            </tr>
-          </thead>
-          <tbody id="bugs-tbody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="timeline" class="panel" aria-labelledby="timeline-title">
-      <h2 id="timeline-title">Type-error timeline (@ts-nocheck removal)</h2>
-      <ol class="timeline" id="type-timeline"></ol>
-      <div class="chart-wrap chart-wrap--sm">
-        <canvas id="typeChart" role="img" aria-label="Line chart of type error count over fix phases"></canvas>
-      </div>
-    </section>
-
-    <section id="diff" class="panel" aria-labelledby="diff-title">
-      <h2 id="diff-title">Live diff: worst type-safety bypass in wc.test.ts</h2>
-      <p class="muted">Before: entire suite skipped typechecking. After: typed nock setup + response generics.</p>
-      <div class="diff-grid" role="group" aria-label="Before and after code samples">
-        <div class="diff-pane">
-          <h3>Before</h3>
-          <pre class="code before" tabindex="0"><code id="diff-before"></code></pre>
+    <!-- Claude config generator -->
+    <section id="config-gen" class="panel" aria-labelledby="config-title">
+      <h2 id="config-title">Claude Desktop config generator</h2>
+      <p class="muted">Enter credentials to generate a copy-pasteable <code>claude_desktop_config.json</code> snippet. Values stay in your browser only.</p>
+      <form id="config-form" class="config-form" autocomplete="off">
+        <label>WC_URL
+          <input name="url" type="url" required placeholder="https://mystore.com" />
+        </label>
+        <label>WC_KEY
+          <input name="key" type="text" required placeholder="ck_xxxxxxxx" spellcheck="false" />
+        </label>
+        <label>WC_SECRET
+          <input name="secret" type="password" required placeholder="cs_xxxxxxxx" spellcheck="false" />
+        </label>
+        <label>WC_RATE_LIMIT_PER_SECOND
+          <input name="rate" type="number" min="1" max="100" value="5" />
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Generate config</button>
+          <button type="button" id="copy-config" class="btn" disabled>Copy to clipboard</button>
         </div>
-        <div class="diff-pane">
-          <h3>After</h3>
-          <pre class="code after" tabindex="0"><code id="diff-after"></code></pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel metrics" aria-label="Summary metrics">
-      <div class="metric"><span class="metric-value">74</span><span class="metric-label">tests passing</span></div>
-      <div class="metric"><span class="metric-value">92.6%</span><span class="metric-label">line coverage</span></div>
-      <div class="metric"><span class="metric-value">7</span><span class="metric-label">bugs fixed</span></div>
-      <div class="metric"><span class="metric-value">0</span><span class="metric-label">OAuth changes</span></div>
+      </form>
+      <pre id="config-output" class="code-block" tabindex="0" role="region" aria-label="Generated Claude Desktop config"></pre>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>Keyboard: Tab through sections · charts rendered with Chart.js · dark theme default</p>
+    <p>woo-mcp-server · packages/mcp-server · MIT · <a href="../packages/mcp-server/README.md">Package README</a></p>
   </footer>
 
   <script src="./app.js" defer></script>

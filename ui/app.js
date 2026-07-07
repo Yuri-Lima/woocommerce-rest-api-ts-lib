@@ -1,234 +1,289 @@
-/* Coverage & bug dashboard data + Chart.js rendering */
+/* woo-mcp-server dashboard — vanilla JS, keyboard accessible */
 
-const COVERAGE = [
-  { module: "ErrorNormalizer", before: 0, after: 100 },
-  { module: "PaginationHelper", before: 0, after: 100 },
-  { module: "Throttler", before: 0, after: 100 },
-  { module: "RetryStrategy", before: 0, after: 98.9 },
-  { module: "Convenience methods", before: 0, after: 100 },
-  { module: "sanitize", before: 74.6, after: 93.8 },
-  { module: "index (client)", before: 86, after: 89.7 },
-];
-
-const BUGS = [
-  {
-    id: "BUG-1",
-    root: "jest.config.ts setupFiles pointed at setEnvVars.js which was missing (and gitignored). Suite never started.",
-    fix: "Committed setEnvVars.js with hermetic URL/keys matching nock TEST_BASE; stopped gitignoring it.",
-    sha: "59b1133",
-  },
-  {
-    id: "BUG-2",
-    root: "wc.test.ts had @ts-nocheck — entire test suite bypassed TypeScript.",
-    fix: "Removed @ts-nocheck; fixed nock ReplyHeaders, response generics (WcEntity), and header comparisons.",
-    sha: "42d928d",
-  },
-  {
-    id: "BUG-3",
-    root: "classVersion hardcoded to 0.0.2 while package is 8.0.0 — wrong User-Agent reporting.",
-    fix: "Default classVersion to 8.0.0; allow opt.classVersion override.",
-    sha: "d50aa6c",
-  },
-  {
-    id: "BUG-4",
-    root: "ShippingZonesMethods public type used misspelled instace_id.",
-    fix: "Added instance_id; kept instace_id as @deprecated alias for backward compatibility.",
-    sha: "0b4242b",
-  },
-  {
-    id: "BUG-5",
-    root: "Stale tsc build/ directory committed; real artifacts live in dist/ via esbuild.",
-    fix: "Removed build/ from git and added build to .gitignore.",
-    sha: "cce92a5",
-  },
-  {
-    id: "BUG-6",
-    root: "WooRestApiVersion defined in both sanitize.ts and types/options.",
-    fix: "Single source of truth in options; sanitize re-exports the type.",
-    sha: "b8c0c98",
-  },
-  {
-    id: "BUG-7",
-    root: "_parseParamsObject fully commented out but left in index.ts as dead code.",
-    fix: "Deleted the commented block and obsolete references in _normalizeQueryString docs.",
-    sha: "f24b4fd",
-  },
-];
-
-const TYPE_TIMELINE = [
-  { phase: "With @ts-nocheck", errors: 0, note: "All type errors suppressed (unsafe)" },
-  { phase: "Removed @ts-nocheck", errors: 48, note: "nock overloads, unknown data, header comparisons" },
-  { phase: "Nock + headers typed", errors: 28, note: "ReplyHeaders + body overload fixed" },
-  { phase: "Response generics", errors: 9, note: "WcEntity / WcEntityList helpers" },
-  { phase: "Fully fixed", errors: 0, note: "Suite typechecks under ts-jest" },
-];
-
-const DIFF_BEFORE = `// @ts-nocheck
-// Test file intentionally loose: exercises the strict library types via real usage patterns + nock.
-// Production src/ has zero \`any\` and full strictness.
-
-const commonHeaders: Record<string, string | string[] | number> = {
-  "x-wp-total": "5",
-  "x-wp-totalpages": "1",
-  "content-type": "application/json",
-};
-
-nock(TEST_BASE)
-  .persist()
-  .get(/\\/wp-json\\/wc\\/v3\\/coupons\\/\\d+$/)
-  .reply(200, (couponsJson[0] || { id: 1 }), commonHeaders);
-
-const coupons = await wooCommerce.get("coupons");
-const keys = Object.keys(coupons.data[0]); // data is unknown — unchecked`;
-
-const DIFF_AFTER = `// Type-checked test suite: exercises the library via real usage patterns + nock.
-
-type WcEntity = { id: number; code?: string; [key: string]: unknown };
-type WcEntityList = WcEntity[];
-
-const commonHeaders = {
-  "x-wp-total": "5",
-  "x-wp-totalpages": "1",
-  "content-type": "application/json",
-};
-
-nock(TEST_BASE)
-  .persist()
-  .get(/\\/wp-json\\/wc\\/v3\\/coupons\\/\\d+$/)
-  .reply(200, couponsJson[0] ?? { id: 1 }, commonHeaders);
-
-const coupons = await wooCommerce.get<WcEntityList>("coupons");
-const keys = Object.keys(asList(coupons.data)[0] ?? {});`;
-
-function fillCoverageTable() {
-  const tbody = document.getElementById("coverage-tbody");
-  tbody.innerHTML = COVERAGE.map(
-    (row) =>
-      `<tr><th scope="row">${row.module}</th><td>${row.before}%</td><td>${row.after}%</td></tr>`,
-  ).join("");
-}
-
-function fillBugs() {
-  const tbody = document.getElementById("bugs-tbody");
-  tbody.innerHTML = BUGS.map(
-    (b) => `<tr>
-      <th scope="row">${b.id}</th>
-      <td>${b.root}</td>
-      <td>${b.fix}</td>
-      <td><a class="commit" href="https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/commit/${b.sha}" target="_blank" rel="noopener noreferrer"><code>${b.sha}</code></a></td>
-    </tr>`,
-  ).join("");
-}
-
-function fillTimeline() {
-  const ol = document.getElementById("type-timeline");
-  ol.innerHTML = TYPE_TIMELINE.map(
-    (t) =>
-      `<li><span class="count">${t.errors}</span> <strong>${t.phase}</strong> — ${t.note}</li>`,
-  ).join("");
-}
-
-function fillDiff() {
-  document.getElementById("diff-before").textContent = DIFF_BEFORE;
-  document.getElementById("diff-after").textContent = DIFF_AFTER;
-}
-
-function charts() {
-  if (typeof Chart === "undefined") {
-    console.warn("Chart.js not loaded");
+(async function boot() {
+  const res = await fetch("./tools-catalog.json");
+  if (!res.ok) {
+    document.getElementById("tools-tbody").innerHTML =
+      '<tr><td colspan="5">Failed to load tools-catalog.json</td></tr>';
     return;
   }
+  const catalog = await res.json();
+  init(catalog);
+})();
 
-  const labels = COVERAGE.map((c) => c.module);
-  new Chart(document.getElementById("coverageChart"), {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        {
-          label: "Before %",
-          data: COVERAGE.map((c) => c.before),
-          backgroundColor: "rgba(255, 107, 122, 0.75)",
-          borderRadius: 6,
-        },
-        {
-          label: "After %",
-          data: COVERAGE.map((c) => c.after),
-          backgroundColor: "rgba(61, 214, 140, 0.8)",
-          borderRadius: 6,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100,
-          ticks: { color: "#9aadc2" },
-          grid: { color: "rgba(255,255,255,0.06)" },
-        },
-        x: {
-          ticks: { color: "#9aadc2", maxRotation: 40, minRotation: 0 },
-          grid: { display: false },
-        },
-      },
-      plugins: {
-        legend: { labels: { color: "#e7eef8" } },
-        title: { display: false },
-      },
-    },
+function init(catalog) {
+  const tools = catalog.tools || [];
+  const domains = [...new Set(tools.map((t) => t.domain))].sort();
+
+  document.getElementById("stat-tools").textContent = String(tools.length);
+  document.getElementById("stat-domains").textContent = String(domains.length);
+
+  // Domain filter options
+  const domainFilter = document.getElementById("domain-filter");
+  for (const d of domains) {
+    const opt = document.createElement("option");
+    opt.value = d;
+    opt.textContent = d;
+    domainFilter.appendChild(opt);
+  }
+
+  const tbody = document.getElementById("tools-tbody");
+  const search = document.getElementById("tool-search");
+  const countEl = document.getElementById("tools-count");
+
+  function renderTable() {
+    const q = search.value.trim().toLowerCase();
+    const domain = domainFilter.value;
+    const filtered = tools.filter((t) => {
+      if (domain && t.domain !== domain) return false;
+      if (!q) return true;
+      const hay = `${t.name} ${t.domain} ${t.description}`.toLowerCase();
+      return hay.includes(q);
+    });
+
+    tbody.replaceChildren();
+    for (const t of filtered) {
+      const tr = document.createElement("tr");
+      tr.tabIndex = 0;
+      tr.innerHTML = `
+        <td class="tool-name">${escapeHtml(t.name)}</td>
+        <td><span class="badge">${escapeHtml(t.domain)}</span></td>
+        <td>${escapeHtml(t.description)}</td>
+        <td class="param-list">${(t.required || []).map(escapeHtml).join(", ") || "—"}</td>
+        <td class="param-list">${(t.optional || []).map(escapeHtml).join(", ") || "—"}</td>
+      `;
+      tr.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          document.getElementById("tester-tool").value = t.name;
+          document.getElementById("tester-tool").dispatchEvent(new Event("change"));
+          document.getElementById("tester").scrollIntoView({ behavior: "smooth" });
+        }
+      });
+      tbody.appendChild(tr);
+    }
+    countEl.textContent = `Showing ${filtered.length} of ${tools.length} tools`;
+  }
+
+  search.addEventListener("input", renderTable);
+  domainFilter.addEventListener("change", renderTable);
+  renderTable();
+
+  // / focuses search
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA" && document.activeElement?.tagName !== "SELECT") {
+      e.preventDefault();
+      search.focus();
+    }
   });
 
-  new Chart(document.getElementById("typeChart"), {
-    type: "line",
-    data: {
-      labels: TYPE_TIMELINE.map((t) => t.phase),
-      datasets: [
-        {
-          label: "Type errors in wc.test.ts",
-          data: TYPE_TIMELINE.map((t) => t.errors),
-          borderColor: "#ffc857",
-          backgroundColor: "rgba(255, 200, 87, 0.15)",
-          fill: true,
-          tension: 0.25,
-          pointRadius: 5,
-          pointBackgroundColor: "#ffc857",
+  // Live tester
+  const testerSelect = document.getElementById("tester-tool");
+  const fieldsEl = document.getElementById("tester-fields");
+  const callEl = document.getElementById("tester-call");
+  const responseEl = document.getElementById("tester-response");
+
+  for (const t of tools) {
+    const opt = document.createElement("option");
+    opt.value = t.name;
+    opt.textContent = t.name;
+    testerSelect.appendChild(opt);
+  }
+
+  function buildFields() {
+    const tool = tools.find((t) => t.name === testerSelect.value);
+    fieldsEl.replaceChildren();
+    if (!tool) return;
+    const params = [...(tool.required || []), ...(tool.optional || [])];
+    for (const p of params) {
+      const label = document.createElement("label");
+      const required = (tool.required || []).includes(p);
+      label.textContent = `${p}${required ? " *" : ""}`;
+      const input = document.createElement("input");
+      input.name = p;
+      input.dataset.param = p;
+      input.placeholder = exampleFor(p);
+      if (required) input.required = true;
+      label.appendChild(input);
+      fieldsEl.appendChild(label);
+    }
+  }
+
+  testerSelect.addEventListener("change", buildFields);
+  buildFields();
+
+  document.getElementById("tester-run").addEventListener("click", () => {
+    const tool = tools.find((t) => t.name === testerSelect.value);
+    if (!tool) return;
+    const args = {};
+    for (const input of fieldsEl.querySelectorAll("input")) {
+      const raw = input.value.trim();
+      if (!raw) continue;
+      args[input.dataset.param] = coerce(raw);
+    }
+    const call = {
+      method: "tools/call",
+      params: { name: tool.name, arguments: args },
+    };
+    callEl.textContent = JSON.stringify(call, null, 2);
+
+    const fixtures = catalog.fixtures || {};
+    const mock =
+      fixtures[tool.name] ||
+      fixtures[tool.name.replace(/_get$/, "_list")] ||
+      {
+        note: "No dedicated fixture — illustrative mock",
+        tool: tool.name,
+        echo_arguments: args,
+        item: { id: 1, status: "ok" },
+      };
+    responseEl.textContent = JSON.stringify(
+      {
+        content: [{ type: "text", text: JSON.stringify(mock, null, 2) }],
+      },
+      null,
+      2,
+    );
+  });
+
+  // Coverage chart
+  const coverage = catalog.coverage || {};
+  const labels = Object.keys(coverage);
+  const values = Object.values(coverage);
+  const covBody = document.getElementById("coverage-tbody");
+  for (const [k, v] of Object.entries(coverage)) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${escapeHtml(k)}</td><td>${v}%</td>`;
+    covBody.appendChild(tr);
+  }
+
+  function drawChart() {
+    if (typeof Chart === "undefined") {
+      setTimeout(drawChart, 50);
+      return;
+    }
+    const ctx = document.getElementById("coverageChart");
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Coverage %",
+            data: values,
+            backgroundColor: values.map((v) =>
+              v >= 90 ? "rgba(61, 214, 198, 0.75)" : v >= 80 ? "rgba(91, 157, 255, 0.75)" : "rgba(240, 180, 41, 0.75)",
+            ),
+            borderRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: { color: "#9aa8bc" },
+            grid: { color: "rgba(36, 48, 65, 0.8)" },
+          },
+          x: {
+            ticks: { color: "#9aa8bc", maxRotation: 45, minRotation: 0 },
+            grid: { display: false },
+          },
         },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { color: "#9aadc2", stepSize: 10 },
-          grid: { color: "rgba(255,255,255,0.06)" },
-        },
-        x: {
-          ticks: { color: "#9aadc2", maxRotation: 30 },
-          grid: { display: false },
+        plugins: {
+          legend: { display: false },
         },
       },
-      plugins: {
-        legend: { labels: { color: "#e7eef8" } },
+    });
+  }
+  drawChart();
+
+  // Config generator
+  const form = document.getElementById("config-form");
+  const out = document.getElementById("config-output");
+  const copyBtn = document.getElementById("copy-config");
+  let lastConfig = "";
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const config = {
+      mcpServers: {
+        woocommerce: {
+          command: "npx",
+          args: ["woo-mcp-server"],
+          env: {
+            WC_URL: String(fd.get("url") || ""),
+            WC_KEY: String(fd.get("key") || ""),
+            WC_SECRET: String(fd.get("secret") || ""),
+            WC_RATE_LIMIT_PER_SECOND: String(fd.get("rate") || "5"),
+          },
+        },
       },
-    },
+    };
+    lastConfig = JSON.stringify(config, null, 2);
+    out.textContent = lastConfig;
+    copyBtn.disabled = false;
+  });
+
+  copyBtn.addEventListener("click", async () => {
+    if (!lastConfig) return;
+    try {
+      await navigator.clipboard.writeText(lastConfig);
+      copyBtn.textContent = "Copied!";
+      setTimeout(() => {
+        copyBtn.textContent = "Copy to clipboard";
+      }, 1500);
+    } catch {
+      copyBtn.textContent = "Select & copy manually";
+    }
   });
 }
 
-function init() {
-  fillCoverageTable();
-  fillBugs();
-  fillTimeline();
-  fillDiff();
-  charts();
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
+function coerce(raw) {
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  if (/^-?\d+$/.test(raw)) return Number(raw);
+  if ((raw.startsWith("{") && raw.endsWith("}")) || (raw.startsWith("[") && raw.endsWith("]"))) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return raw;
+    }
+  }
+  return raw;
+}
+
+function exampleFor(param) {
+  const map = {
+    id: "1",
+    product_id: "1",
+    order_id: "101",
+    zone_id: "1",
+    query: "blue shirt",
+    name: "Blue T-Shirt",
+    email: "jane@example.com",
+    code: "SAVE10",
+    page: "1",
+    per_page: "10",
+    status: "publish",
+    group: "general",
+    value: "USD",
+    topic: "order.created",
+    delivery_url: "https://hooks.example/wc",
+    rate: "8.5",
+    slug: "standard",
+    data: '{"name":"Updated"}',
+  };
+  return map[param] || param;
 }

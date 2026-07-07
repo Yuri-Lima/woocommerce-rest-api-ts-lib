@@ -1,0 +1,16 @@
+[
+  {
+    "id": 101,
+    "status": "processing",
+    "currency": "USD",
+    "total": "49.98",
+    "customer_id": 12,
+    "date_created": "2024-06-01T10:00:00",
+    "billing": { "first_name": "Jane", "email": "jane@example.com" },
+    "shipping": { "first_name": "Jane" },
+    "line_items": [
+      { "product_id": 1, "quantity": 1, "name": "Blue T-Shirt", "total": "29.99" },
+      { "product_id": 2, "quantity": 1, "name": "Red Hat", "total": "19.99" }
+    ]
+  }
+]

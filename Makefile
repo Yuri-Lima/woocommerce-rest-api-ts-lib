@@ -12,7 +12,7 @@ build:
 coverage:
 	pnpm test
 
-# Open the coverage/bug dashboard (starts local static server when possible).
+# Open the MCP tool explorer dashboard (starts local static server when possible).
 ui:
 	chmod +x scripts/open-ui.sh
 	./scripts/open-ui.sh
