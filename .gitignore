@@ -8,3 +8,4 @@ build
 .src/test
 .reminder
 ./reminder/
+ui/.server.pid
