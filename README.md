@@ -41,11 +41,22 @@ Source files: [`ui/presentation.html`](./ui/presentation.html) · [`ui/index.htm
 Talk to any WooCommerce store from **Claude Desktop**, custom agents, or any MCP client — without giving models a raw HTTP free-for-all.
 
 ```bash
-# monorepo
+# from npm (after publish)
+npm i -g woo-mcp-server
+# or monorepo dev
 pnpm install && pnpm run build
 export WC_URL=https://mystore.com WC_KEY=ck_… WC_SECRET=cs_…
-npx woo-mcp-server
+npx -y woo-mcp-server
 ```
+
+Published packages (separate):
+
+| Package | npm | Role |
+|---------|-----|------|
+| `woocommerce-rest-ts-api` | [npm](https://www.npmjs.com/package/woocommerce-rest-ts-api) | Typed REST client |
+| `woo-mcp-server` | [npm](https://www.npmjs.com/package/woo-mcp-server) | MCP STDIO server for AI agents |
+
+Release both: `pnpm run publish:packages` (or GitHub Action **Release npm packages**).
 
 **Highlights**
 
