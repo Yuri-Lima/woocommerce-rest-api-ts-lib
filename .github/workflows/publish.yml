@@ -1,5 +1,6 @@
-# This workflow will do a clean installation of node dependencies using pnpm, cache/restore them, build the source code and run release across different versions of node.
-# pnpm-exclusive: no npm/yarn used in CI.
+# Validate monorepo build/test on PRs; semantic-release only on main.
+# pnpm-exclusive: pin must match package.json "packageManager".
+# pnpm@11.5 requires Node >= 22.13 (node:sqlite) — matrix is 22.x only.
 name: Publish NPM CI
 on:
   push:
@@ -14,13 +15,13 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [22.x]
     steps:
       - uses: actions/checkout@v4
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 11
+          version: 11.5.0
           run_install: false
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -29,7 +30,7 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies (frozen)
         run: pnpm install --frozen-lockfile
-      - name: Build (verify)
+      - name: Build (library + mcp-server)
         run: pnpm run build
       - name: Typecheck
         run: pnpm run typecheck
