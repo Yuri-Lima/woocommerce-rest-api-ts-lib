@@ -1,6 +1,5 @@
 /**
  * PaginationHelper tests — WP REST pagination headers + multi-page collection.
- * Hermetic: no network; optional nock-style fetcher stubs.
  */
 import nock from "nock";
 import { parsePaginationHeaders, collectAllPages } from "../utils/PaginationHelper";
@@ -8,10 +7,6 @@ import type { WooCommerceApiResponse } from "../types";
 import WooCommerceRestApi from "../index";
 
 describe("PaginationHelper", () => {
-    afterEach(() => {
-        nock.cleanAll();
-    });
-
     test("parsePaginationHeaders reads lowercase x-wp-total headers", () => {
         const res: WooCommerceApiResponse<unknown[]> = {
             data: [],
@@ -46,7 +41,9 @@ describe("PaginationHelper", () => {
         let calls = 0;
         const fetchPage = async (page: number, perPage: number) => {
             calls += 1;
-            const items = Array.from({ length: perPage }, (_, i) => ({ id: (page - 1) * perPage + i + 1 }));
+            const items = Array.from({ length: perPage }, (_, i) => ({
+                id: (page - 1) * perPage + i + 1,
+            }));
             return {
                 data: items,
                 status: 200,
@@ -100,32 +97,42 @@ describe("PaginationHelper", () => {
     });
 
     test("collectAllPages works with nock-backed Woo client fetcher", async () => {
-        const base = "https://pagination.example";
+        const base = "https://example.com";
+        nock.cleanAll();
+        nock.disableNetConnect();
+        let call = 0;
         nock(base)
-            .get(/\/wp-json\/wc\/v3\/products.*/)
-            .times(2)
-            .reply(200, (uri: string) => {
-                const page = /[?&]page=(\d+)/.exec(uri)?.[1] ?? "1";
-                if (page === "1") return [{ id: 1 }, { id: 2 }];
-                return [{ id: 3 }, { id: 4 }];
-            }, {
-                "x-wp-total": "4",
-                "x-wp-totalpages": "2",
-                "content-type": "application/json",
-            });
+            .persist()
+            .get(/\/wp-json\/wc\/v3\/products/)
+            .reply(
+                200,
+                () => {
+                    call += 1;
+                    if (call === 1) return [{ id: 1 }, { id: 2 }];
+                    return [{ id: 3 }, { id: 4 }];
+                },
+                {
+                    "x-wp-total": "4",
+                    "x-wp-totalpages": "2",
+                    "content-type": "application/json",
+                },
+            );
 
         const api = new WooCommerceRestApi({
             url: base,
-            consumerKey: "ck_test",
-            consumerSecret: "cs_test",
-            queryStringAuth: true,
+            consumerKey: "ck_test_consumer_key_for_hermetic_nock",
+            consumerSecret: "cs_test_consumer_secret_for_hermetic_nock",
+            version: "wc/v3",
+            queryStringAuth: false,
         });
 
         const all = await collectAllPages(
-            (page, perPage) => api.get<{ id: number }[]>("products", { page, per_page: perPage }),
+            (page, perPage) =>
+                api.get<{ id: number }[]>("products", { page, per_page: perPage }),
             { perPage: 2 },
         );
         expect(all.map((p) => p.id)).toEqual([1, 2, 3, 4]);
-        expect(nock.isDone()).toBe(true);
+        expect(call).toBe(2);
+        nock.cleanAll();
     });
 });
