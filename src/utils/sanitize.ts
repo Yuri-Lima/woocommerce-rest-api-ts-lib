@@ -5,6 +5,10 @@
  */
 
 import { OptionsException } from "../types/index.js";
+import type { WooRestApiVersion } from "../types/options/index.js";
+
+// Re-export from the single source of truth (src/types/options) for callers that imported from sanitize.
+export type { WooRestApiVersion } from "../types/options/index.js";
 
 const SAFE_SEGMENT = /^[a-zA-Z0-9._-]+$/;
 
@@ -38,8 +42,6 @@ export function sanitizeEndpoint(endpoint: string): string {
     const safeParts = parts.map((p, i) => sanitizePathSegment(p, `endpoint part[${i}]`));
     return safeParts.join("/");
 }
-
-export type WooRestApiVersion = "wc/v3";
 
 export function sanitizeApiVersion(v: string): WooRestApiVersion {
     const cleaned = String(v || "").trim().replace(/^\/+|\/+$/g, "");
