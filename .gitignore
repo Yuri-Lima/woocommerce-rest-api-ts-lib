@@ -14,3 +14,4 @@ ui/.server.pid
 packages/mcp-server/dist
 packages/mcp-server/coverage
 packages/mcp-server/node_modules
+scripts/live-wc/.env.live
