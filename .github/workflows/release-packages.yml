@@ -32,7 +32,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   release:
@@ -54,10 +53,24 @@ jobs:
         with:
           node-version: 22.x
           cache: pnpm
+          # Do not enable OIDC/provenance here — use classic NPM_TOKEN auth only.
           registry-url: https://registry.npmjs.org
+          always-auth: true
 
       - name: Install dependencies (frozen)
         run: pnpm install --frozen-lockfile
+
+      - name: Verify npm auth (whoami)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "NPM_TOKEN secret is empty" >&2
+            exit 1
+          fi
+          # setup-node writes .npmrc with ${NODE_AUTH_TOKEN}; export for npm
+          npm whoami
+          echo "Authenticated as $(npm whoami) — can publish"
 
       - name: Publish packages
         env:
