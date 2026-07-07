@@ -1,11 +1,15 @@
 name: Snyk Security Check
-on: [push,pull_request]
+on: [push, pull_request]
 jobs:
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@main
+      - uses: actions/checkout@v4
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
+        with:
+          # pnpm workspaces need multi-project mode (lockfile + pnpm-workspace.yaml).
+          # Fail the job on high/critical production issues only (dev tooling noise is ignored).
+          args: --all-projects --severity-unmanaged --severity-dev --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

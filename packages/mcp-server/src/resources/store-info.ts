@@ -37,10 +37,14 @@ export function registerStoreInfoResource(
           string,
           unknown
         >;
-        const general = Array.isArray(generalRes.data) ? generalRes.data : [];
+        const general: Array<Record<string, unknown>> = Array.isArray(
+          generalRes.data,
+        )
+          ? generalRes.data
+          : [];
 
-        const findSetting = (id: string) =>
-          general.find((s) => s.id === id)?.value;
+        const findSetting = (id: string): unknown =>
+          general.find((s: Record<string, unknown>) => s.id === id)?.value;
 
         const info = {
           url: client.config.WC_URL,
