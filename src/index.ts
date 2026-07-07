@@ -162,7 +162,8 @@ export default class WooCommerceRestApi<T extends WooRestApiOptions> {
         this._opt.isHttps = /^https/i.test(this._opt.url);
         this._opt.encoding = opt.encoding || "utf-8";
         this._opt.queryStringAuth = opt.queryStringAuth || false;
-        this._opt.classVersion = "0.0.2";
+        // Keep in sync with package.json version (woocommerce-rest-ts-api).
+        this._opt.classVersion = opt.classVersion || "8.0.0";
     }
 
     /**
