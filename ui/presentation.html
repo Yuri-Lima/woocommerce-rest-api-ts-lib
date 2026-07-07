@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>woo-mcp-server — Developer Presentation</title>
+  <link rel="stylesheet" href="./presentation.css" />
+</head>
+<body>
+  <a class="skip-link" href="#slide-viewport">Skip to slides</a>
+
+  <!-- Progress + chrome -->
+  <header class="deck-chrome" role="banner">
+    <div class="chrome-left">
+      <span class="logo" aria-hidden="true">WC</span>
+      <div>
+        <strong>woo-mcp-server</strong>
+        <span class="chrome-sub">MCP for WooCommerce · developer presentation</span>
+      </div>
+    </div>
+    <div class="chrome-right">
+      <a class="chrome-link" href="./index.html">Tool explorer</a>
+      <span id="slide-counter" class="slide-counter" aria-live="polite">1 / 1</span>
+    </div>
+  </header>
+  <div class="progress-track" aria-hidden="true"><div id="progress-bar" class="progress-bar"></div></div>
+
+  <main id="slide-viewport" class="slide-viewport" tabindex="-1">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 1 — Title
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide active" data-title="Title" aria-label="Title slide">
+      <div class="slide-inner center">
+        <p class="eyebrow">woocommerce-rest-ts-api · v8 + MCP package</p>
+        <h1>Talk to any WooCommerce store<br />from an AI agent</h1>
+        <p class="lede">
+          A full <strong>Model Context Protocol (MCP) server</strong> on top of the existing TypeScript REST library —
+          so Claude, GPT, and other models can list products, create orders, manage customers, and run store audits
+          through typed tools with Zod validation.
+        </p>
+        <div class="pill-row">
+          <span class="pill">60+ tools</span>
+          <span class="pill">STDIO · Claude Desktop</span>
+          <span class="pill">OAuth 1.0a</span>
+          <span class="pill">Live-tested on WC 10.9</span>
+        </div>
+        <p class="hint">Use <kbd>→</kbd> <kbd>←</kbd> or click the arrows · <kbd>F</kbd> fullscreen · <kbd>Esc</kbd> overview</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 2 — Agenda
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Agenda" aria-label="Agenda">
+      <div class="slide-inner">
+        <p class="eyebrow">Roadmap</p>
+        <h2>What we’ll cover</h2>
+        <ol class="agenda">
+          <li><strong>Why MCP on WooCommerce</strong> — the problem for AI + e‑commerce teams</li>
+          <li><strong>Architecture</strong> — library vs MCP server, request path</li>
+          <li><strong>Step-by-step setup</strong> — install, env, Claude Desktop, local live store</li>
+          <li><strong>New functionality tour</strong> — tools, resources, prompts, batch & search</li>
+          <li><strong>Developer use-case scenarios</strong> — support bot, inventory, ops, SEO audit</li>
+          <li><strong>How far we proved it</strong> — live Docker store results</li>
+          <li><strong>Where to go next</strong> — repo paths, links, contribution surface</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 3 — The problem
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Problem" aria-label="The problem">
+      <div class="slide-inner">
+        <p class="eyebrow">Context</p>
+        <h2>The problem for AI + store teams</h2>
+        <div class="two-col">
+          <div class="card bad">
+            <h3>Before</h3>
+            <ul>
+              <li>Agents invent raw <code>/wp-json/wc/v3/…</code> paths</li>
+              <li>OAuth 1.0a signing is easy to get wrong</li>
+              <li>No shared schema language between models</li>
+              <li>One-off scripts per automation</li>
+              <li>Secrets leaked into prompts & notebooks</li>
+            </ul>
+          </div>
+          <div class="card good">
+            <h3>After (woo-mcp-server)</h3>
+            <ul>
+              <li>Purpose-built tools: <code>woo_products_list</code>, …</li>
+              <li>Library owns OAuth / Basic Auth / retries</li>
+              <li>Zod schemas = machine-readable contracts</li>
+              <li>One STDIO binary for any MCP client</li>
+              <li>Env-only credentials, fail-fast at startup</li>
+            </ul>
+          </div>
+        </div>
+        <p class="note">
+          The MCP server is a <em>thin orchestration layer</em>. It does <strong>not</strong> rewrite the HTTP stack —
+          it calls <code>woocommerce-rest-ts-api</code> typed methods as-is.
+        </p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 4 — Architecture
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Architecture" aria-label="Architecture">
+      <div class="slide-inner">
+        <p class="eyebrow">System design</p>
+        <h2>Architecture at a glance</h2>
+        <div class="flow">
+          <div class="flow-node n-ai">
+            <strong>AI client</strong>
+            <span>Claude Desktop · GPT · custom agent</span>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node n-mcp">
+            <strong>woo-mcp-server</strong>
+            <ul>
+              <li>Tool registry (<code>woo_*</code>)</li>
+              <li>Zod in / Zod out</li>
+              <li>Rate limiter</li>
+              <li>Error normalization</li>
+              <li>Resources + prompts</li>
+            </ul>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node n-lib">
+            <strong>woocommerce-rest-ts-api</strong>
+            <span>OAuth 1.0a · axios · throttle · retry</span>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node n-wc">
+            <strong>WooCommerce REST</strong>
+            <span><code>/wp-json/wc/v3/*</code></span>
+          </div>
+        </div>
+        <div class="grid-3">
+          <article class="mini">
+            <h3>Package layout</h3>
+            <pre class="code-sm">packages/mcp-server/
+  src/server.ts
+  src/tools/*.ts
+  src/resources/
+  src/prompts/
+  src/client.ts</pre>
+          </article>
+          <article class="mini">
+            <h3>Transport</h3>
+            <p>STDIO only (Claude Desktop requirement). No HTTP transport on the MCP side.</p>
+          </article>
+          <article class="mini">
+            <h3>Naming</h3>
+            <p><code>woo_{resource}_{action}</code><br />e.g. <code>woo_orders_create</code>, <code>woo_customers_search</code></p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 5 — Step 1 setup monorepo
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Setup 1" aria-label="Setup step 1">
+      <div class="slide-inner">
+        <p class="eyebrow">Step 1 of 5 · Setup</p>
+        <h2>Install & build the monorepo</h2>
+        <pre class="code-block"><code># clone & enter
+git clone https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib.git
+cd woocommerce-rest-api-ts-lib
+
+# workspace install (root library + packages/mcp-server)
+pnpm install
+
+# build library (CJS+ESM) and MCP server
+pnpm run build
+
+# unit + integration tests (hermetic nock; live suite skipped by default)
+pnpm --filter woo-mcp-server test</code></pre>
+        <div class="callout">
+          <strong>Workspace dependency:</strong> MCP package uses <code>"woocommerce-rest-ts-api": "workspace:*"</code>
+          so it always links the local library — never a stale published copy during development.
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 6 — Step 2 env
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Setup 2" aria-label="Setup step 2">
+      <div class="slide-inner">
+        <p class="eyebrow">Step 2 of 5 · Setup</p>
+        <h2>Configure credentials (fail-fast)</h2>
+        <p class="lede-sm">If any required var is missing, the server exits immediately with a copy-pasteable help message. No silent fallbacks.</p>
+        <table class="pretty">
+          <thead><tr><th>Variable</th><th>Required</th><th>Default</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>WC_URL</code></td><td>yes</td><td>—</td><td>Store base URL</td></tr>
+            <tr><td><code>WC_KEY</code></td><td>yes</td><td>—</td><td>Consumer key <code>ck_…</code></td></tr>
+            <tr><td><code>WC_SECRET</code></td><td>yes</td><td>—</td><td>Consumer secret <code>cs_…</code></td></tr>
+            <tr><td><code>WC_VERSION</code></td><td>no</td><td><code>wc/v3</code></td><td>API version prefix</td></tr>
+            <tr><td><code>WC_RATE_LIMIT_PER_SECOND</code></td><td>no</td><td><code>5</code></td><td>Outbound throttle</td></tr>
+            <tr><td><code>WC_QUERY_STRING_AUTH</code></td><td>no</td><td><code>false</code></td><td><code>true</code> on some HTTPS hosts</td></tr>
+          </tbody>
+        </table>
+        <pre class="code-block"><code>export WC_URL=https://mystore.com
+export WC_KEY=ck_xxxxxxxx
+export WC_SECRET=cs_xxxxxxxx
+# HTTP local Docker stores: leave query-string auth OFF (use OAuth)
+export WC_QUERY_STRING_AUTH=false</code></pre>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 7 — Step 3 Claude Desktop
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Setup 3" aria-label="Setup step 3">
+      <div class="slide-inner">
+        <p class="eyebrow">Step 3 of 5 · Setup</p>
+        <h2>Wire Claude Desktop (or any MCP host)</h2>
+        <pre class="code-block"><code>// ~/Library/Application Support/Claude/claude_desktop_config.json
+{
+  "mcpServers": {
+    "woocommerce": {
+      "command": "npx",
+      "args": ["woo-mcp-server"],
+      "env": {
+        "WC_URL": "https://mystore.com",
+        "WC_KEY": "ck_xxxxxxxx",
+        "WC_SECRET": "cs_xxxxxxxx",
+        "WC_RATE_LIMIT_PER_SECOND": "5"
+      }
+    }
+  }
+}</code></pre>
+        <div class="grid-2">
+          <div class="card">
+            <h3>From monorepo (dev)</h3>
+            <pre class="code-sm">"command": "node",
+"args": [
+  "/abs/path/packages/mcp-server/dist/cli.js"
+]</pre>
+          </div>
+          <div class="card">
+            <h3>What the model sees</h3>
+            <ul class="compact">
+              <li>60+ tools with multi-sentence descriptions</li>
+              <li>2 resources for grounding context</li>
+              <li>3 reusable prompt templates</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 8 — Step 4 free live store
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Setup 4" aria-label="Setup step 4">
+      <div class="slide-inner">
+        <p class="eyebrow">Step 4 of 5 · Setup</p>
+        <h2>Free live store for real tests</h2>
+        <p class="lede-sm">There is no public WC sandbox with shared write keys. Use your own temp site or this free Docker stack.</p>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Docker (recommended for CI/local)</h3>
+            <pre class="code-sm">cd scripts/live-wc
+docker compose up -d
+# bootstrap WP + WooCommerce + keys
+./bootstrap.sh
+export $(grep -v '^#' .env.live | xargs)
+export WC_QUERY_STRING_AUTH=false
+export LIVE_WC=1
+# run real MCP suite
+pnpm --filter woo-mcp-server exec \
+  node …/jest.js … live-store.test.ts</pre>
+            <p class="muted">Store: <code>http://127.0.0.1:8088</code></p>
+          </div>
+          <div class="card">
+            <h3>Cloud free temp sites</h3>
+            <ul class="compact">
+              <li><strong>TasteWP</strong> — one-click temp WP</li>
+              <li><strong>InstaWP</strong> — free tier + blueprints</li>
+              <li><strong>WPSandbox</strong> — plugin testing</li>
+            </ul>
+            <p class="muted">Then: Plugins → WooCommerce → REST API key (Read/Write).</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 9 — Step 5 first tool call
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Setup 5" aria-label="Setup step 5">
+      <div class="slide-inner">
+        <p class="eyebrow">Step 5 of 5 · Setup</p>
+        <h2>First successful tool call (mental model)</h2>
+        <div class="steps">
+          <div class="step"><span class="n">1</span><div><strong>Model chooses tool</strong><p>From description + Zod input schema</p></div></div>
+          <div class="step"><span class="n">2</span><div><strong>MCP validates input</strong><p>Rejects bad types before any HTTP call</p></div></div>
+          <div class="step"><span class="n">3</span><div><strong>Rate limiter schedules</strong><p><code>WC_RATE_LIMIT_PER_SECOND</code> + library concurrency</p></div></div>
+          <div class="step"><span class="n">4</span><div><strong>Library signs request</strong><p>OAuth on HTTP · Basic/query on HTTPS</p></div></div>
+          <div class="step"><span class="n">5</span><div><strong>Zod validates response</strong><p>Then returns JSON text content to the model</p></div></div>
+          <div class="step"><span class="n">6</span><div><strong>Errors stay structured</strong><p><code>Error [code] (HTTP n): message</code> — no raw stack dumps</p></div></div>
+        </div>
+        <pre class="code-block"><code>// Example tool call the model issues over MCP
+{
+  "method": "tools/call",
+  "params": {
+    "name": "woo_products_search",
+    "arguments": { "query": "blue shirt", "per_page": 5 }
+  }
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 10 — Tool domains overview
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Tools overview" aria-label="Tools overview">
+      <div class="slide-inner">
+        <p class="eyebrow">Functionality tour · 1</p>
+        <h2>14 resource domains · 60+ tools</h2>
+        <div class="domain-grid">
+          <span>products</span><span>orders</span><span>customers</span><span>coupons</span>
+          <span>categories</span><span>tags</span><span>variations</span><span>shipping</span>
+          <span>payments</span><span>reports</span><span>settings</span><span>system-status</span>
+          <span>webhooks</span><span>tax</span>
+        </div>
+        <div class="grid-3 top-gap">
+          <article class="mini accent">
+            <h3>CRUD pattern</h3>
+            <p><code>_list</code> <code>_get</code> <code>_create</code> <code>_update</code> <code>_delete</code></p>
+          </article>
+          <article class="mini accent">
+            <h3>Search</h3>
+            <p><code>woo_products_search</code><br /><code>woo_customers_search</code></p>
+          </article>
+          <article class="mini accent">
+            <h3>Batch</h3>
+            <p><code>woo_products_batch</code><br /><code>woo_orders_batch</code></p>
+          </article>
+        </div>
+        <p class="note">Every tool description is ≥ 2 sentences (what + when/why). No catch-all <code>woo_api_call</code>.</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 11 — Products deep dive
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Products" aria-label="Products tools">
+      <div class="slide-inner">
+        <p class="eyebrow">Functionality tour · 2</p>
+        <h2>Products — full catalog control</h2>
+        <table class="pretty compact-table">
+          <thead><tr><th>Tool</th><th>When to use</th><th>Key params</th></tr></thead>
+          <tbody>
+            <tr><td><code>woo_products_list</code></td><td>Browse / inventory overview</td><td><code>page</code>, <code>status</code>, <code>stock_status</code></td></tr>
+            <tr><td><code>woo_products_get</code></td><td>Known ID, need full detail</td><td><code>id</code></td></tr>
+            <tr><td><code>woo_products_create</code></td><td>Add SKU to catalog</td><td><code>name</code>, price, images…</td></tr>
+            <tr><td><code>woo_products_update</code></td><td>Price/stock/SEO patch</td><td><code>id</code>, <code>data</code></td></tr>
+            <tr><td><code>woo_products_delete</code></td><td>Cleanup / remove SKU</td><td><code>id</code>, <code>force</code></td></tr>
+            <tr><td><code>woo_products_search</code></td><td>Keyword find</td><td><code>query</code></td></tr>
+            <tr><td><code>woo_products_batch</code></td><td>Bulk import / mass update</td><td><code>create</code>/<code>update</code>/<code>delete</code></td></tr>
+          </tbody>
+        </table>
+        <pre class="code-block"><code>// List page 1, only published, in stock
+{ "name": "woo_products_list",
+  "arguments": { "page": 1, "per_page": 20, "status": "publish", "stock_status": "instock" } }</code></pre>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 12 — Orders deep dive
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Orders" aria-label="Orders tools">
+      <div class="slide-inner">
+        <p class="eyebrow">Functionality tour · 3</p>
+        <h2>Orders — ops + support workflows</h2>
+        <div class="grid-2">
+          <div>
+            <table class="pretty compact-table">
+              <thead><tr><th>Tool</th><th>Role</th></tr></thead>
+              <tbody>
+                <tr><td><code>woo_orders_list</code></td><td>Queue by status / date / customer</td></tr>
+                <tr><td><code>woo_orders_get</code></td><td>Fulfillment detail</td></tr>
+                <tr><td><code>woo_orders_create</code></td><td>Agent-assisted checkout</td></tr>
+                <tr><td><code>woo_orders_update</code></td><td>Status transitions</td></tr>
+                <tr><td><code>woo_orders_notes_*</code></td><td>Support audit trail</td></tr>
+                <tr><td><code>woo_orders_batch</code></td><td>Mass complete / cancel</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <h3 class="h3-sm">Filter power on list</h3>
+            <ul class="compact">
+              <li><code>status</code> — e.g. <code>processing,on-hold</code></li>
+              <li><code>after</code> / <code>before</code> — ISO8601 range</li>
+              <li><code>customer</code> — customer ID</li>
+              <li><code>product</code> — orders containing product</li>
+            </ul>
+            <div class="callout warn">
+              Writes that change money/status should be confirmed with the human operator in production agents.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 13 — Resources & prompts
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Resources & prompts" aria-label="Resources and prompts">
+      <div class="slide-inner">
+        <p class="eyebrow">Functionality tour · 4</p>
+        <h2>Resources & prompt templates</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Resources (read-only context)</h3>
+            <dl class="dl">
+              <dt><code>woo://store/info</code></dt>
+              <dd>Name, URL, currency, timezone, WC/WP/PHP versions — ground the model before mutations.</dd>
+              <dt><code>woo://api/schema</code></dt>
+              <dd>Endpoint map + tool names so the model picks the right tool instead of inventing paths.</dd>
+            </dl>
+          </div>
+          <div class="card">
+            <h3>Prompts (reusable playbooks)</h3>
+            <dl class="dl">
+              <dt><code>store-audit</code></dt>
+              <dd>Missing images, short descriptions, no categories, zero stock, SEO issues.</dd>
+              <dt><code>order-report</code></dt>
+              <dd>Revenue, status breakdown, top sellers for a date range (default last 30 days).</dd>
+              <dt><code>inventory-check</code></dt>
+              <dd>Below-threshold stock, group by category, suggest reorder quantities.</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SLIDE 14 — Quality guarantees
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Quality" aria-label="Quality guarantees">
+      <div class="slide-inner">
+        <p class="eyebrow">Functionality tour · 5</p>
+        <h2>Quality guarantees for every tool</h2>
+        <div class="grid-2">
+          <ul class="check-list">
+            <li><strong>AI-friendly descriptions</strong> — what + when/why (≥ 2 sentences)</li>
+            <li><strong>Zod input</strong> — per-field descriptions & examples</li>
+            <li><strong>Zod output</strong> — response validated before return</li>
+            <li><strong>Pagination</strong> — <code>page</code>/<code>per_page</code> + <code>total</code>/<code>totalPages</code>/<code>currentPage</code></li>
+            <li><strong>Structured errors</strong> — MCP tool errors, not HTTP dumps</li>
+            <li><strong>Nullish param stripping</strong> — WC 10.x rejects empty enums (fixed live)</li>
+          </ul>
+          <div class="card good">
+            <h3>Live proof (Docker WC 10.9.3)</h3>
+            <ul class="compact">
+              <li>✓ Product list / search / CRUD</li>
+              <li>✓ Order create + note</li>
+              <li>✓ Customer create / search / delete</li>
+              <li>✓ store-info resource</li>
+              <li>✓ System status tool</li>
+            </ul>
+            <p class="muted">Hermetic suite: 59 tests · ~95% line coverage</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         USE CASES
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Use cases" aria-label="Use cases overview">
+      <div class="slide-inner center">
+        <p class="eyebrow">Scenarios</p>
+        <h1 class="h1-sm">How developers use this</h1>
+        <p class="lede">Six concrete scenarios — from support bots to catalog ops — with the tools and prompts each one needs.</p>
+        <div class="scenario-pills">
+          <span>1 · Support copilot</span>
+          <span>2 · Inventory ops</span>
+          <span>3 · Sales report agent</span>
+          <span>4 · Catalog SEO audit</span>
+          <span>5 · Bulk import pipeline</span>
+          <span>6 · Custom agent runtime</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- UC 1 -->
+    <section class="slide" data-title="UC: Support" aria-label="Use case support copilot">
+      <div class="slide-inner">
+        <p class="eyebrow">Use case 01 · Customer support</p>
+        <h2>Support copilot in Claude Desktop</h2>
+        <div class="persona">
+          <strong>Persona:</strong> Support lead · <strong>Goal:</strong> answer “Where is my order?” without logging into wp-admin
+        </div>
+        <div class="grid-2">
+          <div>
+            <h3 class="h3-sm">Conversation pattern</h3>
+            <ol class="compact-ol">
+              <li>Read <code>woo://store/info</code> for currency/context</li>
+              <li><code>woo_customers_search</code> with email fragment</li>
+              <li><code>woo_orders_list</code> filtered by <code>customer</code></li>
+              <li><code>woo_orders_get</code> for line items & status</li>
+              <li><code>woo_orders_notes_create</code> to log the interaction</li>
+            </ol>
+          </div>
+          <pre class="code-block"><code>User: "Order for jane@acme.com stuck?"
+
+Agent plan:
+  woo_customers_search { query: "jane@acme.com" }
+  woo_orders_list { customer: 12, status: "processing" }
+  woo_orders_get { id: 101 }
+  → "Order #101 is processing, 2 items,
+     total $49.98, placed 2024-06-01."
+  woo_orders_notes_create {
+    order_id: 101,
+    note: "Customer contacted via chat"
+  }</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- UC 2 -->
+    <section class="slide" data-title="UC: Inventory" aria-label="Use case inventory">
+      <div class="slide-inner">
+        <p class="eyebrow">Use case 02 · Merchandising / ops</p>
+        <h2>Low-stock inventory check</h2>
+        <div class="persona">
+          <strong>Persona:</strong> Ops engineer · <strong>Goal:</strong> weekly restock list grouped by category
+        </div>
+        <div class="grid-2">
+          <div>
+            <h3 class="h3-sm">Best path</h3>
+            <p>Invoke the built-in prompt template:</p>
+            <pre class="code-sm">prompts/get
+  name: inventory-check
+  arguments:
+    threshold: "5"
+    include_outofstock: "true"</pre>
+            <p class="muted">The prompt instructs the model to page products, list variations when needed, group by category, and suggest reorder qty.</p>
+          </div>
+          <div>
+            <h3 class="h3-sm">Tools under the hood</h3>
+            <ul class="compact">
+              <li><code>woo_products_list</code> + <code>stock_status</code></li>
+              <li><code>woo_variations_list</code> for variable parents</li>
+              <li><code>woo_categories_list</code> for labels</li>
+              <li>Optional: <code>woo_reports_top_sellers</code> to refine qty</li>
+            </ul>
+            <div class="callout">
+              Output: markdown table SKU · Name · Category · Stock · Suggested reorder · Product ID
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UC 3 -->
+    <section class="slide" data-title="UC: Sales report" aria-label="Use case sales report">
+      <div class="slide-inner">
+        <p class="eyebrow">Use case 03 · Analytics</p>
+        <h2>Monthly sales report agent</h2>
+        <div class="persona">
+          <strong>Persona:</strong> Founder / analyst · <strong>Goal:</strong> “How did we do last month?”
+        </div>
+        <div class="grid-2">
+          <div>
+            <h3 class="h3-sm">Prompt</h3>
+            <pre class="code-sm">prompts/get
+  name: order-report
+  arguments:
+    date_min: "2026-06-01"
+    date_max: "2026-06-30"
+    status: "completed,processing"</pre>
+            <h3 class="h3-sm top-gap-sm">Tools</h3>
+            <ul class="compact">
+              <li><code>woo_reports_sales</code></li>
+              <li><code>woo_reports_top_sellers</code></li>
+              <li><code>woo_reports_orders_totals</code></li>
+              <li>Optional deep dive: <code>woo_orders_list</code></li>
+            </ul>
+          </div>
+          <div class="card good">
+            <h3>Expected narrative</h3>
+            <ul class="compact">
+              <li>Total revenue & order count</li>
+              <li>Average order value</li>
+              <li>Status breakdown</li>
+              <li>Top 5 products by qty</li>
+              <li>Anomalies (refund spikes)</li>
+            </ul>
+            <p class="muted">Prompt forbids inventing numbers — only tool results.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UC 4 -->
+    <section class="slide" data-title="UC: SEO audit" aria-label="Use case SEO audit">
+      <div class="slide-inner">
+        <p class="eyebrow">Use case 04 · Catalog quality</p>
+        <h2>SEO & product quality audit</h2>
+        <div class="persona">
+          <strong>Persona:</strong> Growth engineer · <strong>Goal:</strong> find publish-ready products with bad SEO signals
+        </div>
+        <pre class="code-block"><code>prompts/get → store-audit
+  arguments: { sample_size: "50", focus: "seo" }
+
+// Model workflow encoded in the prompt:
+// 1. woo://store/info
+// 2. woo_products_list (paginate)
+// 3. Flag: no images, short_description &lt; 20 chars,
+//    no categories, stock 0 while publish, weak slugs
+// 4. Severity groups + prioritized fix list with product IDs
+// 5. Do NOT mutate unless user explicitly asks</code></pre>
+        <div class="callout">
+          After the human approves, the agent can call <code>woo_products_update</code> per ID — still tool-scoped, never a raw endpoint free-for-all.
+        </div>
+      </div>
+    </section>
+
+    <!-- UC 5 -->
+    <section class="slide" data-title="UC: Bulk import" aria-label="Use case bulk import">
+      <div class="slide-inner">
+        <p class="eyebrow">Use case 05 · Data engineering</p>
+        <h2>Bulk catalog import / price sync</h2>
+        <div class="persona">
+          <strong>Persona:</strong> Integration developer · <strong>Goal:</strong> sync 200 SKUs from ERP without 200 round-trips
+        </div>
+        <div class="grid-2">
+          <pre class="code-block"><code>woo_products_batch {
+  "create": [
+    { "name": "SKU-A", "regular_price": "10.00" },
+    { "name": "SKU-B", "regular_price": "12.00" }
+  ],
+  "update": [
+    { "id": 10, "regular_price": "31.00" }
+  ],
+  "delete": [ 999 ]
+}</code></pre>
+          <div>
+            <h3 class="h3-sm">Why batch matters</h3>
+            <ul class="compact">
+              <li>WC REST supports batch endpoints natively</li>
+              <li>Respects <code>WC_RATE_LIMIT_PER_SECOND</code> better than N creates</li>
+              <li>Same pattern: <code>woo_orders_batch</code> for mass status updates</li>
+            </ul>
+            <div class="callout warn">
+              Always dry-run on a staging/TasteWP/Docker store first — batch deletes are permanent when <code>force</code> is true.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UC 6 -->
+    <section class="slide" data-title="UC: Custom agent" aria-label="Use case custom agent">
+      <div class="slide-inner">
+        <p class="eyebrow">Use case 06 · Platform engineering</p>
+        <h2>Embed MCP in your own agent runtime</h2>
+        <p class="lede-sm">You are not limited to Claude Desktop. Any MCP client can connect over STDIO.</p>
+        <pre class="code-block"><code>import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+
+const transport = new StdioClientTransport({
+  command: "node",
+  args: ["./packages/mcp-server/dist/cli.js"],
+  env: {
+    ...process.env,
+    WC_URL: process.env.WC_URL!,
+    WC_KEY: process.env.WC_KEY!,
+    WC_SECRET: process.env.WC_SECRET!,
+  },
+});
+
+const client = new Client({ name: "my-agent", version: "1.0.0" });
+await client.connect(transport);
+
+const tools = await client.listTools();
+const result = await client.callTool({
+  name: "woo_products_list",
+  arguments: { per_page: 5 },
+});</code></pre>
+        <p class="note">In-memory transport is used in our Jest suite for the same protocol surface without spawning a process.</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Library vs MCP
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Library vs MCP" aria-label="When to use library vs MCP">
+      <div class="slide-inner">
+        <p class="eyebrow">Decision guide</p>
+        <h2>When to use the library vs the MCP server</h2>
+        <table class="pretty">
+          <thead>
+            <tr><th>Need</th><th>Use library directly</th><th>Use woo-mcp-server</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Backend service / worker</td>
+              <td class="yes">✓ typed TS imports</td>
+              <td>optional</td>
+            </tr>
+            <tr>
+              <td>AI agent / Claude / GPT tools</td>
+              <td>—</td>
+              <td class="yes">✓ designed for this</td>
+            </tr>
+            <tr>
+              <td>Fine-grained control of every request</td>
+              <td class="yes">✓</td>
+              <td>via purpose-built tools</td>
+            </tr>
+            <tr>
+              <td>Prompt playbooks & resources</td>
+              <td>—</td>
+              <td class="yes">✓</td>
+            </tr>
+            <tr>
+              <td>OAuth signing only</td>
+              <td class="yes">✓ core value</td>
+              <td>inherits automatically</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note">Both live in the same monorepo. MCP never forks the HTTP layer.</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Remaining domains cheat sheet
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Cheat sheet" aria-label="Full domain cheat sheet">
+      <div class="slide-inner">
+        <p class="eyebrow">Reference</p>
+        <h2>Remaining domains — quick cheat sheet</h2>
+        <div class="cheat">
+          <div><strong>customers</strong><span>list/get/create/update/delete/search</span></div>
+          <div><strong>coupons</strong><span>promo CRUD</span></div>
+          <div><strong>categories / tags</strong><span>taxonomy CRUD</span></div>
+          <div><strong>variations</strong><span>under <code>product_id</code></span></div>
+          <div><strong>shipping</strong><span>zones, methods, classes</span></div>
+          <div><strong>payments</strong><span>list/get/update gateways</span></div>
+          <div><strong>reports</strong><span>sales, top sellers, totals</span></div>
+          <div><strong>settings</strong><span>groups & options</span></div>
+          <div><strong>system-status</strong><span>health + maintenance tools</span></div>
+          <div><strong>webhooks</strong><span>event subscriptions</span></div>
+          <div><strong>tax</strong><span>rates & classes</span></div>
+        </div>
+        <p class="muted top-gap">Full tables: <code>packages/mcp-server/README.md</code> · interactive: <a href="./index.html">tool explorer</a></p>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Live results
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Live results" aria-label="Live test results">
+      <div class="slide-inner">
+        <p class="eyebrow">Evidence</p>
+        <h2>How far we proved MCP integration</h2>
+        <div class="grid-2">
+          <div class="card good">
+            <h3>Live Docker store</h3>
+            <ul class="compact">
+              <li>WordPress <strong>7.0</strong></li>
+              <li>WooCommerce <strong>10.9.3</strong></li>
+              <li>PHP <strong>8.2</strong> · currency USD</li>
+              <li>OAuth 1.0a over <code>http://127.0.0.1:8088</code></li>
+              <li><strong>8/8</strong> live MCP tests green</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Hermetic CI suite</h3>
+            <ul class="compact">
+              <li>59 unit/integration tests (nock)</li>
+              <li>~95% line coverage on mcp-server</li>
+              <li>In-memory MCP client ↔ server</li>
+              <li>Live suite opt-in via <code>LIVE_WC=1</code></li>
+            </ul>
+          </div>
+        </div>
+        <pre class="code-block"><code>LIVE products: 12:Green Mug, 11:Red Hat, 10:Blue T-Shirt
+LIVE store-info: { woocommerce_version: "10.9.3", currency: "USD", … }</code></pre>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         File map
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Repo map" aria-label="Repository map">
+      <div class="slide-inner">
+        <p class="eyebrow">Navigate the code</p>
+        <h2>Where everything lives</h2>
+        <pre class="code-block tree"><code>woocommerce-rest-api-ts-lib/
+├── src/                          # existing library (do not rewrite for MCP)
+├── packages/mcp-server/
+│   ├── src/server.ts             # STDIO bootstrap
+│   ├── src/cli.ts                # bin: woo-mcp-server
+│   ├── src/config.ts             # env validation
+│   ├── src/client.ts             # rate limit + clean params
+│   ├── src/tools/*.ts            # one file per domain
+│   ├── src/resources/            # store-info, api-schema
+│   ├── src/prompts/              # audit, report, inventory
+│   ├── tests/integration/
+│   │   ├── e2e.test.ts           # hermetic MCP protocol
+│   │   └── live-store.test.ts    # real WC (LIVE_WC=1)
+│   └── README.md                 # full tool reference
+├── scripts/live-wc/              # free Docker store + bootstrap
+└── ui/
+    ├── presentation.html         # this deck
+    └── index.html                # interactive tool explorer</code></pre>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Closing
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="slide" data-title="Next steps" aria-label="Next steps">
+      <div class="slide-inner center">
+        <p class="eyebrow">Ship it</p>
+        <h1 class="h1-sm">Next steps for developers</h1>
+        <div class="next-grid">
+          <a class="next-card" href="./index.html">
+            <strong>Open tool explorer</strong>
+            <span>Search tools · mock tester · config generator</span>
+          </a>
+          <div class="next-card static">
+            <strong>Run live suite</strong>
+            <span><code>LIVE_WC=1</code> + Docker store</span>
+          </div>
+          <div class="next-card static">
+            <strong>Point Claude Desktop</strong>
+            <span><code>npx woo-mcp-server</code> + env</span>
+          </div>
+          <div class="next-card static">
+            <strong>Read package README</strong>
+            <span><code>packages/mcp-server/README.md</code></span>
+          </div>
+        </div>
+        <p class="lede top-gap">
+          <strong>MCP turns WooCommerce into an AI-native control plane</strong> —
+          without giving models a raw HTTP free-for-all.
+        </p>
+        <p class="hint">← → navigate · <kbd>O</kbd> overview · <kbd>F</kbd> fullscreen</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Nav controls -->
+  <nav class="deck-nav" aria-label="Slide navigation">
+    <button type="button" id="btn-prev" class="nav-btn" aria-label="Previous slide">←</button>
+    <button type="button" id="btn-overview" class="nav-btn ghost" aria-label="Overview of all slides">Overview</button>
+    <button type="button" id="btn-next" class="nav-btn" aria-label="Next slide">→</button>
+  </nav>
+
+  <!-- Overview grid (Esc / O) -->
+  <div id="overview" class="overview hidden" role="dialog" aria-label="Slide overview" aria-modal="true" hidden></div>
+
+  <script src="./presentation.js" defer></script>
+</body>
+</html>
