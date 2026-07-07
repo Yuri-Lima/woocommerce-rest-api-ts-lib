@@ -6,7 +6,8 @@ const config: Config = {
   preset: "ts-jest",
   testEnvironment: "node",
   verbose: true,
-  maxWorkers: (os.cpus().length - 1) / 2, // 50% of the available cores
+  // nock interceptors are process-global; parallel workers race and drop mocks in CI.
+  maxWorkers: 1,
   detectOpenHandles: false, // Detects when a test leaves something behind that it shouldn't
   testMatch: ["**/test/test.ts", "**/test/wc.test.ts", "**/test/*.test.ts"],
   testPathIgnorePatterns: ["node_modules", "dist"],
