@@ -16,7 +16,7 @@ A modern, type-safe TypeScript client for the [WooCommerce REST API](https://woo
 | Package | Role |
 |---------|------|
 | [`woocommerce-rest-ts-api`](https://www.npmjs.com/package/woocommerce-rest-ts-api) | Typed HTTP client (OAuth 1.0a, retries, throttling, ESM + CJS) |
-| [`woo-mcp-server`](./packages/mcp-server/README.md) | MCP STDIO server — 60+ tools, resources, prompts for Claude / agents |
+| [`woo-mcp-server`](./packages/mcp-server/README.md) | MCP STDIO server — 80+ tools, resources, prompts, token usage for Claude / agents |
 
 ---
 
@@ -60,11 +60,21 @@ Release both: `pnpm run publish:packages` (or GitHub Action **Release npm packag
 
 **Highlights**
 
-- 60+ purpose-built tools (`woo_products_list`, `woo_orders_get`, …) with Zod I/O validation  
+- 80+ purpose-built tools (`woo_products_list`, `woo_orders_get`, refunds, reviews, …) with Zod I/O validation  
+- **Always-on token usage** — every tool result includes estimated payload tokens; hosts can record LLM rounds and audit with `woo_usage_stats`  
 - Resources: `woo://store/info`, `woo://api/schema`  
 - Prompts: `store-audit`, `order-report`, `inventory-check`  
 - Rate limiting, fail-fast env config, structured errors  
 - Live-tested on WooCommerce **10.9.3** (Docker stack under `scripts/live-wc/`)
+
+**Token usage (summary)** — full guide: [packages/mcp-server/README.md#token-usage](./packages/mcp-server/README.md#token-usage)
+
+| What | How |
+|------|-----|
+| Tool response cost | Every JSON tool result includes `usage.estimated_response_tokens` (+ `_meta["woo.usage"]`) |
+| Host model (Claude/GPT) cost | Call `woo_model_usage_record` after each API round, or use exported `ModelUsageTracker` |
+| Session audit | `woo_usage_stats` returns tool + model totals for the process |
+| Low-cost Anthropic smoke | `node packages/mcp-server/scripts/anthropic-mcp-smoke.mjs` (always prints token totals) |
 
 **Full package docs:** [packages/mcp-server/README.md](./packages/mcp-server/README.md)
 
