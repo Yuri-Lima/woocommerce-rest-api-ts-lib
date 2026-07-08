@@ -57,6 +57,7 @@
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.cjs --coverage",
     "test:unit": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.cjs --testPathPattern=tests/tools",
     "start": "node dist/cli.js",
+    "bench:perf": "node scripts/bench-perf.mjs",
     "clean": "rm -rf dist coverage",
     "prepublishOnly": "pnpm run build",
     "prepack": "pnpm run build"

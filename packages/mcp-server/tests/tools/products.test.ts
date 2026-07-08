@@ -39,6 +39,40 @@ describe("product tools", () => {
     expect((data as { items: unknown[] }).items).toHaveLength(2);
   });
 
+  it("woo_products_list default summary sends _fields projection", async () => {
+    nock(TEST_BASE)
+      .get(apiPath("/products"))
+      .query((q) => typeof q._fields === "string" && String(q._fields).includes("id"))
+      .reply(200, [{ id: 1, name: "Slim", price: "9.99" }], {
+        "x-wp-total": "1",
+        "x-wp-totalpages": "1",
+      });
+
+    const { data, isError } = await callTool(ctx.client, "woo_products_list", {
+      page: 1,
+      per_page: 5,
+    });
+    expect(isError).toBe(false);
+    expect((data as { items: unknown[] }).items[0]).toMatchObject({ id: 1 });
+  });
+
+  it("woo_products_list detail=full omits _fields", async () => {
+    nock(TEST_BASE)
+      .get(apiPath("/products"))
+      .query((q) => q._fields === undefined)
+      .reply(200, products, {
+        "x-wp-total": "2",
+        "x-wp-totalpages": "1",
+      });
+
+    const { isError } = await callTool(ctx.client, "woo_products_list", {
+      page: 1,
+      per_page: 10,
+      detail: "full",
+    });
+    expect(isError).toBe(false);
+  });
+
   it("woo_products_get returns a single product", async () => {
     nock(TEST_BASE)
       .get(apiPath("/products/1"))

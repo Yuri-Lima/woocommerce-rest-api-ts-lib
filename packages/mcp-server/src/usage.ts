@@ -73,7 +73,12 @@ export interface ModelUsageReport {
   totals: ModelUsageTotals;
 }
 
-const MAX_RECENT = 50;
+/** Ring-buffer size for recent tool payloads (keeps session memory bounded). */
+const MAX_RECENT = 20;
+/** Cap stored host model reports (each may hold many rounds). */
+const MAX_MODEL_REPORTS = 10;
+/** Cap rounds retained inside a single ModelUsageTracker instance. */
+const MAX_MODEL_ROUNDS = 40;
 
 /** Process-wide session counters for this MCP server instance. */
 class UsageSession {
@@ -109,8 +114,17 @@ class UsageSession {
   }
 
   recordModelReport(report: ModelUsageReport): void {
-    this.modelReports.push(report);
-    if (this.modelReports.length > 20) this.modelReports.shift();
+    // Store a shallow copy with capped rounds so long agent loops cannot
+    // retain unbounded history in the MCP process heap.
+    const capped: ModelUsageReport = {
+      ...report,
+      rounds:
+        report.rounds.length > MAX_MODEL_ROUNDS
+          ? report.rounds.slice(-MAX_MODEL_ROUNDS)
+          : report.rounds,
+    };
+    this.modelReports.push(capped);
+    if (this.modelReports.length > MAX_MODEL_REPORTS) this.modelReports.shift();
   }
 
   snapshot(): {
@@ -233,7 +247,10 @@ function mergeModelTotals(into: ModelUsageTotals, add: ModelUsageTotals): void {
  */
 export class ModelUsageTracker {
   private rounds: ModelRoundUsage[] = [];
+  /** Totals kept separately so ring-buffering rounds does not lose aggregate counts. */
+  private running = emptyModelTotals();
   private readonly provider: string;
+  private finalized = false;
 
   constructor(provider = "anthropic") {
     this.provider = provider;
@@ -242,6 +259,7 @@ export class ModelUsageTracker {
   /**
    * Record one model API response.
    * Accepts Anthropic (`input_tokens`/`output_tokens`) shapes.
+   * Rounds are ring-buffered (MAX_MODEL_ROUNDS) while totals stay exact.
    */
   addRound(
     usage: {
@@ -260,7 +278,7 @@ export class ModelUsageTracker {
     const output =
       usage?.output_tokens ?? usage?.completion_tokens ?? 0;
     const round: ModelRoundUsage = {
-      round: this.rounds.length + 1,
+      round: this.running.rounds + 1,
       model: options.model,
       input_tokens: Number(input) || 0,
       output_tokens: Number(output) || 0,
@@ -269,38 +287,55 @@ export class ModelUsageTracker {
       stop_reason: options.stop_reason ?? null,
     };
     this.rounds.push(round);
+    if (this.rounds.length > MAX_MODEL_ROUNDS) this.rounds.shift();
+
+    this.running.rounds += 1;
+    this.running.input_tokens += round.input_tokens;
+    this.running.output_tokens += round.output_tokens;
+    this.running.cache_creation_input_tokens +=
+      round.cache_creation_input_tokens ?? 0;
+    this.running.cache_read_input_tokens += round.cache_read_input_tokens ?? 0;
+    this.running.total_tokens =
+      this.running.input_tokens + this.running.output_tokens;
+    const model = round.model || "unknown";
+    const cur = this.running.by_model[model] ?? {
+      rounds: 0,
+      input_tokens: 0,
+      output_tokens: 0,
+      total_tokens: 0,
+    };
+    cur.rounds += 1;
+    cur.input_tokens += round.input_tokens;
+    cur.output_tokens += round.output_tokens;
+    cur.total_tokens += round.input_tokens + round.output_tokens;
+    this.running.by_model[model] = cur;
+
     return round;
   }
 
   finalize(): ModelUsageReport {
-    const totals = emptyModelTotals();
-    totals.rounds = this.rounds.length;
-    for (const r of this.rounds) {
-      totals.input_tokens += r.input_tokens;
-      totals.output_tokens += r.output_tokens;
-      totals.cache_creation_input_tokens += r.cache_creation_input_tokens ?? 0;
-      totals.cache_read_input_tokens += r.cache_read_input_tokens ?? 0;
-      const model = r.model || "unknown";
-      const cur = totals.by_model[model] ?? {
-        rounds: 0,
-        input_tokens: 0,
-        output_tokens: 0,
-        total_tokens: 0,
-      };
-      cur.rounds += 1;
-      cur.input_tokens += r.input_tokens;
-      cur.output_tokens += r.output_tokens;
-      cur.total_tokens += r.input_tokens + r.output_tokens;
-      totals.by_model[model] = cur;
+    // Idempotent: hosts sometimes call finalize more than once; only record once.
+    const byModel: ModelUsageTotals["by_model"] = {};
+    for (const [model, stats] of Object.entries(this.running.by_model)) {
+      byModel[model] = { ...stats };
     }
-    totals.total_tokens = totals.input_tokens + totals.output_tokens;
-
     const report: ModelUsageReport = {
       provider: this.provider,
       rounds: [...this.rounds],
-      totals,
+      totals: {
+        rounds: this.running.rounds,
+        input_tokens: this.running.input_tokens,
+        output_tokens: this.running.output_tokens,
+        cache_creation_input_tokens: this.running.cache_creation_input_tokens,
+        cache_read_input_tokens: this.running.cache_read_input_tokens,
+        total_tokens: this.running.total_tokens,
+        by_model: byModel,
+      },
     };
-    usageSession.recordModelReport(report);
+    if (!this.finalized) {
+      this.finalized = true;
+      usageSession.recordModelReport(report);
+    }
     return report;
   }
 }
