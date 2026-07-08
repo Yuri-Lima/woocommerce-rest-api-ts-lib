@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Publish both monorepo packages to npm as separate packages, in order:
-#   1) woocommerce-rest-ts-api  (root library)
-#   2) woo-mcp-server           (MCP server; depends on the library)
+# Publish monorepo packages to npm as separate packages, in order:
+#   1) woocommerce-rest-ts-api  (root library — admin wc/v3)
+#   2) woo-store-ts-api         (Store API client — cart/checkout)
+#   3) woo-mcp-server           (MCP server; depends on the admin library)
 #
 # Usage:
 #   bash scripts/publish-packages.sh
 #   DRY_RUN=1 bash scripts/publish-packages.sh
-#   SKIP_LIBRARY=1 | SKIP_MCP=1 | SKIP_TESTS=1 | SKIP_BUILD=1
+#   SKIP_LIBRARY=1 | SKIP_STORE=1 | SKIP_MCP=1 | SKIP_TESTS=1 | SKIP_BUILD=1
 #
 # Auth: NODE_AUTH_TOKEN or NPM_TOKEN (npm automation token for owner yurimlima).
 set -euo pipefail
@@ -16,11 +17,13 @@ cd "${ROOT}"
 
 DRY_RUN="${DRY_RUN:-0}"
 SKIP_LIBRARY="${SKIP_LIBRARY:-0}"
+SKIP_STORE="${SKIP_STORE:-0}"
 SKIP_MCP="${SKIP_MCP:-0}"
 SKIP_TESTS="${SKIP_TESTS:-0}"
 SKIP_BUILD="${SKIP_BUILD:-0}"
 
 LIBRARY_NAME="woocommerce-rest-ts-api"
+STORE_NAME="woo-store-ts-api"
 MCP_NAME="woo-mcp-server"
 
 log() { printf '\n\033[1;36m==>\033[0m %s\n' "$*"; }
@@ -79,6 +82,62 @@ publish_library() {
   npm publish --access public --registry https://registry.npmjs.org/
 
   verify_published "${LIBRARY_NAME}" "${version}"
+}
+
+# Shared helper for packages/* that publish dist + package.json (no workspace rewrite).
+publish_workspace_package() {
+  local name="$1"
+  local dir="$2"
+  local version
+  version="$(pkg_version "${dir}")"
+  log "Package ${name}@${version}"
+
+  if already_published "${name}" "${version}"; then
+    warn "${name}@${version} already on npm — skipping."
+    return 0
+  fi
+
+  if [[ ! -d "${dir}/dist" ]]; then
+    pnpm --filter "${name}" build
+  fi
+
+  if [[ "${DRY_RUN}" == "1" ]]; then
+    log "DRY_RUN: pnpm pack (${name})"
+    (cd "${dir}" && pnpm pack)
+    local tgz
+    tgz="$(ls -1 "${dir}/${name}-${version}.tgz" 2>/dev/null | head -1 || true)"
+    if [[ -n "${tgz}" ]]; then
+      tar -tzf "${tgz}" | head -30
+      rm -f "${tgz}"
+    fi
+    return 0
+  fi
+
+  local tmp_dir
+  tmp_dir="$(mktemp -d)"
+  cp "${dir}/package.json" "${tmp_dir}/"
+  [[ -f "${dir}/README.md" ]] && cp "${dir}/README.md" "${tmp_dir}/"
+  [[ -f "${dir}/LICENSE" ]] && cp "${dir}/LICENSE" "${tmp_dir}/"
+  cp -R "${dir}/dist" "${tmp_dir}/"
+
+  # Drop scripts from published package.json (prepublishOnly would re-run monorepo build)
+  node -e "
+const fs = require('fs');
+const pkgPath = process.argv[1];
+const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+delete pkg.scripts;
+fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+" "${tmp_dir}/package.json"
+
+  log "Publishing ${name}@${version} …"
+  (cd "${tmp_dir}" && npm publish --access public --registry https://registry.npmjs.org/)
+  rm -rf "${tmp_dir}"
+
+  verify_published "${name}" "${version}"
+}
+
+publish_store() {
+  publish_workspace_package "${STORE_NAME}" "${ROOT}/packages/store-api"
 }
 
 publish_mcp() {
@@ -167,7 +226,7 @@ if [[ "${SKIP_BUILD}" != "1" ]]; then
   log "Install (frozen)"
   pnpm install --frozen-lockfile
 
-  log "Build library + MCP server"
+  log "Build library + store-api + MCP server"
   pnpm run build
 fi
 
@@ -187,6 +246,12 @@ else
   warn "Skipping library publish (SKIP_LIBRARY=1)"
 fi
 
+if [[ "${SKIP_STORE}" != "1" ]]; then
+  publish_store
+else
+  warn "Skipping Store API publish (SKIP_STORE=1)"
+fi
+
 if [[ "${SKIP_MCP}" != "1" ]]; then
   publish_mcp
 else
@@ -196,5 +261,6 @@ fi
 log "Done."
 printf '\nConsumers:\n'
 printf '  npm i %s@%s\n' "${LIBRARY_NAME}" "$(pkg_version "${ROOT}")"
+printf '  npm i %s@%s\n' "${STORE_NAME}" "$(pkg_version "${ROOT}/packages/store-api")"
 printf '  npm i -g %s@%s\n' "${MCP_NAME}" "$(pkg_version "${ROOT}/packages/mcp-server")"
 printf '  npx -y %s\n\n' "${MCP_NAME}"

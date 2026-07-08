@@ -29,7 +29,7 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies (frozen)
         run: pnpm install --frozen-lockfile
-      - name: Build (library + mcp-server)
+      - name: Build (library + store-api + mcp-server)
         run: pnpm run build
       - name: Typecheck
         run: pnpm run typecheck

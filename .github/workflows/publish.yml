@@ -30,7 +30,7 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies (frozen)
         run: pnpm install --frozen-lockfile
-      - name: Build (library + mcp-server)
+      - name: Build (library + store-api + mcp-server)
         run: pnpm run build
       - name: Typecheck
         run: pnpm run typecheck
@@ -38,9 +38,10 @@ jobs:
         run: pnpm run lint
       - name: Test
         run: pnpm test
-      # Dual-package release on main:
+      # Triple-package release on main:
       # 1) semantic-release bumps/publishes the root library from conventional commits
-      # 2) publish-packages publishes any versions not yet on npm (library + woo-mcp-server)
+      # 2) publish-packages publishes any versions not yet on npm:
+      #    woocommerce-rest-ts-api + woo-store-ts-api + woo-mcp-server
       - name: Release library (semantic-release, main only)
         if: github.ref == 'refs/heads/main'
         run: pnpm run semantic-release
@@ -48,7 +49,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish monorepo packages (library + MCP if not already on npm)
+      - name: Publish monorepo packages (library + store + MCP if not already on npm)
         if: github.ref == 'refs/heads/main'
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
