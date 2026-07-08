@@ -45,7 +45,7 @@ Or open the static files directly:
 
 ## Features
 
-- **60+ purpose-built tools** — `woo_{resource}_{action}` naming (no catch-all HTTP free-for-all)
+- **80+ purpose-built tools** — `woo_{resource}_{action}` naming (no catch-all HTTP free-for-all)
 - **Zod input + output validation** on every tool
 - **Pagination metadata** (`total`, `totalPages`, `currentPage`) on list tools
 - **Search tools** for products and customers; rich order filters
@@ -217,6 +217,10 @@ Naming: `woo_{resource}_{action}`. Every tool description is multi-sentence (wha
 | `woo_orders_delete` | Delete order | `id` |
 | `woo_orders_notes_list` | List order notes | `order_id` |
 | `woo_orders_notes_create` | Add order note | `order_id`, `note` |
+| `woo_orders_refunds_list` | List refunds for an order | `order_id` |
+| `woo_orders_refunds_get` | Get a single refund | `order_id`, `id` |
+| `woo_orders_refunds_create` | Create full/partial refund | `order_id` (+ optional `amount`, `reason`, `line_items`) |
+| `woo_orders_refunds_delete` | Delete a refund record | `order_id`, `id` |
 | `woo_orders_batch` | Batch order operations | create/update/delete arrays |
 
 ### Customers
@@ -239,6 +243,16 @@ Naming: `woo_{resource}_{action}`. Every tool description is multi-sentence (wha
 | `woo_coupons_create` | Create coupon | `code` |
 | `woo_coupons_update` | Update coupon | `id`, `data` |
 | `woo_coupons_delete` | Delete coupon | `id` |
+
+### Reviews
+
+| Tool | Description | Required |
+|------|-------------|---------|
+| `woo_reviews_list` | List product reviews | — |
+| `woo_reviews_get` | Get review | `id` |
+| `woo_reviews_create` | Create review | `product_id`, `review`, `reviewer`, `reviewer_email` |
+| `woo_reviews_update` | Update review | `id`, `data` |
+| `woo_reviews_delete` | Delete review | `id` |
 
 ### Categories & tags
 
@@ -294,6 +308,8 @@ Naming: `woo_{resource}_{action}`. Every tool description is multi-sentence (wha
 | System status | `woo_system_status_get`, `woo_system_status_tools_list`, `woo_system_status_tools_run` |
 | Webhooks | `woo_webhooks_list` / `get` / `create` / `update` / `delete` |
 | Tax | `woo_tax_rates_*`, `woo_tax_classes_list` / `get` |
+| Reviews | `woo_reviews_list` / `get` / `create` / `update` / `delete` |
+| Usage | `woo_usage_stats`, `woo_model_usage_record` — tool payload + model token usage |
 
 ---
 

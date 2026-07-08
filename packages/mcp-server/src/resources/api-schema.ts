@@ -37,6 +37,7 @@ export const WC_API_SCHEMA = {
       methods: ["GET", "POST", "PUT", "DELETE"],
       batch: "/orders/batch",
       notes: "/orders/{id}/notes",
+      refunds: "/orders/{id}/refunds",
       filters: ["status", "customer", "after", "before", "product"],
       tools: [
         "woo_orders_list",
@@ -47,7 +48,32 @@ export const WC_API_SCHEMA = {
         "woo_orders_notes_list",
         "woo_orders_notes_create",
         "woo_orders_batch",
+        "woo_orders_refunds_list",
+        "woo_orders_refunds_get",
+        "woo_orders_refunds_create",
+        "woo_orders_refunds_delete",
       ],
+    },
+    {
+      resource: "reviews",
+      path: "/products/reviews",
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      filters: ["product", "status", "reviewer"],
+      tools: [
+        "woo_reviews_list",
+        "woo_reviews_get",
+        "woo_reviews_create",
+        "woo_reviews_update",
+        "woo_reviews_delete",
+      ],
+    },
+    {
+      resource: "usage",
+      path: null,
+      methods: [],
+      description:
+        "Session usage: estimated tool-response tokens on every tool result, plus recorded host model (LLM) token totals.",
+      tools: ["woo_usage_stats", "woo_model_usage_record"],
     },
     {
       resource: "customers",

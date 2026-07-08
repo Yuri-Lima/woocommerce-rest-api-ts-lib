@@ -19,6 +19,8 @@ import { registerSettingsTools } from "./tools/settings.js";
 import { registerSystemStatusTools } from "./tools/system-status.js";
 import { registerWebhookTools } from "./tools/webhooks.js";
 import { registerTaxTools } from "./tools/tax.js";
+import { registerReviewTools } from "./tools/reviews.js";
+import { registerUsageTools } from "./tools/usage.js";
 
 import { registerStoreInfoResource } from "./resources/store-info.js";
 import { registerApiSchemaResource } from "./resources/api-schema.js";
@@ -45,6 +47,8 @@ export const TOOL_DOMAINS = [
   "system-status",
   "webhooks",
   "tax",
+  "reviews",
+  "usage",
 ] as const;
 
 export type ToolDomain = (typeof TOOL_DOMAINS)[number];
@@ -68,6 +72,8 @@ export function registerAll(server: McpServer, client: WooClient): void {
   registerSystemStatusTools(server, client);
   registerWebhookTools(server, client);
   registerTaxTools(server, client);
+  registerReviewTools(server, client);
+  registerUsageTools(server);
 
   // Resources
   registerStoreInfoResource(server, client);

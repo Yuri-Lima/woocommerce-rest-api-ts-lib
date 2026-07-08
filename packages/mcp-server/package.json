@@ -1,7 +1,7 @@
 {
   "name": "woo-mcp-server",
   "version": "1.0.0",
-  "description": "Model Context Protocol (MCP) server for WooCommerce — 60+ tools, resources, and prompts for AI agents",
+  "description": "Model Context Protocol (MCP) server for WooCommerce — 80+ tools, resources, and prompts for AI agents",
   "author": "Yuri Lima",
   "license": "MIT",
   "type": "module",

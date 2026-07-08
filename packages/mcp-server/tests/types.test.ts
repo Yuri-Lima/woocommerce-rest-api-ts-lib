@@ -34,8 +34,10 @@ describe("types helpers", () => {
     expect(parsed.delete).toEqual([2, 3]);
   });
 
-  it("textContent serializes objects", () => {
+  it("textContent serializes objects and includes usage", () => {
     const c = textContent({ ok: true });
     expect(c.content[0].text).toMatch(/"ok": true/);
+    expect(c.content[0].text).toMatch(/"usage"/);
+    expect(c._meta?.["woo.usage"].estimated_response_tokens).toBeGreaterThan(0);
   });
 });

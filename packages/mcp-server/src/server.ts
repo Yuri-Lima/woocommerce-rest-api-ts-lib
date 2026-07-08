@@ -73,4 +73,17 @@ export async function startServer(): Promise<CreatedServer> {
 }
 
 export { loadConfig, createWooClient, registerAll };
+export {
+  ModelUsageTracker,
+  usageSession,
+  estimateTokensFromText,
+  buildToolPayloadUsage,
+} from "./usage.js";
 export type { McpConfig, WooClient };
+export type {
+  ModelUsageReport,
+  ModelUsageTotals,
+  ModelRoundUsage,
+  SessionToolUsage,
+  ToolPayloadUsage,
+} from "./usage.js";
