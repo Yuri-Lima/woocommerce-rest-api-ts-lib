@@ -1,0 +1,70 @@
+{
+  "name": "woo-store-ts-api",
+  "version": "1.0.0",
+  "description": "TypeScript client for the WooCommerce Store API (wc/store/v1) — cart, checkout, and storefront catalog. Separate from the admin REST client (woocommerce-rest-ts-api).",
+  "author": "Yuri Lima",
+  "license": "MIT",
+  "type": "module",
+  "private": false,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib.git",
+    "directory": "packages/store-api"
+  },
+  "homepage": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/tree/main/packages/store-api#readme",
+  "bugs": {
+    "url": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/issues"
+  },
+  "keywords": [
+    "woocommerce",
+    "store-api",
+    "cart",
+    "checkout",
+    "headless",
+    "typescript",
+    "wc/store"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.cjs --coverage",
+    "clean": "rm -rf dist coverage",
+    "prepublishOnly": "pnpm run build",
+    "prepack": "pnpm run build"
+  },
+  "dependencies": {
+    "axios": "^1.18.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.10.0",
+    "jest": "^30.0.3",
+    "nock": "13.5.6",
+    "ts-jest": "^29.4.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
+  }
+}

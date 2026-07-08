@@ -3,6 +3,7 @@
 ![npm](https://img.shields.io/npm/dt/woocommerce-rest-ts-api)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![MCP](https://img.shields.io/badge/MCP-woo--mcp--server-5b9dff)](./packages/mcp-server/README.md)
+[![Store API](https://img.shields.io/badge/Store%20API-woo--store--ts--api-7c3aed)](./packages/store-api/README.md)
 [![Known Vulnerabilities](https://snyk.io/test/github/Yuri-Lima/woocommerce-rest-api-ts-lib/badge.svg?targetFile=package.json)](https://snyk.io/test/github/Yuri-Lima/woocommerce-rest-api-ts-lib?targetFile=package.json)
 
 <div align="center" width="100%">
@@ -11,12 +12,17 @@
 
 # WooCommerce REST API — TypeScript Library
 
-A modern, type-safe TypeScript client for the [WooCommerce REST API](https://woocommerce.github.io/woocommerce-rest-api-docs/), plus an optional **Model Context Protocol (MCP) server** so AI agents can operate a store through validated tools.
+A modern, type-safe TypeScript monorepo for WooCommerce:
 
-| Package | Role |
-|---------|------|
-| [`woocommerce-rest-ts-api`](https://www.npmjs.com/package/woocommerce-rest-ts-api) | Typed HTTP client (OAuth 1.0a, retries, throttling, ESM + CJS) |
-| [`woo-mcp-server`](./packages/mcp-server/README.md) | MCP STDIO server — 80+ tools, resources, prompts, token usage for Claude / agents |
+- **Admin REST** client (`wc/v3`) for back-office / ERP / automation  
+- **Store API** client (`wc/store/v1`) for headless cart, checkout, and catalog  
+- **MCP server** so AI agents can operate a store through validated admin tools  
+
+| Package | Role | Auth |
+|---------|------|------|
+| [`woocommerce-rest-ts-api`](https://www.npmjs.com/package/woocommerce-rest-ts-api) | Typed **admin** REST client `wc/v3` (OAuth 1.0a, retries, throttling, ESM + CJS) | Consumer key + secret |
+| [`woo-store-ts-api`](./packages/store-api/README.md) | Typed **Store API** client `wc/store/v1` (cart, checkout, storefront catalog) | **Cart-Token** / Nonce (no API keys) |
+| [`woo-mcp-server`](./packages/mcp-server/README.md) | MCP STDIO server — 80+ tools, resources, prompts, token usage for Claude / agents | Same as admin library |
 
 ---
 
@@ -49,23 +55,27 @@ export WC_URL=https://mystore.com WC_KEY=ck_… WC_SECRET=cs_…
 npx -y woo-mcp-server
 ```
 
-Published packages (separate):
+Published packages (separate npm names):
 
 | Package | npm | Role |
 |---------|-----|------|
-| `woocommerce-rest-ts-api` | [npm](https://www.npmjs.com/package/woocommerce-rest-ts-api) | Typed REST client |
+| `woocommerce-rest-ts-api` | [npm](https://www.npmjs.com/package/woocommerce-rest-ts-api) | Admin REST `wc/v3` |
+| `woo-store-ts-api` | [packages/store-api](./packages/store-api/README.md) | Store API `wc/store/v1` (cart / checkout) |
 | `woo-mcp-server` | [npm](https://www.npmjs.com/package/woo-mcp-server) | MCP STDIO server for AI agents |
 
-Release both: `pnpm run publish:packages` (or GitHub Action **Release npm packages**).
+Release: `pnpm run publish:packages` (or GitHub Action **Release npm packages**).
 
 **Highlights**
 
 - 80+ purpose-built tools (`woo_products_list`, `woo_orders_get`, refunds, reviews, …) with Zod I/O validation  
 - **Always-on token usage** — every tool result includes estimated payload tokens; hosts can record LLM rounds and audit with `woo_usage_stats`  
+- **Lean agent payloads** — compact JSON, list `detail=summary` (`_fields`), slim system status, bounded error/usage memory  
+- **Single rate limiter** — token bucket via `WC_RATE_LIMIT_PER_SECOND` (no double-throttle with the REST library)  
 - Resources: `woo://store/info`, `woo://api/schema`  
 - Prompts: `store-audit`, `order-report`, `inventory-check`  
-- Rate limiting, fail-fast env config, structured errors  
-- Live-tested on WooCommerce **10.9.3** (Docker stack under `scripts/live-wc/`)
+- Fail-fast env config, structured errors  
+- Live-tested on WooCommerce **10.9.3** (Docker stack under `scripts/live-wc/`)  
+- Perf proof: `pnpm --filter woo-mcp-server bench:perf`
 
 **Token usage (summary)** — full guide: [packages/mcp-server/README.md#token-usage](./packages/mcp-server/README.md#token-usage)
 
@@ -98,6 +108,133 @@ Release both: `pnpm run publish:packages` (or GitHub Action **Release npm packag
 ```
 
 </details>
+
+---
+
+## Store API client (`woo-store-ts-api`)
+
+Headless / storefront traffic uses a **different** WooCommerce surface than admin REST. This monorepo ships a dedicated client so concerns stay cleanly separated.
+
+| | Admin (`woocommerce-rest-ts-api`) | Store (`woo-store-ts-api`) |
+|--|----------------------------------|----------------------------|
+| Namespace | `wc/v3` | `wc/store/v1` |
+| Auth | Consumer key + secret (OAuth) | **Cart-Token** (preferred) or Nonce |
+| Audience | Back-office, ERP, MCP | Storefront, mobile, BFF |
+| Typical ops | Products CRUD, orders, refunds, settings | Cart, coupons, shipping rates, checkout, catalog |
+| Types | Admin product/order models | `StoreCart`, `StoreProduct`, `StoreCheckout`, … |
+
+**Full package docs:** [packages/store-api/README.md](./packages/store-api/README.md)  
+**Store API reference (endpoints, tokens):** [docs/STORE_API.md](./docs/STORE_API.md)  
+**Design / issue:** [#62](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/issues/62)
+
+### Install & quick start
+
+```bash
+pnpm add woo-store-ts-api
+# monorepo: pnpm --filter woo-store-ts-api build
+```
+
+```ts
+import { WooCommerceStoreApi, StoreApiError } from "woo-store-ts-api";
+
+const store = new WooCommerceStoreApi({
+  url: "https://shop.example",
+  // cartToken: process.env.CART_TOKEN, // optional restore
+});
+
+// Bootstrap session → captures Cart-Token from GET /cart response headers
+await store.ensureSession();
+
+const products = await store.products.list({ per_page: 10, on_sale: true });
+const cart = await store.cart.addItem({
+  id: products[0]!.id,
+  quantity: 1,
+  variation: [], // simple products: empty array
+});
+
+await store.cart.updateCustomer({
+  billing_address: {
+    first_name: "Jane",
+    last_name: "Doe",
+    address_1: "1 Main St",
+    city: "Austin",
+    state: "TX",
+    postcode: "78701",
+    country: "US",
+    email: "jane@example.com",
+  },
+});
+
+const order = await store.checkout.process({ payment_method: "bacs" });
+console.log(order.order_id, order.status, await store.getCartToken());
+```
+
+### API surface (summary)
+
+| Resource | Methods |
+|----------|---------|
+| **Session** | `ensureSession()`, `getCartToken()`, `session` (`CartSession`: snapshot, headers, clear) |
+| **Cart** | `get`, `addItem`, `updateItem`, `removeItem`, `applyCoupon`, `removeCoupon`, `updateCustomer`, `selectShippingRate`, `listItems`, `clearItems` |
+| **Products** | `list`, `get`, `collectionData`, `listCategories`, `listTags`, `listAttributes`, `listReviews` |
+| **Checkout** | `get`, `process`, `update`, `payForOrder` |
+| **Low-level** | `request(method, endpoint, opts?)`, `batch(requests)` — covers brands, order-by-key, coupon collection, attribute terms, etc. |
+
+Session model: **Cart-Token first** (Nonce absorbed as fallback). Constructor **rejects** `consumerKey` / `consumerSecret` so admin credentials cannot be mixed in by accident.
+
+**Full endpoint → method matrix, types, errors, troubleshooting:** [packages/store-api/README.md](./packages/store-api/README.md) · [docs/STORE_API.md](./docs/STORE_API.md)
+
+### Custom session persistence
+
+```ts
+import {
+  WooCommerceStoreApi,
+  type SessionStore,
+  type SessionSnapshot,
+} from "woo-store-ts-api";
+
+const store = new WooCommerceStoreApi({
+  url: "https://shop.example",
+  sessionStore: {
+    async get(): Promise<SessionSnapshot> {
+      return { cartToken: loadFromCookie(), nonce: null };
+    },
+    async set(s: SessionSnapshot) {
+      if (s.cartToken) saveToCookie(s.cartToken);
+    },
+  },
+});
+```
+
+### Side-by-side with admin REST (correct pattern)
+
+```ts
+import WooCommerceRestApi from "woocommerce-rest-ts-api";
+import { WooCommerceStoreApi } from "woo-store-ts-api";
+
+const admin = new WooCommerceRestApi({
+  url: process.env.WC_URL!,
+  consumerKey: process.env.WC_KEY!,
+  consumerSecret: process.env.WC_SECRET!,
+  version: "wc/v3",
+});
+
+const storefront = new WooCommerceStoreApi({ url: process.env.WC_URL! });
+
+// Admin: back-office product
+await admin.get("products", { id: 34 });
+
+// Store: shopper cart (no keys)
+await storefront.ensureSession();
+await storefront.cart.addItem({ id: 34, quantity: 1 });
+```
+
+### Develop / test
+
+```bash
+pnpm --filter woo-store-ts-api build
+pnpm --filter woo-store-ts-api test      # or: pnpm test:store
+pnpm --filter woo-store-ts-api typecheck
+```
 
 ---
 
@@ -563,9 +700,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ```
 woocommerce-rest-api-ts-lib/
-├── src/                         # TypeScript REST client library
-├── packages/mcp-server/         # woo-mcp-server (MCP tools, resources, prompts)
-├── scripts/live-wc/             # Free Docker WooCommerce for live MCP tests
+├── src/                         # Admin REST client (woocommerce-rest-ts-api, wc/v3)
+├── packages/
+│   ├── mcp-server/              # woo-mcp-server (MCP tools over admin REST)
+│   └── store-api/               # woo-store-ts-api (Store API client, wc/store/v1)
+├── docs/
+│   ├── STORE_API.md             # Store API endpoint / token reference
+│   ├── PUBLISHING.md            # npm dual/triple package publish
+│   └── CODERABBIT.md
+├── scripts/live-wc/             # Free Docker WooCommerce for live tests
 └── ui/
     ├── presentation.html        # Developer slide deck (make ui-presentation)
     └── index.html               # MCP tool explorer (make ui)
@@ -574,6 +717,7 @@ woocommerce-rest-api-ts-lib/
 ## 🙏 Thanks / Credits
 
 - [WooCommerce REST API Documentation](https://woocommerce.github.io/woocommerce-rest-api-docs/)
+- [WooCommerce Store API](https://developer.woocommerce.com/docs/apis/store-api/)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [Axios HTTP Client](https://github.com/axios/axios)
 - [TypeScript](https://www.typescriptlang.org/)
@@ -583,9 +727,10 @@ woocommerce-rest-api-ts-lib/
 
 If you need help or have questions, please:
 
-1. Check the [WooCommerce REST API Documentation](https://woocommerce.github.io/woocommerce-rest-api-docs/)
-2. Open an [issue on GitHub](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/issues)
-3. Contact via email (use subject: "WooCommerce TS Library - [Your Issue]")
+1. Check the [WooCommerce REST API Documentation](https://woocommerce.github.io/woocommerce-rest-api-docs/) (admin) or [Store API](https://developer.woocommerce.com/docs/apis/store-api/) (cart/checkout)
+2. Package guides: [admin README](./README.md) · [store-api README](./packages/store-api/README.md) · [MCP README](./packages/mcp-server/README.md)
+3. Open an [issue on GitHub](https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/issues)
+4. Contact via email (use subject: "WooCommerce TS Library - [Your Issue]")
 
 |  Name |  Email | 
 |-------|--------|
