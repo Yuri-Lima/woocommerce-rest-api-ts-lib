@@ -4,6 +4,13 @@
  */
 
 import { z } from "zod";
+import {
+  buildToolPayloadUsage,
+  estimateTokensFromText,
+  recordToolUsage,
+  usageMetaForText,
+  type ToolPayloadUsage,
+} from "./usage.js";
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
 
@@ -169,6 +176,32 @@ export const OrderNoteSchema = z
   })
   .passthrough();
 
+export const OrderRefundSchema = z
+  .object({
+    id: z.number().optional(),
+    date_created: z.string().optional(),
+    amount: z.union([z.string(), z.number()]).optional(),
+    reason: z.string().optional(),
+    refunded_by: z.number().optional(),
+    refunded_payment: z.boolean().optional(),
+    line_items: z.array(z.unknown()).optional(),
+  })
+  .passthrough();
+
+export const ProductReviewSchema = z
+  .object({
+    id: z.number().optional(),
+    product_id: z.number().optional(),
+    status: z.string().optional(),
+    reviewer: z.string().optional(),
+    reviewer_email: z.string().optional(),
+    review: z.string().optional(),
+    rating: z.number().optional(),
+    verified: z.boolean().optional(),
+    date_created: z.string().optional(),
+  })
+  .passthrough();
+
 // ─── List response wrapper ────────────────────────────────────────────────────
 
 export function listResponseSchema<T extends z.ZodTypeAny>(itemSchema: T) {
@@ -243,15 +276,69 @@ export function parseSingleOutput<T>(item: unknown, itemSchema: z.ZodType<T>) {
   return singleResponseSchema(itemSchema).parse({ item });
 }
 
-export function textContent(data: unknown): {
+export interface TextContentOptions {
+  /** Tool name for session usage rollups */
+  tool?: string;
+  /**
+   * When true (default), attach `usage` on object payloads and MCP `_meta`.
+   * Set false only for internal/test payloads that must stay byte-identical.
+   */
+  includeUsage?: boolean;
+}
+
+export interface McpTextContentResult {
   content: Array<{ type: "text"; text: string }>;
-} {
-  return {
-    content: [
-      {
-        type: "text",
-        text: typeof data === "string" ? data : JSON.stringify(data, null, 2),
-      },
-    ],
+  _meta?: {
+    "woo.usage": ToolPayloadUsage & { tool?: string };
   };
 }
+
+/**
+ * Serialize tool data as MCP text content.
+ * Always attaches token-usage estimates (payload size) unless includeUsage=false.
+ */
+export function textContent(
+  data: unknown,
+  options: TextContentOptions = {},
+): McpTextContentResult {
+  const includeUsage = options.includeUsage !== false;
+  let body: unknown = data;
+  let usage: ToolPayloadUsage | undefined;
+
+  if (
+    includeUsage &&
+    data !== null &&
+    typeof data === "object" &&
+    !Array.isArray(data)
+  ) {
+    // Estimate from business payload only (before attaching usage) so the
+    // usage object does not inflate its own estimate.
+    const baseText = JSON.stringify(data);
+    usage = recordToolUsage(baseText, { tool: options.tool });
+    body = { ...(data as Record<string, unknown>), usage };
+  }
+
+  const text =
+    typeof body === "string" ? body : JSON.stringify(body, null, 2);
+
+  if (!includeUsage) {
+    return { content: [{ type: "text", text }] };
+  }
+
+  // Non-object payloads still get _meta usage (and session tracking).
+  if (!usage) {
+    usage = recordToolUsage(text, { tool: options.tool });
+  }
+
+  return {
+    content: [{ type: "text", text }],
+    _meta: {
+      "woo.usage": {
+        ...usage,
+        ...(options.tool ? { tool: options.tool } : {}),
+      },
+    },
+  };
+}
+
+export { buildToolPayloadUsage, estimateTokensFromText, usageMetaForText };

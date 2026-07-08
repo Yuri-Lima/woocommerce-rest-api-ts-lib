@@ -135,4 +135,58 @@ describe("order tools", () => {
     });
     expect(isError).toBe(false);
   });
+
+  it("order refunds list / get / create / delete", async () => {
+    nock(TEST_BASE)
+      .get(apiPath("/orders/101/refunds"))
+      .query(true)
+      .reply(200, [{ id: 55, amount: "5.00", reason: "partial" }], {
+        "x-wp-total": "1",
+        "x-wp-totalpages": "1",
+      });
+    nock(TEST_BASE)
+      .get(apiPath("/orders/101/refunds/55"))
+      .query(true)
+      .reply(200, { id: 55, amount: "5.00", reason: "partial" });
+    nock(TEST_BASE)
+      .post(apiPath("/orders/101/refunds"))
+      .query(true)
+      .reply(201, { id: 56, amount: "10.00", reason: "damaged" });
+    nock(TEST_BASE)
+      .delete(apiPath("/orders/101/refunds/56"))
+      .query(true)
+      .reply(200, { id: 56 });
+
+    const list = await callTool(ctx.client, "woo_orders_refunds_list", {
+      order_id: 101,
+    });
+    expect(list.isError).toBe(false);
+    expect((list.data as { items: unknown[] }).items).toHaveLength(1);
+
+    expect(
+      (await callTool(ctx.client, "woo_orders_refunds_get", { order_id: 101, id: 55 }))
+        .data,
+    ).toMatchObject({ item: { id: 55 } });
+
+    expect(
+      (
+        await callTool(ctx.client, "woo_orders_refunds_create", {
+          order_id: 101,
+          amount: "10.00",
+          reason: "damaged",
+          api_refund: false,
+        })
+      ).data,
+    ).toMatchObject({ item: { id: 56 } });
+
+    expect(
+      (
+        await callTool(ctx.client, "woo_orders_refunds_delete", {
+          order_id: 101,
+          id: 56,
+          force: true,
+        })
+      ).data,
+    ).toMatchObject({ deleted: true });
+  });
 });

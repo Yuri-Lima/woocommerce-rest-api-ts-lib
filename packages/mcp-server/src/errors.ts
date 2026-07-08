@@ -5,10 +5,12 @@
  */
 
 import { WooCommerceApiError, AuthenticationError, OptionsException } from "woocommerce-rest-ts-api";
+import { usageMetaForText } from "./usage.js";
 
 export interface McpToolErrorPayload {
   isError: true;
   content: Array<{ type: "text"; text: string }>;
+  _meta?: ReturnType<typeof usageMetaForText>;
 }
 
 export interface NormalizedError {
@@ -111,9 +113,11 @@ export function toMcpToolError(err: unknown): McpToolErrorPayload {
       // ignore non-serializable details
     }
   }
+  const text = parts.join("\n");
   return {
     isError: true,
-    content: [{ type: "text", text: parts.join("\n") }],
+    content: [{ type: "text", text }],
+    _meta: usageMetaForText(text, { is_error: true }),
   };
 }
 

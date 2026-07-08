@@ -1,5 +1,5 @@
 /**
- * Order tools — list, get, create, update, delete, notes, batch.
+ * Order tools — list, get, create, update, delete, notes, refunds, batch.
  */
 
 import { z } from "zod";
@@ -11,6 +11,7 @@ import {
   BatchResponseSchema,
   DeleteResponseSchema,
   OrderNoteSchema,
+  OrderRefundSchema,
   OrderSchema,
   PaginationInputSchema,
   parseListOutput,
@@ -288,6 +289,145 @@ export function registerOrderTools(server: McpServer, client: WooClient): void {
       try {
         const res = await client.post("orders/batch", args as Record<string, unknown>);
         return textContent(BatchResponseSchema.parse(res.data ?? {}));
+      } catch (err) {
+        return toMcpToolError(err);
+      }
+    },
+  );
+
+  server.registerTool(
+    "woo_orders_refunds_list",
+    {
+      title: "List order refunds",
+      description:
+        "Lists refunds issued against a specific order. Use this for support lookups, finance reconciliation, or before creating another partial refund so you do not double-refund.",
+      inputSchema: {
+        order_id: z.number().int().positive().describe("Order ID whose refunds to list"),
+        ...PaginationInputSchema.shape,
+      },
+    },
+    async (args) => {
+      try {
+        const page = args.page ?? 1;
+        const per_page = args.per_page ?? 10;
+        const res = await client.get<unknown[]>(`orders/${args.order_id}/refunds`, {
+          page,
+          per_page,
+        });
+        const meta = client.pagination(res, page, per_page);
+        const out = parseListOutput(
+          res.data,
+          meta.currentPage,
+          meta.perPage,
+          meta.total,
+          meta.totalPages,
+          OrderRefundSchema,
+        );
+        return textContent(out);
+      } catch (err) {
+        return toMcpToolError(err);
+      }
+    },
+  );
+
+  server.registerTool(
+    "woo_orders_refunds_get",
+    {
+      title: "Get order refund",
+      description:
+        "Retrieves a single refund by ID for an order, including amount, reason, and line items. Use when you have a refund ID from a list or webhook.",
+      inputSchema: {
+        order_id: z.number().int().positive().describe("Parent order ID"),
+        id: z.number().int().positive().describe("Refund ID"),
+      },
+    },
+    async (args) => {
+      try {
+        const res = await client.get(`orders/${args.order_id}/refunds/${args.id}`);
+        return textContent(parseSingleOutput(res.data, OrderRefundSchema));
+      } catch (err) {
+        return toMcpToolError(err);
+      }
+    },
+  );
+
+  server.registerTool(
+    "woo_orders_refunds_create",
+    {
+      title: "Create order refund",
+      description:
+        "Creates a full or partial refund on an order. Prefer amount for simple money refunds; use line_items for item-level restocks. api_refund=true attempts payment gateway refund when supported. Use carefully — this mutates order money and may email the customer.",
+      inputSchema: {
+        order_id: z.number().int().positive().describe("Order ID to refund"),
+        amount: z
+          .string()
+          .optional()
+          .describe('Refund amount as string. Example: "10.00". Omit for full remaining refund when allowed.'),
+        reason: z.string().optional().describe("Human-readable refund reason"),
+        api_refund: z
+          .boolean()
+          .optional()
+          .describe("If true, attempt gateway refund via payment API (default false)"),
+        api_restock: z
+          .boolean()
+          .optional()
+          .describe("If true, restock refunded line items when applicable"),
+        line_items: z
+          .array(
+            z.object({
+              id: z.number().describe("Order line item ID (not product ID)"),
+              quantity: z.number().int().positive().optional().describe("Qty to refund"),
+              refund_total: z
+                .number()
+                .optional()
+                .describe("Line refund total (ex tax) as number"),
+            }),
+          )
+          .optional()
+          .describe("Optional per-line-item refund details"),
+      },
+    },
+    async (args) => {
+      try {
+        const body: Record<string, unknown> = {};
+        if (args.amount !== undefined) body.amount = args.amount;
+        if (args.reason !== undefined) body.reason = args.reason;
+        if (args.api_refund !== undefined) body.api_refund = args.api_refund;
+        if (args.api_restock !== undefined) body.api_restock = args.api_restock;
+        if (args.line_items !== undefined) body.line_items = args.line_items;
+        const res = await client.post(`orders/${args.order_id}/refunds`, body);
+        return textContent(parseSingleOutput(res.data, OrderRefundSchema));
+      } catch (err) {
+        return toMcpToolError(err);
+      }
+    },
+  );
+
+  server.registerTool(
+    "woo_orders_refunds_delete",
+    {
+      title: "Delete order refund",
+      description:
+        "Deletes a refund record from an order. force=true is required by WooCommerce for permanent delete. Use mainly for test cleanup; production finance policies often disallow removing refund history.",
+      inputSchema: {
+        order_id: z.number().int().positive().describe("Parent order ID"),
+        id: z.number().int().positive().describe("Refund ID to delete"),
+        force: z.boolean().default(true).optional().describe("Permanent delete (default true)"),
+      },
+    },
+    async (args) => {
+      try {
+        const res = await client.delete(
+          `orders/${args.order_id}/refunds/${args.id}`,
+          { force: args.force ?? true },
+        );
+        return textContent(
+          DeleteResponseSchema.parse({
+            deleted: true,
+            previous: res.data,
+            id: args.id,
+          }),
+        );
       } catch (err) {
         return toMcpToolError(err);
       }
