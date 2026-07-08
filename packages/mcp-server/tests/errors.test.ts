@@ -59,6 +59,22 @@ describe("toMcpToolError", () => {
     expect(payload.content[0].type).toBe("text");
     expect(payload.content[0].text).toMatch(/fail/);
   });
+
+  it("truncates oversized error details", () => {
+    const err = Object.assign(new Error("Request failed"), {
+      response: {
+        status: 500,
+        data: {
+          code: "internal_server_error",
+          message: "Boom",
+          data: { html: "x".repeat(5000) },
+        },
+      },
+    });
+    const payload = toMcpToolError(err);
+    expect(payload.content[0].text.length).toBeLessThan(1200);
+    expect(payload.content[0].text).toMatch(/truncated/);
+  });
 });
 
 describe("withToolErrorHandling", () => {

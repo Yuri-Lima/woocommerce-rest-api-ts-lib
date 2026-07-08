@@ -35,8 +35,8 @@ describe("ConcurrencyThrottler", () => {
 });
 
 describe("RateLimiter", () => {
-  it("schedules functions sequentially respecting interval", async () => {
-    const limiter = new RateLimiter(50); // 20ms interval
+  it("allows a burst up to the bucket capacity", async () => {
+    const limiter = new RateLimiter(50); // capacity 50 tokens
     const times: number[] = [];
     await Promise.all(
       [1, 2, 3].map(() =>
@@ -46,8 +46,22 @@ describe("RateLimiter", () => {
       ),
     );
     expect(times).toHaveLength(3);
-    // At least some spacing between starts
-    expect(times[2]! - times[0]!).toBeGreaterThanOrEqual(15);
+    // Burst: three tokens available immediately (no forced spacing chain)
+    expect(times[2]! - times[0]!).toBeLessThan(30);
+  });
+
+  it("throttles sustained traffic above the rate", async () => {
+    // 5 RPS, capacity 5 — 10 jobs require ~1s of refill after the first burst
+    const limiter = new RateLimiter(5, 5);
+    const start = Date.now();
+    await Promise.all(
+      Array.from({ length: 10 }, () =>
+        limiter.schedule(async () => undefined),
+      ),
+    );
+    const elapsed = Date.now() - start;
+    // 5 immediate + 5 refilled at 5/s ⇒ ≥ ~800ms under load (allow jitter)
+    expect(elapsed).toBeGreaterThanOrEqual(700);
   });
 });
 

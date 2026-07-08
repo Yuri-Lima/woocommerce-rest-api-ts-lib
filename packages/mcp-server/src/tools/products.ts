@@ -10,10 +10,14 @@ import {
   BatchOperationSchema,
   BatchResponseSchema,
   DeleteResponseSchema,
+  ListDetailSchema,
+  ListFieldsSchema,
   PaginationInputSchema,
+  PRODUCT_SUMMARY_FIELDS,
   ProductSchema,
   parseListOutput,
   parseSingleOutput,
+  resolveListFields,
   textContent,
 } from "../types.js";
 
@@ -54,7 +58,7 @@ export function registerProductTools(server: McpServer, client: WooClient): void
     {
       title: "List products",
       description:
-        "Lists products from the WooCommerce catalog with pagination. Use this when you need to browse the catalog, build an inventory overview, or feed product data into a report. Returns product objects plus pagination metadata (total, totalPages, currentPage).",
+        "Lists products from the WooCommerce catalog with pagination. Default detail=summary uses a slim `_fields` projection (no HTML descriptions/images) to cut tokens and memory — use detail=full or woo_products_get when you need the complete product. Returns product objects plus pagination metadata.",
       inputSchema: {
         ...PaginationInputSchema.shape,
         status: z
@@ -75,12 +79,19 @@ export function registerProductTools(server: McpServer, client: WooClient): void
           .optional()
           .describe("Sort field"),
         order: z.enum(["asc", "desc"]).optional().describe("Sort direction"),
+        detail: ListDetailSchema,
+        fields: ListFieldsSchema,
       },
     },
     async (args) => {
       try {
         const page = args.page ?? 1;
         const per_page = args.per_page ?? 10;
+        const _fields = resolveListFields(
+          args.detail,
+          args.fields,
+          PRODUCT_SUMMARY_FIELDS,
+        );
         const res = await client.get<unknown[]>("products", {
           page,
           per_page,
@@ -90,6 +101,7 @@ export function registerProductTools(server: McpServer, client: WooClient): void
           stock_status: args.stock_status,
           orderby: args.orderby,
           order: args.order,
+          ...(_fields ? { _fields } : {}),
         });
         const meta = client.pagination(res, page, per_page);
         const out = parseListOutput(
@@ -211,23 +223,31 @@ export function registerProductTools(server: McpServer, client: WooClient): void
     {
       title: "Search products",
       description:
-        "Searches products by a free-text query matching name, SKU, and description fields. Use this when the user asks to find products by keyword rather than by ID or filters. Returns paginated matching products.",
+        "Searches products by a free-text query matching name, SKU, and description fields. Default detail=summary uses a slim `_fields` projection. Returns paginated matching products.",
       inputSchema: {
         query: z
           .string()
           .min(1)
           .describe("Search query string. Example: \"blue shirt\""),
         ...PaginationInputSchema.shape,
+        detail: ListDetailSchema,
+        fields: ListFieldsSchema,
       },
     },
     async (args) => {
       try {
         const page = args.page ?? 1;
         const per_page = args.per_page ?? 10;
+        const _fields = resolveListFields(
+          args.detail,
+          args.fields,
+          PRODUCT_SUMMARY_FIELDS,
+        );
         const res = await client.get<unknown[]>("products", {
           search: args.query,
           page,
           per_page,
+          ...(_fields ? { _fields } : {}),
         });
         const meta = client.pagination(res, page, per_page);
         const out = parseListOutput(

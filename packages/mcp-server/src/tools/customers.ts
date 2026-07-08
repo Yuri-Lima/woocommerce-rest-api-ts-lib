@@ -7,11 +7,15 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { WooClient } from "../client.js";
 import { toMcpToolError } from "../errors.js";
 import {
+  CUSTOMER_SUMMARY_FIELDS,
   CustomerSchema,
   DeleteResponseSchema,
+  ListDetailSchema,
+  ListFieldsSchema,
   PaginationInputSchema,
   parseListOutput,
   parseSingleOutput,
+  resolveListFields,
   textContent,
 } from "../types.js";
 
@@ -33,7 +37,7 @@ export function registerCustomerTools(server: McpServer, client: WooClient): voi
     {
       title: "List customers",
       description:
-        "Lists WooCommerce customers with pagination. Use this for CRM-style overviews, segmenting audiences, or finding accounts before creating orders. Returns customer objects and pagination metadata.",
+        "Lists WooCommerce customers with pagination. Default detail=summary uses a slim `_fields` projection (no full address blobs) to cut tokens/memory — use detail=full or woo_customers_get for complete profiles. Returns customer objects and pagination metadata.",
       inputSchema: {
         ...PaginationInputSchema.shape,
         role: z.string().optional().describe("Filter by role, e.g. customer"),
@@ -43,12 +47,19 @@ export function registerCustomerTools(server: McpServer, client: WooClient): voi
           .optional()
           .describe("Sort field"),
         order: z.enum(["asc", "desc"]).optional().describe("Sort direction"),
+        detail: ListDetailSchema,
+        fields: ListFieldsSchema,
       },
     },
     async (args) => {
       try {
         const page = args.page ?? 1;
         const per_page = args.per_page ?? 10;
+        const _fields = resolveListFields(
+          args.detail,
+          args.fields,
+          CUSTOMER_SUMMARY_FIELDS,
+        );
         const res = await client.get<unknown[]>("customers", {
           page,
           per_page,
@@ -56,6 +67,7 @@ export function registerCustomerTools(server: McpServer, client: WooClient): voi
           email: args.email,
           orderby: args.orderby,
           order: args.order,
+          ...(_fields ? { _fields } : {}),
         });
         const meta = client.pagination(res, page, per_page);
         return textContent(
@@ -179,20 +191,28 @@ export function registerCustomerTools(server: McpServer, client: WooClient): voi
     {
       title: "Search customers",
       description:
-        "Searches customers by free-text query (name, email, username). Use this when the user provides a partial name or email and you need matching accounts before acting on orders.",
+        "Searches customers by free-text query (name, email, username). Default detail=summary uses a slim `_fields` projection. Use this when the user provides a partial name or email and you need matching accounts before acting on orders.",
       inputSchema: {
         query: z.string().min(1).describe("Search query. Example: \"jane@\""),
         ...PaginationInputSchema.shape,
+        detail: ListDetailSchema,
+        fields: ListFieldsSchema,
       },
     },
     async (args) => {
       try {
         const page = args.page ?? 1;
         const per_page = args.per_page ?? 10;
+        const _fields = resolveListFields(
+          args.detail,
+          args.fields,
+          CUSTOMER_SUMMARY_FIELDS,
+        );
         const res = await client.get<unknown[]>("customers", {
           search: args.query,
           page,
           per_page,
+          ...(_fields ? { _fields } : {}),
         });
         const meta = client.pagination(res, page, per_page);
         return textContent(

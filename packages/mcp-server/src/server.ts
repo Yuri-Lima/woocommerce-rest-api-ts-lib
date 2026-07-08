@@ -8,7 +8,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { loadConfig, type McpConfig } from "./config.js";
-import { createWooClient, type WooClient } from "./client.js";
+import {
+  createWooClient,
+  RateLimiter,
+  ConcurrencyThrottler,
+  type WooClient,
+} from "./client.js";
 import { registerAll } from "./registry.js";
 
 export const SERVER_NAME = "woo-mcp-server";
@@ -72,13 +77,29 @@ export async function startServer(): Promise<CreatedServer> {
   return created;
 }
 
-export { loadConfig, createWooClient, registerAll };
+export { loadConfig, createWooClient, RateLimiter, ConcurrencyThrottler, registerAll };
 export {
   ModelUsageTracker,
   usageSession,
   estimateTokensFromText,
   buildToolPayloadUsage,
 } from "./usage.js";
+export {
+  compactJson,
+  textContent,
+  resolveListFields,
+  PRODUCT_SUMMARY_FIELDS,
+  ORDER_SUMMARY_FIELDS,
+  CUSTOMER_SUMMARY_FIELDS,
+} from "./types.js";
+export {
+  formatErrorDetails,
+  truncateText,
+  MAX_ERROR_DETAILS_CHARS,
+  MAX_ERROR_MESSAGE_CHARS,
+  toMcpToolError,
+} from "./errors.js";
+export { slimSystemStatus } from "./tools/system-status.js";
 export type { McpConfig, WooClient };
 export type {
   ModelUsageReport,
