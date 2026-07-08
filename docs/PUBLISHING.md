@@ -1,19 +1,21 @@
-# Publishing to npm (dual packages)
+# Publishing to npm (triple packages)
 
-This monorepo publishes **two separate packages**:
+This monorepo publishes **three separate packages**:
 
-| Package | Version (repo) | Path |
-|---------|----------------|------|
-| [`woocommerce-rest-ts-api`](https://www.npmjs.com/package/woocommerce-rest-ts-api) | `8.0.0` | repository root |
-| [`woo-mcp-server`](https://www.npmjs.com/package/woo-mcp-server) | `1.0.0` | `packages/mcp-server` |
+| Package | Version (repo) | Path | Surface |
+|---------|----------------|------|---------|
+| [`woocommerce-rest-ts-api`](https://www.npmjs.com/package/woocommerce-rest-ts-api) | `8.0.0` | repository root | Admin REST `wc/v3` |
+| [`woo-store-ts-api`](https://www.npmjs.com/package/woo-store-ts-api) | `1.0.0` | `packages/store-api` | Store API `wc/store/v1` |
+| [`woo-mcp-server`](https://www.npmjs.com/package/woo-mcp-server) | `1.1.0` | `packages/mcp-server` | MCP tools over admin REST |
 
-## How it works (best option we implemented)
+## How it works
 
 1. **Dev dependency** in the monorepo:  
    `woocommerce-rest-ts-api: "workspace:^"` inside `woo-mcp-server`.
-2. **On publish**, the MCP package is staged with that rewritten to **`^8.0.0`** so consumers install a real registry version.
-3. **Order**: library first → MCP second (script enforces this).
-4. **Release entrypoints**:
+2. **On publish**, the MCP package is staged with that rewritten to **`^8.0.0`** (root `version`) so consumers install a real registry version.
+3. **`woo-store-ts-api`** has **no** workspace dependency on the admin library (axios only). It is packed from `dist` + package metadata.
+4. **Order**: library → store-api → MCP (script enforces this).
+5. **Release entrypoints**:
    - GitHub Action: **Actions → Release npm packages → Run workflow**
    - Local/CI script: `pnpm run publish:packages` (needs a valid token)
    - After merge to `main`, `Publish NPM CI` also calls the same script (skips versions already on npm)
@@ -47,6 +49,7 @@ Or: GitHub repo → **Settings → Secrets and variables → Actions → NPM_TOK
 gh workflow run release-packages.yml --ref main \
   -f dry_run=false \
   -f skip_library=false \
+  -f skip_store=false \
   -f skip_mcp=false \
   -f skip_tests=false \
   -f create_tags=true
@@ -57,8 +60,9 @@ Or use the Actions UI: **Release npm packages**.
 ### Verify
 
 ```bash
-npm view woocommerce-rest-ts-api version   # expect 8.0.0
-npm view woo-mcp-server version            # expect 1.0.0
+npm view woocommerce-rest-ts-api version   # expect 8.0.0 (or newer)
+npm view woo-store-ts-api version          # expect 1.0.0 (first publish)
+npm view woo-mcp-server version            # expect 1.1.0 (or newer)
 npm view woo-mcp-server dependencies       # woocommerce-rest-ts-api: ^8.0.0
 npx -y woo-mcp-server --help               # or just start with env set
 ```
@@ -71,13 +75,31 @@ pnpm run publish:packages:dry
 DRY_RUN=1 bash scripts/publish-packages.sh
 ```
 
+Skip individual packages:
+
+```bash
+DRY_RUN=1 SKIP_LIBRARY=1 bash scripts/publish-packages.sh   # pack store + MCP only
+DRY_RUN=1 SKIP_MCP=1 bash scripts/publish-packages.sh       # pack library + store only
+DRY_RUN=1 SKIP_STORE=1 bash scripts/publish-packages.sh     # pack library + MCP only
+```
+
 ## Bumping versions later
 
-1. Edit `version` in root `package.json` and/or `packages/mcp-server/package.json`.
+1. Edit `version` in the package you intend to release:
+   - root `package.json` → `woocommerce-rest-ts-api`
+   - `packages/store-api/package.json` → `woo-store-ts-api`
+   - `packages/mcp-server/package.json` → `woo-mcp-server`
 2. Commit, merge to `main`.
 3. Re-run **Release npm packages** (already-published versions are skipped safely).
 
-Optional long-term: [Changesets](https://github.com/changesets/changesets) or multi-semantic-release for automated dual bumps.
+| Change type | Suggested bump |
+|-------------|----------------|
+| New package first publish | `1.0.0` |
+| MCP perf / tools / non-breaking | minor (`1.0.0` → `1.1.0`) |
+| Admin library breaking | major (`8.x` → `9.0.0`) |
+| Store API additive methods | minor |
+
+Optional long-term: [Changesets](https://github.com/changesets/changesets) or multi-semantic-release for automated multi-package bumps.
 
 ## Trusted Publishing (optional alternative to long-lived tokens)
 
@@ -88,15 +110,18 @@ If you prefer OIDC instead of `NPM_TOKEN`:
 3. Workflow: `release-packages.yml`
 4. Re-enable `permissions: id-token: write` and `npm publish --provenance`
 
-Configure **both** packages (library + MCP). New packages may need a first classic-token publish before Trusted Publishing applies—follow npm’s current docs.
+Configure **all three** packages (library + store + MCP). New packages may need a first classic-token publish before Trusted Publishing applies—follow npm’s current docs.
 
 ## Consumers
 
 ```bash
-# library only
+# admin REST only
 npm i woocommerce-rest-ts-api
 
-# MCP server (pulls library as dependency)
+# headless cart / checkout / storefront catalog
+npm i woo-store-ts-api
+
+# MCP server (pulls admin library as dependency)
 npm i -g woo-mcp-server
 npx -y woo-mcp-server
 ```
@@ -117,4 +142,19 @@ Claude Desktop:
     }
   }
 }
+```
+
+## After this PR merges
+
+1. Ensure `NPM_TOKEN` is valid (see above).
+2. Merge to `main` — `Publish NPM CI` will attempt to publish any version not yet on npm:
+   - `woocommerce-rest-ts-api@8.0.0` → skip if already published
+   - `woo-store-ts-api@1.0.0` → **first publish**
+   - `woo-mcp-server@1.1.0` → **new minor** (payload/memory perf)
+3. Or manually: **Actions → Release npm packages** with `dry_run=true` first, then real run.
+4. Confirm:
+
+```bash
+npm view woo-store-ts-api version
+npm view woo-mcp-server version
 ```

@@ -1,7 +1,7 @@
 {
-  "name": "woo-mcp-server",
-  "version": "1.1.0",
-  "description": "Model Context Protocol (MCP) server for WooCommerce — 80+ tools, resources, and prompts for AI agents",
+  "name": "woo-store-ts-api",
+  "version": "1.0.0",
+  "description": "TypeScript client for the WooCommerce Store API (wc/store/v1) — cart, checkout, and storefront catalog. Separate from the admin REST client (woocommerce-rest-ts-api).",
   "author": "Yuri Lima",
   "license": "MIT",
   "type": "module",
@@ -9,16 +9,14 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "bin": {
-    "woo-mcp-server": "./dist/cli.js"
-  },
-  "main": "./dist/server.js",
-  "types": "./dist/server.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/server.d.ts",
-      "import": "./dist/server.js",
-      "require": "./dist/server.cjs"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -34,38 +32,31 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib.git",
-    "directory": "packages/mcp-server"
+    "directory": "packages/store-api"
   },
-  "homepage": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/tree/main/packages/mcp-server#readme",
+  "homepage": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/tree/main/packages/store-api#readme",
   "bugs": {
     "url": "https://github.com/Yuri-Lima/woocommerce-rest-api-ts-lib/issues"
   },
   "keywords": [
     "woocommerce",
-    "mcp",
-    "model-context-protocol",
-    "claude",
-    "ai-agent",
-    "gpt",
-    "rest-api",
+    "store-api",
+    "cart",
+    "checkout",
+    "headless",
     "typescript",
-    "stdio"
+    "wc/store"
   ],
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.cjs --coverage",
-    "test:unit": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js --config jest.config.cjs --testPathPattern=tests/tools",
-    "start": "node dist/cli.js",
-    "bench:perf": "node scripts/bench-perf.mjs",
     "clean": "rm -rf dist coverage",
     "prepublishOnly": "pnpm run build",
     "prepack": "pnpm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "woocommerce-rest-ts-api": "workspace:^",
-    "zod": "^3.24.2"
+    "axios": "^1.18.0"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

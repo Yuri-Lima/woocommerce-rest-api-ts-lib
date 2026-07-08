@@ -610,6 +610,9 @@ node packages/mcp-server/scripts/anthropic-mcp-smoke.mjs
 | AI agent / Claude / GPT tools | — | **Yes — designed for this** |
 | Fine-grained control of every request | Yes | — |
 | Shared tool schemas across models | — | Yes (Zod → MCP) |
+| Headless cart / checkout / storefront catalog | Use [`woo-store-ts-api`](../store-api/README.md) (Store API `wc/store/v1`) — **not** this MCP server | — |
+
+This MCP server talks to the **admin** REST API (`wc/v3`) via `woocommerce-rest-ts-api`. Shopper session flows (Cart-Token, guest cart, storefront checkout) live in the separate package [`woo-store-ts-api`](../store-api/README.md).
 
 ---
 

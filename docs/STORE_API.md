@@ -32,6 +32,7 @@ This document is a local implementation reference for the **WooCommerce Store AP
 17. [Guiding principles](#guiding-principles)
 18. [Extensibility](#extensibility)
 19. [Official links](#official-links)
+20. [Relation to packages in this monorepo](#relation-to-packages-in-this-monorepo)
 
 ---
 
@@ -646,15 +647,59 @@ For sensitive/admin data or new standalone routes, use:
 
 ---
 
-## Relation to `woocommerce-rest-ts-api`
+## Relation to packages in this monorepo
 
-This repository (`woocommerce-rest-ts-api`) currently targets the **authenticated `wc/v3` REST API** with consumer key/secret.
+| Package | Surface | Auth |
+|---------|---------|------|
+| `woocommerce-rest-ts-api` | Admin REST `wc/v3` | Consumer key + secret |
+| **`woo-store-ts-api`** (`packages/store-api`) | Store API `wc/store/v1` | **Cart-Token** (preferred) / Nonce |
+| `woo-mcp-server` | MCP tools over admin REST | Same as admin library |
 
-The **Store API** (`wc/store/v1`) is a separate surface. To support it in TypeScript, consider:
+```ts
+import { WooCommerceStoreApi } from "woo-store-ts-api";
 
-- A dedicated `WooCommerceStoreApi` client class
-- Cart-Token / Nonce header management
-- Cookie jar support for session persistence
-- Store-specific response types (cart, checkout, store product schema)
+const store = new WooCommerceStoreApi({ url: "https://shop.example" });
+await store.ensureSession(); // captures Cart-Token
+await store.cart.addItem({ id: 34, quantity: 1 });
+```
 
-See this doc when implementing that client or building headless cart/checkout flows.
+Do **not** pass `consumerKey` / `consumerSecret` to the Store client — it rejects them to avoid mixed concerns.
+
+Full package docs: [`packages/store-api/README.md`](../packages/store-api/README.md).
+
+### TypeScript client method map (`woo-store-ts-api`)
+
+| Store API route | `WooCommerceStoreApi` |
+|-----------------|------------------------|
+| `GET /cart` | `ensureSession()` / `cart.get()` |
+| `POST /cart/add-item` | `cart.addItem({ id, quantity, variation? })` |
+| `POST /cart/update-item` | `cart.updateItem({ key, quantity })` |
+| `POST /cart/remove-item` | `cart.removeItem(key)` |
+| `POST /cart/apply-coupon` | `cart.applyCoupon(code)` |
+| `POST /cart/remove-coupon` | `cart.removeCoupon(code)` |
+| `POST /cart/update-customer` | `cart.updateCustomer({ billing_address?, shipping_address? })` |
+| `POST /cart/select-shipping-rate` | `cart.selectShippingRate({ package_id, rate_id })` |
+| `GET /cart/items` | `cart.listItems()` |
+| `DELETE /cart/items` | `cart.clearItems()` |
+| `GET`/`POST`/`PUT`/`DELETE /cart/items/:key` | `request(method, "cart/items/{key}", …)` |
+| `GET`/`POST`/`DELETE /cart/coupons` | `request(…, "cart/coupons")` |
+| `GET`/`DELETE /cart/coupon/:code` | `request(…, "cart/coupon/{code}")` |
+| `GET /checkout` | `checkout.get()` |
+| `POST /checkout` | `checkout.process(payload?)` |
+| `PUT /checkout` | `checkout.update(payload?)` |
+| `POST /checkout/:id` | `checkout.payForOrder(orderId, payload?)` |
+| `GET /order/:id` | `request("GET", "order/{id}")` |
+| `GET /products` | `products.list(params?)` |
+| `GET /products/:id` | `products.get(id)` |
+| `GET /products/collection-data` | `products.collectionData(params?)` |
+| `GET /products/categories` | `products.listCategories(params?)` |
+| `GET /products/tags` | `products.listTags(params?)` |
+| `GET /products/attributes` | `products.listAttributes(params?)` |
+| `GET /products/attributes/:id[/terms]` | `request("GET", "products/attributes/…")` |
+| `GET /products/brands` | `request("GET", "products/brands")` |
+| `GET /products/reviews` | `products.listReviews(params?)` |
+| `POST /batch` | `batch(requests)` |
+
+**Session helpers:** `getCartToken()`, `session` (`CartSession` — Cart-Token preferred over Nonce, automatic header absorb on every response).
+
+**Errors:** `StoreApiError` (`status`, `code`, `isSessionError`), `StoreApiOptionsError` (bad options / admin keys rejected).
