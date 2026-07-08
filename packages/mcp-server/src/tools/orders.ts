@@ -10,12 +10,16 @@ import {
   BatchOperationSchema,
   BatchResponseSchema,
   DeleteResponseSchema,
+  ListDetailSchema,
+  ListFieldsSchema,
+  ORDER_SUMMARY_FIELDS,
   OrderNoteSchema,
   OrderRefundSchema,
   OrderSchema,
   PaginationInputSchema,
   parseListOutput,
   parseSingleOutput,
+  resolveListFields,
   textContent,
 } from "../types.js";
 
@@ -58,7 +62,7 @@ export function registerOrderTools(server: McpServer, client: WooClient): void {
     {
       title: "List orders",
       description:
-        "Lists store orders with pagination and optional filters for status, date range, and customer. Use this to build order queues, support lookups, or feed sales analysis. Returns order objects plus pagination metadata.",
+        "Lists store orders with pagination and optional filters for status, date range, and customer. Default detail=summary uses a slim `_fields` projection to cut tokens/memory — use detail=full or woo_orders_get for complete addresses/meta. Returns order objects plus pagination metadata.",
       inputSchema: {
         ...PaginationInputSchema.shape,
         status: z
@@ -85,12 +89,19 @@ export function registerOrderTools(server: McpServer, client: WooClient): void {
           .optional()
           .describe("Sort field"),
         order: z.enum(["asc", "desc"]).optional().describe("Sort direction"),
+        detail: ListDetailSchema,
+        fields: ListFieldsSchema,
       },
     },
     async (args) => {
       try {
         const page = args.page ?? 1;
         const per_page = args.per_page ?? 10;
+        const _fields = resolveListFields(
+          args.detail,
+          args.fields,
+          ORDER_SUMMARY_FIELDS,
+        );
         const res = await client.get<unknown[]>("orders", {
           page,
           per_page,
@@ -101,6 +112,7 @@ export function registerOrderTools(server: McpServer, client: WooClient): void {
           product: args.product,
           orderby: args.orderby,
           order: args.order,
+          ...(_fields ? { _fields } : {}),
         });
         const meta = client.pagination(res, page, per_page);
         const out = parseListOutput(

@@ -63,40 +63,90 @@ export class ConcurrencyThrottler implements Throttler {
 }
 
 /**
- * Rate limiter: enforces a maximum number of operations per second
- * using a sliding window + the Throttler concurrency gate.
+ * Token-bucket rate limiter + optional concurrency gate.
+ *
+ * Previous spacing chain serialized every start at 1000/RPS ms, which:
+ * - forbade bursts even when the bucket had capacity
+ * - stacked with the library's own Throttler (double throttle)
+ *
+ * Token bucket allows up to `requestsPerSecond` burst tokens, refilling at
+ * `requestsPerSecond` tokens/sec. Concurrent in-flight work is limited
+ * separately so slow WC responses do not starve the queue.
  */
 export class RateLimiter {
-  private readonly intervalMs: number;
+  private tokens: number;
+  private readonly maxTokens: number;
+  private readonly refillPerMs: number;
+  private lastRefillMs: number;
   private readonly throttler: Throttler;
-  private lastRequestAt = 0;
-  private chain: Promise<void> = Promise.resolve();
+  /** FIFO of waiters when the bucket is empty */
+  private waiters: Array<() => void> = [];
+  private timer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(requestsPerSecond: number, maxConcurrent?: number) {
-    this.intervalMs = Math.ceil(1000 / Math.max(1, requestsPerSecond));
-    // Align concurrent slots with rate limit (library Throttler pattern)
+    const rps = Math.max(1, requestsPerSecond);
+    this.maxTokens = rps;
+    this.tokens = rps;
+    this.refillPerMs = rps / 1000;
+    this.lastRefillMs = Date.now();
+    // Cap default concurrency so a burst does not open unbounded sockets.
+    // Library-side maxConcurrentRequests is disabled (0) — single throttle point.
     this.throttler = new ConcurrencyThrottler(
-      maxConcurrent ?? Math.max(1, requestsPerSecond),
+      maxConcurrent ?? Math.min(rps, 8),
     );
+  }
+
+  private refill(): void {
+    const now = Date.now();
+    const elapsed = now - this.lastRefillMs;
+    if (elapsed <= 0) return;
+    this.tokens = Math.min(this.maxTokens, this.tokens + elapsed * this.refillPerMs);
+    this.lastRefillMs = now;
+  }
+
+  private scheduleWake(): void {
+    if (this.timer || this.waiters.length === 0) return;
+    // Time until one full token is available
+    const need = 1 - this.tokens;
+    const waitMs = Math.max(1, Math.ceil(need / this.refillPerMs));
+    this.timer = setTimeout(() => {
+      this.timer = null;
+      this.refill();
+      this.drainWaiters();
+    }, waitMs);
+    // Don't keep the process alive solely for rate-limit timers
+    if (typeof this.timer === "object" && "unref" in this.timer) {
+      this.timer.unref();
+    }
+  }
+
+  private drainWaiters(): void {
+    this.refill();
+    while (this.waiters.length > 0 && this.tokens >= 1) {
+      this.tokens -= 1;
+      const next = this.waiters.shift()!;
+      next();
+    }
+    if (this.waiters.length > 0) this.scheduleWake();
+  }
+
+  private acquireToken(): Promise<void> {
+    this.refill();
+    if (this.tokens >= 1 && this.waiters.length === 0) {
+      this.tokens -= 1;
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve) => {
+      this.waiters.push(resolve);
+      this.scheduleWake();
+    });
   }
 
   /**
    * Schedule `fn` to run respecting both rate and concurrency limits.
    */
   async schedule<T>(fn: () => Promise<T>): Promise<T> {
-    // Serialize start times so we never exceed N starts per second
-    const run = this.chain.then(async () => {
-      const now = Date.now();
-      const wait = Math.max(0, this.lastRequestAt + this.intervalMs - now);
-      if (wait > 0) {
-        await new Promise((r) => setTimeout(r, wait));
-      }
-      this.lastRequestAt = Date.now();
-    });
-    // Keep chain alive even if a prior task rejects
-    this.chain = run.catch(() => undefined);
-    await run;
-
+    await this.acquireToken();
     await this.throttler.acquire();
     try {
       return await fn();
@@ -172,9 +222,11 @@ export interface WooClient {
  * Create a rate-limited WooCommerce client from validated config.
  */
 export function createWooClient(config: McpConfig): WooClient {
+  // Single throttle point at MCP layer (token bucket + concurrency).
+  // Library maxConcurrentRequests=0 disables its internal Throttler so we
+  // never double-limit and pay latency twice on every request.
   const rateLimiter = new RateLimiter(config.WC_RATE_LIMIT_PER_SECOND);
 
-  // Library's internal Throttler is engaged via maxConcurrentRequests.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ApiCtor = WooCommerceRestApi as any;
   const apiInstance = new ApiCtor({
@@ -183,7 +235,7 @@ export function createWooClient(config: McpConfig): WooClient {
     consumerSecret: config.WC_SECRET,
     version: config.WC_VERSION,
     queryStringAuth: config.WC_QUERY_STRING_AUTH,
-    maxConcurrentRequests: config.WC_RATE_LIMIT_PER_SECOND,
+    maxConcurrentRequests: 0,
   }) as WooApi;
 
   /**

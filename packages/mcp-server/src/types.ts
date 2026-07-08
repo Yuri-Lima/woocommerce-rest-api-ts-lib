@@ -250,6 +250,52 @@ export const BatchOperationSchema = z.object({
     .describe("Array of resource IDs to delete"),
 });
 
+// ─── List field projection (memory + token savings) ───────────────────────────
+
+/**
+ * WooCommerce `_fields` projections for list endpoints.
+ * Summary omits HTML descriptions, images, meta, and address blobs that dominate
+ * MCP tool payloads when agents only need inventory/order overviews.
+ */
+export const PRODUCT_SUMMARY_FIELDS =
+  "id,name,slug,type,status,sku,price,regular_price,sale_price,stock_quantity,stock_status,manage_stock,categories,permalink";
+
+export const ORDER_SUMMARY_FIELDS =
+  "id,status,currency,total,customer_id,date_created,billing,shipping,line_items,number,payment_method";
+
+export const CUSTOMER_SUMMARY_FIELDS =
+  "id,email,first_name,last_name,username,role,date_created,orders_count,total_spent";
+
+/** Shared detail mode for high-volume list tools. Default is summary. */
+export const ListDetailSchema = z
+  .enum(["summary", "full"])
+  .default("summary")
+  .describe(
+    'Payload detail. "summary" (default) requests a slim `_fields` projection from WooCommerce to cut tokens/memory; "full" returns the complete entity. Override with `fields` for a custom comma-separated `_fields` list.',
+  );
+
+export const ListFieldsSchema = z
+  .string()
+  .optional()
+  .describe(
+    "Optional comma-separated WooCommerce `_fields` projection. When set, overrides the default summary field set. Example: id,name,price,stock_status",
+  );
+
+/**
+ * Resolve `_fields` for a list call.
+ * - detail=summary (default) → defaultFields unless `fields` overrides
+ * - detail=full → no projection unless `fields` is set
+ */
+export function resolveListFields(
+  detail: "summary" | "full" | undefined,
+  fields: string | undefined,
+  defaultFields: string,
+): string | undefined {
+  if (fields && fields.trim()) return fields.trim();
+  if (detail === "full") return undefined;
+  return defaultFields;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 export function parseListOutput<T>(
@@ -291,19 +337,35 @@ export interface McpTextContentResult {
   _meta?: {
     "woo.usage": ToolPayloadUsage & { tool?: string };
   };
+  /** Index signature so results assign to MCP SDK CallToolResult. */
+  [key: string]: unknown;
 }
 
 /**
- * Serialize tool data as MCP text content.
+ * Compact JSON serialize — single-pass, no pretty-print whitespace.
+ * Pretty JSON (indent 2) inflates MCP tool payloads ~25–40% for nested WC objects,
+ * which multiplies into model input tokens on every tool result.
+ */
+export function compactJson(data: unknown): string {
+  if (typeof data === "string") return data;
+  return JSON.stringify(data);
+}
+
+/**
+ * Serialize tool data as MCP text content (compact JSON).
  * Always attaches token-usage estimates (payload size) unless includeUsage=false.
+ *
+ * Single-pass path: when attaching usage we stringify once for the estimate,
+ * then build the final body and stringify once more (unavoidable if usage is
+ * embedded). No pretty-print intermediate strings are retained.
  */
 export function textContent(
   data: unknown,
   options: TextContentOptions = {},
 ): McpTextContentResult {
   const includeUsage = options.includeUsage !== false;
-  let body: unknown = data;
   let usage: ToolPayloadUsage | undefined;
+  let text: string;
 
   if (
     includeUsage &&
@@ -313,13 +375,15 @@ export function textContent(
   ) {
     // Estimate from business payload only (before attaching usage) so the
     // usage object does not inflate its own estimate.
-    const baseText = JSON.stringify(data);
+    const baseText = compactJson(data);
     usage = recordToolUsage(baseText, { tool: options.tool });
-    body = { ...(data as Record<string, unknown>), usage };
+    text = compactJson({
+      ...(data as Record<string, unknown>),
+      usage,
+    });
+  } else {
+    text = compactJson(data);
   }
-
-  const text =
-    typeof body === "string" ? body : JSON.stringify(body, null, 2);
 
   if (!includeUsage) {
     return { content: [{ type: "text", text }] };
