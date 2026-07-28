@@ -63,7 +63,7 @@
     "prepack": "pnpm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "woocommerce-rest-ts-api": "workspace:^",
     "zod": "^3.24.2"
   },
