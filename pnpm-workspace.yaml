@@ -24,8 +24,8 @@ overrides:
   tar: '>=7.5.16'
   tmp: '>=0.2.6'
   flatted: ^3.4.2
-  'js-yaml@3': 3.15.0
-  'js-yaml@>=4': 4.3.0
+  'js-yaml@3': 3.15.1
+  'js-yaml@>=4': 4.3.1
   yaml: ^2.8.1
   'brace-expansion@1': 1.1.16
   'brace-expansion@2': 2.1.2
