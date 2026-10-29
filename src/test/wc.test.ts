@@ -1175,7 +1175,7 @@ describe("Test Customers", () => {
             expect(getAllCustomers).toHaveProperty("data", expect.any(Array));
         }
         const data = {
-            email: "y.m.limaTEST@gmail.com",
+            email: "john.doe@example.com",
             first_name: `Yuri`,
             last_name: "Doe",
             username: "john.doe",
